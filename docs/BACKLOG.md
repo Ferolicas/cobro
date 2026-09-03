@@ -4,12 +4,12 @@ Actualizado: 2026-09-04
 
 ## P0 — bloquea la entrega pública
 
-- [ ] Crear/corregir en Cloudflare el registro A `cobro` → `87.106.236.248` en modo DNS only; ahora mismo los resolvers autoritativos responden NXDOMAIN.
-- [ ] Crear un proyecto Sanity aislado y suministrar `SANITY_PROJECT_ID` + token de escritura para activar fotos y videos.
-- [ ] Configurar y probar SMTP2GO con remitente verificado para activar enlaces de recuperación.
+- [x] Crear/corregir en Cloudflare el registro A `cobro` → `87.106.236.248` en modo DNS only.
+- [x] Configurar Sanity aislado (`qxetuirc` / `production`) y probar carga y borrado real de archivos.
+- [x] Configurar SMTP2GO y probar en producción el envío del enlace de recuperación.
 - [ ] Sustituir `beatriz@cobro.olcas.app` por el correo real del primer cobrador si es diferente.
-- [ ] Ejecutar QA visual y funcional en HTTPS real una vez propagado DNS: maestro, cobrador móvil, notificación clicable/modal, subida múltiple y WebSocket.
-- [ ] Añadir rate limiting persistente a login y recuperación antes de abrir el dominio a usuarios reales.
+- [x] Ejecutar QA visual y funcional en HTTPS real: maestro, cobrador, notificación clicable/modal, carga documental y WebSocket.
+- [x] Añadir rate limiting persistente en PostgreSQL a login y recuperación.
 
 ## P1 — primera semana
 

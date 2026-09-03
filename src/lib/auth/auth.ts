@@ -30,6 +30,16 @@ export const auth = betterAuth({
   secret: process.env.BETTER_AUTH_SECRET ?? process.env.AUTH_SECRET,
   database: prismaAdapter(prisma, { provider: "postgresql" }),
   trustedOrigins: [process.env.APP_URL ?? "http://localhost:4009", "http://localhost:4009"],
+  rateLimit: {
+    enabled: true,
+    storage: "database",
+    window: 60,
+    max: 100,
+    customRules: {
+      "/sign-in/email": { window: 60, max: 8 },
+      "/request-password-reset": { window: 15 * 60, max: 3 },
+    },
+  },
   emailAndPassword: {
     enabled: true,
     minPasswordLength: 10,
@@ -46,6 +56,9 @@ export const auth = betterAuth({
   advanced: {
     cookiePrefix: "cobro",
     useSecureCookies: process.env.NODE_ENV === "production",
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for"],
+    },
   },
   user: {
     additionalFields: {

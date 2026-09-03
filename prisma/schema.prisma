@@ -90,6 +90,13 @@ model Verification {
   @@index([expiresAt])
 }
 
+model RateLimit {
+  id          String @id @default(cuid())
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
 model Zone {
   id        String   @id @default(cuid())
   name      String   @unique

@@ -11,10 +11,12 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - Next.js 16 App Router + React 19 + TypeScript + Tailwind CSS 4.
 - Servidor Node propio (`server.ts`) con Next y Socket.IO 4.
 - Better Auth con credenciales, cambio obligatorio y recuperación por correo mediante SMTP2GO.
+- Rate limiting persistente en PostgreSQL: 8 intentos de acceso por minuto y 3 solicitudes de recuperación cada 15 minutos por IP.
 - PostgreSQL nativo + Prisma 7.
 - Sanity Assets para fotos/videos; PostgreSQL conserva metadatos y relaciones.
 - Frankfurter v2 para conversión diaria PEN → COP con caché local.
 - VPS normal: `/var/www/cobro`, PM2 `cobro`, puerto 4009, Caddy y `cobro.olcas.app`.
+- Integraciones activas verificadas en producción: Sanity `qxetuirc`/`production`, SMTP2GO y DNS/SSL público.
 
 ## Viajes principales
 
@@ -69,4 +71,5 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
 - Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido.
+- Las notificaciones de documentos fueron verificadas de extremo a extremo: carga a Sanity, evento WebSocket sin recarga y modal detallado clicable.
 - Antes de cada despliegue: `pnpm typecheck && pnpm lint && pnpm build`.

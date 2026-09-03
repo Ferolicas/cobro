@@ -1033,22 +1033,6 @@ export type CreditUncheckedCreateNestedManyWithoutPreviousCreditInput = {
   connect?: Prisma.CreditWhereUniqueInput | Prisma.CreditWhereUniqueInput[]
 }
 
-export type BigIntFieldUpdateOperationsInput = {
-  set?: bigint | number
-  increment?: bigint | number
-  decrement?: bigint | number
-  multiply?: bigint | number
-  divide?: bigint | number
-}
-
-export type IntFieldUpdateOperationsInput = {
-  set?: number
-  increment?: number
-  decrement?: number
-  multiply?: number
-  divide?: number
-}
-
 export type CreditUpdateOneWithoutRenewedCreditsNestedInput = {
   create?: Prisma.XOR<Prisma.CreditCreateWithoutRenewedCreditsInput, Prisma.CreditUncheckedCreateWithoutRenewedCreditsInput>
   connectOrCreate?: Prisma.CreditCreateOrConnectWithoutRenewedCreditsInput
