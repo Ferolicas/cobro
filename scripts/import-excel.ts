@@ -18,12 +18,24 @@ function date(cell: ExcelJS.Cell) { const raw = value(cell); if (raw instanceof 
 function code(prefix: string, key: string) { return `${prefix}-${createHash("sha256").update(key).digest("hex").slice(0, 10).toUpperCase()}`; }
 
 async function main() {
-  const marker = await prisma.systemSetting.findUnique({ where: { key: "excel_import_2026_09_02" } });
-  if (marker) { console.log("El Excel del 02/09/2026 ya fue importado; no se duplicó información."); return; }
   const workbook = new ExcelJS.Workbook(); await workbook.xlsx.readFile(sourcePath);
   const sheet = workbook.getWorksheet("LIQUIDACION"); const balance = workbook.getWorksheet("BALANCE");
   if (!sheet || !balance) throw new Error("El archivo debe contener LIQUIDACION y BALANCE");
   const collector = await prisma.user.findUniqueOrThrow({ where: { email: (process.env.IMPORT_COLLECTOR_EMAIL ?? "beatriz@cobro.olcas.app").toLowerCase() } });
+  const microinsuranceMarker = await prisma.systemSetting.findUnique({ where: { key: "excel_microinsurance_2026_09_02" } });
+  if (!microinsuranceMarker) {
+    let movements = 0; let totalCents = BigInt(0);
+    for (let column = 28; column <= 146; column++) {
+      const occurredAt = date(sheet.getCell(1, column)); const amountCents = amount(sheet.getCell(174, column));
+      if (!occurredAt || amountCents <= BigInt(0)) continue;
+      await prisma.cashMovement.create({ data: { collectorId: collector.id, type: "MICROINSURANCE", direction: "IN", amountCents, occurredAt, note: "Microseguro diario importado del Excel" } });
+      movements++; totalCents += amountCents;
+    }
+    await prisma.systemSetting.create({ data: { key: "excel_microinsurance_2026_09_02", value: { movements, totalCents: totalCents.toString(), importedAt: new Date().toISOString() } } });
+    console.log(`Microseguro histórico: ${movements} movimientos, S/ ${(Number(totalCents) / 100).toFixed(2)}.`);
+  }
+  const marker = await prisma.systemSetting.findUnique({ where: { key: "excel_import_2026_09_02" } });
+  if (marker) { console.log("El Excel del 02/09/2026 ya fue importado; no se duplicó información."); return; }
   let currentZone = await prisma.zone.findFirst({ orderBy: { name: "asc" } });
   let clientsCreated = 0, creditsCreated = 0, paymentsCreated = 0;
   const clientByIdentity = new Map<string, string>();
