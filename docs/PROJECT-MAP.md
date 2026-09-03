@@ -10,7 +10,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 - Next.js 16 App Router + React 19 + TypeScript + Tailwind CSS 4.
 - Servidor Node propio (`server.ts`) con Next y Socket.IO 4.
-- Better Auth con credenciales, cambio obligatorio y recuperación por correo.
+- Better Auth con credenciales, cambio obligatorio y recuperación por correo mediante SMTP2GO.
 - PostgreSQL nativo + Prisma 7.
 - Sanity Assets para fotos/videos; PostgreSQL conserva metadatos y relaciones.
 - Frankfurter v2 para conversión diaria PEN → COP con caché local.

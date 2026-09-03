@@ -34,7 +34,7 @@ Actualizado: 2026-09-04
 
 - Acceso cerrado por correo y contraseña; no existe autorregistro.
 - Clave temporal fija `cobro1234*`, almacenada únicamente como hash, con cambio obligatorio y sesiones revocables.
-- El maestro puede restablecer cobradores; el usuario puede recuperar por enlace de correo.
+- El maestro puede restablecer cobradores; el usuario puede recuperar por enlace de correo enviado con SMTP2GO.
 - Autorización por rol y pertenencia en servidor; auditoría de acciones financieras.
 - WebSocket usa tickets firmados de cinco minutos y los eventos nunca sustituyen el dato persistido.
 - El VPS ya realiza `pg_dumpall` diario; queda pendiente una restauración de ensayo documentada y ampliar/confirmar retención a 14 días.
@@ -44,4 +44,5 @@ Actualizado: 2026-09-04
 - Producción: VPS normal, PM2 `cobro`, puerto 4009, Caddy, PostgreSQL nativo.
 - CI/CD: cada push a `main` despliega con migraciones, seed idempotente, build, recarga y healthcheck.
 - Tipo de cambio: Frankfurter v2, PEN→COP, con caché diaria en PostgreSQL.
+- Email transaccional: SMTP2GO con remitente autorizado de `olcas.app`.
 - Sin SEO, sitemap, captación, HubSpot ni analytics por ser un sistema privado con `noindex`.

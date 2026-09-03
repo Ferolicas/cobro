@@ -4,22 +4,24 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "@/lib/db/prisma";
 
 async function sendResetEmail(to: string, url: string) {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.SMTP2GO_API_KEY;
   if (!key) {
-    console.warn("RESEND_API_KEY no configurada; no se envió el enlace de recuperación");
+    console.warn("SMTP2GO_API_KEY no configurada; no se envió el enlace de recuperación");
     return;
   }
-  const response = await fetch("https://api.resend.com/emails", {
+  const response = await fetch("https://api.smtp2go.com/v3/email/send", {
     method: "POST",
-    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    headers: { "X-Smtp2go-Api-Key": key, "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({
-      from: process.env.EMAIL_FROM ?? "Cobro <no-reply@olcas.app>",
+      sender: process.env.EMAIL_FROM ?? "Cobro <no-reply@olcas.app>",
       to: [to],
       subject: "Restablece tu contraseña de Cobro",
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px"><h1 style="color:#123c8c">Restablecer contraseña</h1><p>Solicitaste un enlace para crear una nueva contraseña.</p><p><a href="${url}" style="display:inline-block;background:#1468ed;color:white;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:700">Crear nueva contraseña</a></p><p style="color:#68738a;font-size:13px">Si no hiciste esta solicitud, ignora este mensaje.</p></div>`,
+      html_body: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto;padding:32px"><h1 style="color:#123c8c">Restablecer contraseña</h1><p>Solicitaste un enlace para crear una nueva contraseña.</p><p><a href="${url}" style="display:inline-block;background:#1468ed;color:white;padding:14px 22px;border-radius:12px;text-decoration:none;font-weight:700">Crear nueva contraseña</a></p><p style="color:#68738a;font-size:13px">Si no hiciste esta solicitud, ignora este mensaje.</p></div>`,
+      text_body: `Restablece tu contraseña de Cobro: ${url}\n\nSi no hiciste esta solicitud, ignora este mensaje.`,
     }),
   });
-  if (!response.ok) throw new Error(`Resend respondió ${response.status}`);
+  const result = await response.json().catch(() => null) as { data?: { succeeded?: number; error?: string } } | null;
+  if (!response.ok || result?.data?.succeeded !== 1) throw new Error(`SMTP2GO rechazó el envío (${response.status})`);
 }
 
 export const auth = betterAuth({

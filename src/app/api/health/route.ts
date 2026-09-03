@@ -12,7 +12,7 @@ export async function GET() {
       realtime: globalThis.__cobroRealtime ? "ok" : "starting",
       integrations: {
         sanity: process.env.SANITY_PROJECT_ID && process.env.SANITY_API_TOKEN ? "configured" : "pending",
-        email: process.env.RESEND_API_KEY ? "configured" : "pending",
+        email: process.env.SMTP2GO_API_KEY ? "configured" : "pending",
       },
       timestamp: new Date().toISOString(),
     });
