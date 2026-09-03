@@ -88,7 +88,12 @@ async function allocatePayment(
         collectorId: params.collectorId,
         creditId: credit.id,
         paymentId: payment.id,
-        type: params.method === "YAPE" ? "PAYMENT_YAPE" : "PAYMENT_CASH",
+        type:
+          params.method === "YAPE"
+            ? "PAYMENT_YAPE"
+            : params.method === "TRANSFER"
+              ? "PAYMENT_TRANSFER"
+              : "PAYMENT_CASH",
         direction: "IN",
         amountCents: params.amountCents,
         occurredAt: params.paidAt,

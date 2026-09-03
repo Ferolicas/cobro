@@ -13,4 +13,13 @@ export function dateTime(value: string | Date) {
   return new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-export function todayInput() { return new Date().toISOString().slice(0, 10); }
+export function todayInput() {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/Lima",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
+  return `${value("year")}-${value("month")}-${value("day")}`;
+}

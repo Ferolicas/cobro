@@ -49,9 +49,9 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { user } = await requireUser(request);
+    const { user } = await requireUser(request, ["COLLECTOR"]);
     const input = clientSchema.parse(await request.json());
-    const collectorId = user.role === "COLLECTOR" ? user.id : input.collectorId;
+    const collectorId = user.id;
     const client = await prisma.client.create({
       data: { ...input, collectorId, code: `CL-${randomUUID().slice(0, 8).toUpperCase()}` },
       include: { collector: { select: { id: true, name: true } }, zone: true },

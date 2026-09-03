@@ -16,11 +16,11 @@ const schema = z.object({
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { user } = await requireUser(request);
+    const { user } = await requireUser(request, ["COLLECTOR"]);
     const { id } = await params;
     const input = schema.parse(await request.json());
     const credit = await prisma.credit.findUniqueOrThrow({ where: { id }, include: { client: true } });
-    if (user.role === "COLLECTOR" && credit.collectorId !== user.id) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
+    if (credit.collectorId !== user.id) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
     const payment = await registerPayment({ creditId: id, collectorId: user.id, amountCents: toCents(input.amount), paidAt: input.paidAt ? new Date(input.paidAt) : new Date(), method: input.method, note: input.note });
     const updated = await prisma.credit.findUniqueOrThrow({ where: { id }, include: { installments: { orderBy: { number: "asc" } } } });
     await audit({ actorId: user.id, action: "PAYMENT_RECORDED", entityType: "credit", entityId: id, after: payment });

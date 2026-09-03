@@ -9,7 +9,7 @@ const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/he
 
 export async function POST(request: Request) {
   try {
-    const { user } = await requireUser(request);
+    const { user } = await requireUser(request, ["COLLECTOR"]);
     const projectId = process.env.SANITY_PROJECT_ID;
     const token = process.env.SANITY_API_TOKEN;
     if (!projectId || !token) return Response.json({ error: "Sanity aún no está configurado" }, { status: 503 });
@@ -25,11 +25,9 @@ export async function POST(request: Request) {
     const maxBatch = Number(process.env.MAX_BATCH_SIZE_MB ?? 100) * 1_000_000;
     if (files.some((file) => file.size > maxFile) || files.reduce((sum, file) => sum + file.size, 0) > maxBatch) return Response.json({ error: "Los archivos superan el límite permitido" }, { status: 413 });
     if (files.some((file) => !allowedTypes.has(file.type))) return Response.json({ error: "Hay un formato de archivo no permitido" }, { status: 415 });
-    if (user.role === "COLLECTOR") {
-      if (clientId && !(await prisma.client.count({ where: { id: clientId, collectorId: user.id } }))) return Response.json({ error: "Cliente no asignado" }, { status: 403 });
-      if (creditId && !(await prisma.credit.count({ where: { id: creditId, collectorId: user.id } }))) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
-      if (liquidationId && !(await prisma.liquidation.count({ where: { id: liquidationId, collectorId: user.id } }))) return Response.json({ error: "Liquidación no asignada" }, { status: 403 });
-    }
+    if (clientId && !(await prisma.client.count({ where: { id: clientId, collectorId: user.id } }))) return Response.json({ error: "Cliente no asignado" }, { status: 403 });
+    if (creditId && !(await prisma.credit.count({ where: { id: creditId, collectorId: user.id } }))) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
+    if (liquidationId && !(await prisma.liquidation.count({ where: { id: liquidationId, collectorId: user.id } }))) return Response.json({ error: "Liquidación no asignada" }, { status: 403 });
     const sanity = createClient({ projectId, dataset: process.env.SANITY_DATASET ?? "production", apiVersion: process.env.SANITY_API_VERSION ?? "2026-09-01", token, useCdn: false });
     const documents = [];
     for (const file of files) {

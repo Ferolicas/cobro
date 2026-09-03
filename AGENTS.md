@@ -35,6 +35,8 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 - Una renovación liquida y cierra el crédito anterior antes de crear el nuevo.
 - Todo cambio financiero debe ser transaccional, auditable y notificar al maestro.
 - El cobrador solo accede a su cartera. La autorización siempre se verifica en servidor.
+- El maestro es supervisor: puede ver toda la información y ejecutar acciones administrativas, pero no puede registrar clientes, desembolsos, renovaciones, pagos, documentos ni cierres diarios.
+- Solo el cobrador realiza operaciones de ruta. La liquidación toma cobros, desembolsos, primera cuota, microseguro, renovaciones y conteos desde PostgreSQL; nunca acepta que el formulario reescriba esos totales.
 - Las notificaciones se guardan antes de emitir el evento WebSocket y deben conservar `details` completos y `actionUrl`.
 - No subir `.env`, secretos, Excel ni datos personales al repositorio.
 - El servidor Socket.IO exige una sola instancia PM2 mientras no exista adaptador compartido.

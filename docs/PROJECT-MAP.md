@@ -22,21 +22,23 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 1. Maestro o cobrador inicia sesión con correo y contraseña.
 2. Una cuenta nueva/restablecida cambia obligatoriamente `cobro1234*`.
-3. El cobrador ve únicamente su ruta, cartera, clientes, créditos y liquidación.
-4. Un crédito nace con capital, 20% de interés, 24 cuotas y primera cuota retenida.
-5. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente; al día siguiente se suma a lo vencido, sin penalidad.
-6. La renovación paga el saldo anterior desde el capital nuevo, descuenta la primera cuota y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo.
-7. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida las vistas en tiempo real.
-8. Al pulsar una notificación, el maestro ve un modal con mensaje, actor, hora, todos los detalles y enlace al registro relacionado.
+3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
+4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos, sube documentos y confirma el cierre diario.
+5. Un crédito nace con capital, 20% de interés, 24 cuotas y primera cuota retenida.
+6. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente; al día siguiente se suma a lo vencido, sin penalidad.
+7. La renovación paga el saldo anterior desde el capital nuevo, descuenta la primera cuota y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo.
+8. La liquidación se arma desde los movimientos del día; el cobrador solo declara base inicial, gastos, retiro y caja física contada antes de confirmar.
+9. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida las vistas en tiempo real.
+10. Al pulsar una notificación, el maestro ve un modal con mensaje, actor, hora, todos los detalles y enlace al registro relacionado.
 
 ## Módulos de interfaz
 
 - `src/components/crm/CrmShell.tsx`: navegación, cambio PEN/COP, tiempo real, notificaciones y modal exacto.
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
-- `views/TodayView.tsx`: ruta diaria y registro rápido de pagos.
-- `views/ClientsView.tsx`: alta, ficha, documentos y actividad.
-- `views/CreditsView.tsx`: alta, cronograma, pagos, renovación y comprobantes.
-- `views/LiquidationsView.tsx`: campos diarios de la hoja LIQUIDACION y conciliación.
+- `views/TodayView.tsx`: ruta diaria y registro rápido de pagos, exclusivo del cobrador.
+- `views/ClientsView.tsx`: alta y documentos para el cobrador; consulta global para el maestro.
+- `views/CreditsView.tsx`: operación completa para el cobrador; cronograma y movimientos en solo lectura para el maestro.
+- `views/LiquidationsView.tsx`: cálculo automático y confirmación del cobrador; selector y revisión en solo lectura para el maestro.
 - `views/CollectorsView.tsx`: altas, activación y restauración de contraseña.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
 
@@ -45,7 +47,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `src/app/api/auth/[...all]`: Better Auth.
 - `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
-- `api/liquidations`: captura diaria y valores sugeridos por sistema.
+- `api/liquidations`: resumen diario automático, conciliación del cobrador e historial de cierres.
 - `api/uploads`, `api/documents/[id]`: subida múltiple a Sanity y descarga autorizada.
 - `api/notifications`: bandeja, lectura individual y masiva.
 - `api/realtime-ticket`: JWT de cinco minutos para Socket.IO.
@@ -58,6 +60,8 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
 - Caja neta de desembolso = capital − primera cuota − microseguro − liquidación anterior.
+- Caja esperada del cobrador = base + pagos en efectivo − efectivo neto entregado − gastos − retiro. Yape y transferencias se informan, pero no aumentan la caja física.
+- Los campos derivados de liquidación se recalculan en el servidor desde `CashMovement`; el cliente no puede enviarlos ni alterarlos.
 - Pérdida = saldo castigado; no se confunde con interés que dejó de ganarse.
 - Estados principales: `ACTIVE`, `OVERDUE`, `PAID`, `RENEWED`, `WRITTEN_OFF`.
 

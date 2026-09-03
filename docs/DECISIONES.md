@@ -42,6 +42,9 @@ Actualizado: 2026-09-04
 ## Operación
 
 - Producción: VPS normal, PM2 `cobro`, puerto 4009, Caddy, PostgreSQL nativo.
+- El maestro es un perfil de supervisión: consulta toda la cartera, liquidaciones, caja y auditoría, pero no registra clientes, créditos, pagos, renovaciones, comprobantes ni cierres diarios.
+- El cobrador es el único perfil operativo. Su liquidación se calcula desde los movimientos reales del día; solo declara base inicial, gastos, retiro, caja física final, notas y comprobantes.
+- La caja esperada se calcula como `base + cobro en efectivo - efectivo neto entregado - gastos - retiro`. Yape y transferencias se informan aparte y no inflan la caja física.
 - CI/CD: cada push a `main` despliega con migraciones, seed idempotente, build, recarga y healthcheck.
 - Tipo de cambio: Frankfurter v2, PEN→COP, con caché diaria en PostgreSQL.
 - Email transaccional: SMTP2GO con remitente autorizado de `olcas.app`.

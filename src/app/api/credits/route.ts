@@ -43,11 +43,11 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
-    const { user } = await requireUser(request);
+    const { user } = await requireUser(request, ["COLLECTOR"]);
     const input = createSchema.parse(await request.json());
     const client = await prisma.client.findUniqueOrThrow({ where: { id: input.clientId } });
-    if (user.role === "COLLECTOR" && client.collectorId !== user.id) return Response.json({ error: "Cliente no asignado" }, { status: 403 });
-    const collectorId = user.role === "COLLECTOR" ? user.id : input.collectorId ?? client.collectorId;
+    if (client.collectorId !== user.id) return Response.json({ error: "Cliente no asignado" }, { status: 403 });
+    const collectorId = user.id;
     const credit = await createCredit({
       clientId: input.clientId,
       collectorId,

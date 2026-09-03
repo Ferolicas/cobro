@@ -16,13 +16,13 @@ const schema = z.object({
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const { user } = await requireUser(request);
+    const { user } = await requireUser(request, ["COLLECTOR"]);
     const { id } = await params;
     const input = schema.parse(await request.json());
     const previous = await prisma.credit.findUniqueOrThrow({ where: { id }, include: { client: true } });
-    if (user.role === "COLLECTOR" && previous.collectorId !== user.id) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
+    if (previous.collectorId !== user.id) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
     const credit = await createCredit({
-      clientId: previous.clientId, collectorId: previous.collectorId ?? user.id,
+      clientId: previous.clientId, collectorId: user.id,
       principalCents: toCents(input.principal), microinsuranceCents: toCents(input.microinsurance),
       disbursedAt: dateOnly(input.disbursedAt), notes: input.notes, previousCreditId: previous.id,
     });
