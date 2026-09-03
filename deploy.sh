@@ -19,11 +19,15 @@ pnpm build
 pm2 startOrReload ecosystem.config.cjs --update-env
 pm2 save
 
-sleep 2
-if curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null; then
-  echo "Deploy OK -> https://${APP}.olcas.app"
-else
-  echo "Healthcheck FALLÓ tras el deploy"
-  pm2 logs "${APP}" --lines 50 --nostream || true
-  exit 1
-fi
+for attempt in $(seq 1 15); do
+  if curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null; then
+    echo "Deploy OK -> https://${APP}.olcas.app"
+    exit 0
+  fi
+  echo "Esperando healthcheck (${attempt}/15)…"
+  sleep 2
+done
+
+echo "Healthcheck FALLÓ tras 30 segundos"
+pm2 logs "${APP}" --lines 50 --nostream || true
+exit 1
