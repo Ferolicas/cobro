@@ -33,6 +33,9 @@ export const auth = betterAuth({
     minPasswordLength: 10,
     maxPasswordLength: 128,
     sendResetPassword: async ({ user, url }) => sendResetEmail(user.email, url),
+    onPasswordReset: async ({ user }) => {
+      await prisma.user.update({ where: { id: user.id }, data: { mustChangePassword: false } });
+    },
   },
   session: {
     expiresIn: 60 * 60 * 24 * 7,
