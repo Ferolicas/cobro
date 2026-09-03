@@ -37,7 +37,7 @@ export async function POST(request: Request) {
       data: {
         id, name: input.name, email: input.email, phone: input.phone, zoneId: input.zoneId,
         role: "COLLECTOR", mustChangePassword: true, active: true,
-        accounts: { create: { id: randomUUID(), accountId: id, providerId: "credential", password } },
+        accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },
       },
     });
     await audit({ actorId: user.id, action: "COLLECTOR_CREATED", entityType: "user", entityId: id, after: collector });

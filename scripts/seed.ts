@@ -18,7 +18,7 @@ async function ensureUser(input: { email: string; name: string; role: "MASTER" |
       role: input.role,
       active: input.active ?? true,
       mustChangePassword: true,
-      accounts: { create: { id: randomUUID(), accountId: id, providerId: "credential", password } },
+      accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },
     },
   });
 }
