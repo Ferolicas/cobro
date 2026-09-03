@@ -10,7 +10,8 @@ const hostname = process.env.HOSTNAME ?? "0.0.0.0";
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-await app.prepare();
+async function main() {
+  await app.prepare();
 
 const httpServer = createServer((request, response) => {
   response.setHeader("X-Content-Type-Options", "nosniff");
@@ -55,3 +56,6 @@ globalThis.__cobroRealtime = io;
 httpServer.listen(port, hostname, () => {
   console.log(`Cobro listo en http://${hostname}:${port}`);
 });
+}
+
+void main();
