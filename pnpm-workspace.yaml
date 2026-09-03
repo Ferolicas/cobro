@@ -1,3 +1,12 @@
+packages:
+  - "."
+
 allowBuilds:
-  sharp: false
-  unrs-resolver: false
+  '@prisma/engines': true
+  esbuild: true
+  prisma: true
+
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - "esbuild"
+  - "prisma"

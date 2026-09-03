@@ -1,0 +1,370 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                     String           @id @default(cuid())
+  name                   String
+  email                  String           @unique
+  emailVerified          Boolean          @default(false)
+  image                  String?
+  createdAt              DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime         @updatedAt @db.Timestamptz(3)
+  role                   String           @default("COLLECTOR")
+  mustChangePassword     Boolean          @default(true)
+  active                 Boolean          @default(true)
+  phone                  String?
+  zoneId                 String?
+  banned                 Boolean          @default(false)
+  banReason              String?
+  banExpires             DateTime?        @db.Timestamptz(3)
+  sessions               Session[]
+  accounts               Account[]
+  zone                   Zone?            @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  assignedClients        Client[]         @relation("ClientCollector")
+  managedCredits         Credit[]         @relation("CreditCollector")
+  payments               Payment[]        @relation("PaymentCollector")
+  liquidations           Liquidation[]
+  uploadedDocuments      Document[]
+  notifications          Notification[]   @relation("NotificationRecipient")
+  triggeredNotifications Notification[]   @relation("NotificationActor")
+  audits                 AuditLog[]
+  activities             ClientActivity[]
+  cashMovements          CashMovement[]
+
+  @@index([role, active])
+  @@index([zoneId])
+}
+
+model Session {
+  id             String   @id @default(cuid())
+  expiresAt      DateTime @db.Timestamptz(3)
+  token          String   @unique
+  createdAt      DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @db.Timestamptz(3)
+  ipAddress      String?
+  userAgent      String?
+  userId         String
+  impersonatedBy String?
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime? @db.Timestamptz(3)
+  refreshTokenExpiresAt DateTime? @db.Timestamptz(3)
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now()) @db.Timestamptz(3)
+  updatedAt             DateTime  @updatedAt @db.Timestamptz(3)
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([providerId, accountId])
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime @db.Timestamptz(3)
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt  DateTime @updatedAt @db.Timestamptz(3)
+
+  @@index([identifier])
+  @@index([expiresAt])
+}
+
+model Zone {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  users     User[]
+  clients   Client[]
+}
+
+model Client {
+  id             String           @id @default(cuid())
+  code           String           @unique
+  name           String
+  documentNumber String?
+  phone          String?
+  alternatePhone String?
+  businessName   String?
+  businessType   String?
+  address        String?
+  locationNotes  String?
+  reference      String?
+  notes          String?
+  zoneId         String?
+  collectorId    String?
+  active         Boolean          @default(true)
+  riskStatus     String           @default("NORMAL")
+  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
+  zone           Zone?            @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  collector      User?            @relation("ClientCollector", fields: [collectorId], references: [id], onDelete: SetNull)
+  credits        Credit[]
+  documents      Document[]
+  activities     ClientActivity[]
+
+  @@index([collectorId, active])
+  @@index([zoneId])
+  @@index([name])
+  @@index([documentNumber])
+  @@index([phone])
+}
+
+model Credit {
+  id                   String           @id @default(cuid())
+  code                 String           @unique
+  clientId             String
+  collectorId          String?
+  previousCreditId     String?
+  principalCents       BigInt
+  interestRateBps      Int              @default(2000)
+  interestCents        BigInt
+  totalDueCents        BigInt
+  installmentCount     Int              @default(24)
+  installmentCents     BigInt
+  disbursedAt          DateTime         @db.Date
+  maturityDate         DateTime         @db.Date
+  status               String           @default("ACTIVE")
+  microinsuranceCents  BigInt           @default(0)
+  advancePaymentCents  BigInt           @default(0)
+  priorSettlementCents BigInt           @default(0)
+  cashDeliveredCents   BigInt
+  paidCents            BigInt           @default(0)
+  balanceCents         BigInt
+  writtenOffCents      BigInt           @default(0)
+  notes                String?
+  createdAt            DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime         @updatedAt @db.Timestamptz(3)
+  closedAt             DateTime?        @db.Timestamptz(3)
+  client               Client           @relation(fields: [clientId], references: [id], onDelete: Restrict)
+  collector            User?            @relation("CreditCollector", fields: [collectorId], references: [id], onDelete: SetNull)
+  previousCredit       Credit?          @relation("RenewalChain", fields: [previousCreditId], references: [id], onDelete: SetNull)
+  renewedCredits       Credit[]         @relation("RenewalChain")
+  installments         Installment[]
+  payments             Payment[]
+  documents            Document[]
+  activities           ClientActivity[]
+  cashMovements        CashMovement[]
+
+  @@index([clientId, status])
+  @@index([collectorId, status])
+  @@index([maturityDate, status])
+  @@index([disbursedAt])
+}
+
+model Installment {
+  id            String              @id @default(cuid())
+  creditId      String
+  number        Int
+  dueDate       DateTime            @db.Date
+  expectedCents BigInt
+  paidCents     BigInt              @default(0)
+  status        String              @default("PENDING")
+  paidAt        DateTime?           @db.Timestamptz(3)
+  credit        Credit              @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  allocations   PaymentAllocation[]
+
+  @@unique([creditId, number])
+  @@index([dueDate, status])
+}
+
+model Payment {
+  id           String              @id @default(cuid())
+  creditId     String
+  collectorId  String?
+  amountCents  BigInt
+  paidAt       DateTime            @db.Timestamptz(3)
+  method       String              @default("CASH")
+  source       String              @default("DAILY_COLLECTION")
+  note         String?
+  createdAt    DateTime            @default(now()) @db.Timestamptz(3)
+  credit       Credit              @relation(fields: [creditId], references: [id], onDelete: Restrict)
+  collector    User?               @relation("PaymentCollector", fields: [collectorId], references: [id], onDelete: SetNull)
+  allocations  PaymentAllocation[]
+  cashMovement CashMovement?
+
+  @@index([creditId, paidAt])
+  @@index([collectorId, paidAt])
+}
+
+model PaymentAllocation {
+  id            String      @id @default(cuid())
+  paymentId     String
+  installmentId String
+  amountCents   BigInt
+  payment       Payment     @relation(fields: [paymentId], references: [id], onDelete: Cascade)
+  installment   Installment @relation(fields: [installmentId], references: [id], onDelete: Cascade)
+
+  @@unique([paymentId, installmentId])
+  @@index([installmentId])
+}
+
+model Liquidation {
+  id                       String         @id @default(cuid())
+  collectorId              String
+  date                     DateTime       @db.Date
+  openingBaseCents         BigInt
+  cashOutCents             BigInt         @default(0)
+  collectedCashCents       BigInt
+  collectedYapeCents       BigInt         @default(0)
+  disbursedCents           BigInt
+  expensesCents            BigInt         @default(0)
+  collectorWithdrawalCents BigInt         @default(0)
+  microinsuranceCents      BigInt         @default(0)
+  closingCashCents         BigInt
+  expectedClosingCents     BigInt
+  differenceCents          BigInt
+  newClientsCount          Int            @default(0)
+  totalAssignedClients     Int            @default(0)
+  overdue30Count           Int            @default(0)
+  zeroBalanceCount         Int            @default(0)
+  status                   String         @default("SUBMITTED")
+  notes                    String?
+  reviewedAt               DateTime?      @db.Timestamptz(3)
+  createdAt                DateTime       @default(now()) @db.Timestamptz(3)
+  updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
+  collector                User           @relation(fields: [collectorId], references: [id], onDelete: Restrict)
+  documents                Document[]
+  cashMovements            CashMovement[]
+
+  @@unique([collectorId, date])
+  @@index([date, status])
+}
+
+model Document {
+  id            String       @id @default(cuid())
+  clientId      String?
+  creditId      String?
+  liquidationId String?
+  uploadedById  String
+  category      String
+  fileName      String
+  mimeType      String
+  sizeBytes     Int
+  sanityAssetId String
+  sanityUrl     String
+  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
+  client        Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  credit        Credit?      @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  liquidation   Liquidation? @relation(fields: [liquidationId], references: [id], onDelete: Cascade)
+  uploadedBy    User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+
+  @@index([clientId, category])
+  @@index([creditId, category])
+  @@index([liquidationId])
+}
+
+model CashMovement {
+  id            String       @id @default(cuid())
+  collectorId   String?
+  creditId      String?
+  paymentId     String?      @unique
+  liquidationId String?
+  type          String
+  direction     String
+  amountCents   BigInt
+  occurredAt    DateTime     @db.Timestamptz(3)
+  note          String?
+  createdAt     DateTime     @default(now()) @db.Timestamptz(3)
+  collector     User?        @relation(fields: [collectorId], references: [id], onDelete: SetNull)
+  credit        Credit?      @relation(fields: [creditId], references: [id], onDelete: SetNull)
+  payment       Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+  liquidation   Liquidation? @relation(fields: [liquidationId], references: [id], onDelete: SetNull)
+
+  @@index([collectorId, occurredAt])
+  @@index([type, occurredAt])
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  recipientId String
+  actorId     String?
+  type        String
+  title       String
+  message     String
+  entityType  String?
+  entityId    String?
+  actionUrl   String?
+  details     Json?
+  readAt      DateTime? @db.Timestamptz(3)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(3)
+  recipient   User      @relation("NotificationRecipient", fields: [recipientId], references: [id], onDelete: Cascade)
+  actor       User?     @relation("NotificationActor", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, readAt, createdAt])
+  @@index([entityType, entityId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String
+  beforeData Json?
+  afterData  Json?
+  metadata   Json?
+  createdAt  DateTime @default(now()) @db.Timestamptz(3)
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([createdAt])
+}
+
+model ClientActivity {
+  id          String   @id @default(cuid())
+  clientId    String
+  creditId    String?
+  actorId     String?
+  type        String
+  title       String
+  description String?
+  metadata    Json?
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  client      Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  credit      Credit?  @relation(fields: [creditId], references: [id], onDelete: SetNull)
+  actor       User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([clientId, createdAt])
+  @@index([creditId, createdAt])
+}
+
+model ExchangeRate {
+  id        String   @id @default(cuid())
+  day       DateTime @db.Date
+  base      String
+  quote     String
+  rate      Decimal  @db.Decimal(18, 8)
+  source    String
+  fetchedAt DateTime @default(now()) @db.Timestamptz(3)
+
+  @@unique([day, base, quote])
+}
+
+model SystemSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+}
