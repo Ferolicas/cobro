@@ -18,6 +18,7 @@ describe("calculateAutomaticLiquidation", () => {
 
     expect(result.cashOutCents).toBe(BigInt(17_000));
     expect(result.totalCollectedCents).toBe(BigInt(25_000));
+    expect(result.ledgerCollectedCashCents).toBe(BigInt(23_000));
     expect(result.expectedClosingCents).toBe(BigInt(48_000));
   });
 
@@ -34,6 +35,7 @@ describe("calculateAutomaticLiquidation", () => {
     });
 
     expect(result.cashOutCents).toBe(BigInt(18_500));
+    expect(result.ledgerCollectedCashCents).toBe(BigInt(11_500));
     expect(result.expectedClosingCents).toBe(BigInt(-18_500));
   });
 });

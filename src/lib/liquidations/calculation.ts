@@ -27,7 +27,12 @@ export function calculateAutomaticLiquidation(input: {
   const cashOutCents = disbursedCents > retainedFromDisbursements ? disbursedCents - retainedFromDisbursements : BigInt(0);
   const collectedDigitalCents = collectedYapeCents + collectedTransferCents;
   const totalCollectedCents = collectedCashCents + collectedDigitalCents;
-  const expectedClosingCents = input.openingBaseCents + collectedCashCents - cashOutCents - input.expensesCents - input.collectorWithdrawalCents;
+  // El Excel usa PRESTÓ como capital bruto. Para que el cuadre siga siendo
+  // BASE + COBRO - PRESTÓ - GASTOS - COBRADOR, COBRO incluye todo lo que se
+  // retuvo al desembolsar: primera cuota, microseguro y saldo de renovación.
+  const ledgerCollectedCashCents = collectedCashCents + retainedFromDisbursements;
+  const ledgerCollectedTotalCents = ledgerCollectedCashCents + collectedDigitalCents;
+  const expectedClosingCents = input.openingBaseCents + ledgerCollectedCashCents - disbursedCents - input.expensesCents - input.collectorWithdrawalCents;
 
   return {
     collectedCashCents,
@@ -35,6 +40,8 @@ export function calculateAutomaticLiquidation(input: {
     collectedTransferCents,
     collectedDigitalCents,
     totalCollectedCents,
+    ledgerCollectedCashCents,
+    ledgerCollectedTotalCents,
     disbursedCents,
     advancePaymentCents,
     microinsuranceCents,

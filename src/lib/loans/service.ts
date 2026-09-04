@@ -267,15 +267,20 @@ export async function createCredit(input: NewCreditInput) {
 export function creditProgress(credit: {
   balanceCents: bigint;
   totalDueCents: bigint;
+  disbursedAt: Date;
   maturityDate: Date;
   installments: { dueDate: Date; expectedCents: bigint; paidCents: bigint }[];
 }) {
   const today = businessToday();
+  const daysElapsed = Math.max(0, differenceInCalendarDays(today, credit.disbursedAt));
   const dueTodayCents = credit.installments
     .filter((item) => item.dueDate <= today)
     .reduce((sum, item) => sum + (item.expectedCents - item.paidCents), BigInt(0));
   return {
     daysRemaining: differenceInCalendarDays(credit.maturityDate, today),
+    daysElapsed,
+    excelStatus: daysElapsed <= CREDIT_DAYS ? "B" : "Q",
+    zeroPaymentDays: credit.installments.filter((item) => item.dueDate <= today && item.paidCents === BigInt(0)).length,
     dueTodayCents: dueTodayCents > credit.balanceCents ? credit.balanceCents : dueTodayCents,
     progress: credit.totalDueCents === BigInt(0) ? 100 : Number(((credit.totalDueCents - credit.balanceCents) * BigInt(10_000)) / credit.totalDueCents) / 100,
   };

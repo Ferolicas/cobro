@@ -15,6 +15,7 @@ function value(cell: ExcelJS.Cell) {
 function amount(cell: ExcelJS.Cell) { const raw = value(cell); return typeof raw === "number" && Number.isFinite(raw) ? BigInt(Math.round(raw * 100)) : BigInt(0); }
 function text(cell: ExcelJS.Cell) { const raw = value(cell); return raw == null ? "" : String(raw).trim(); }
 function date(cell: ExcelJS.Cell) { const raw = value(cell); if (raw instanceof Date) return new Date(Date.UTC(raw.getFullYear(), raw.getMonth(), raw.getDate())); return null; }
+function businessTimestamp(day: Date) { return new Date(day.getTime() + 12 * 60 * 60 * 1000); }
 function code(prefix: string, key: string) { return `${prefix}-${createHash("sha256").update(key).digest("hex").slice(0, 10).toUpperCase()}`; }
 
 async function main() {
@@ -28,11 +29,68 @@ async function main() {
     for (let column = 28; column <= 146; column++) {
       const occurredAt = date(sheet.getCell(1, column)); const amountCents = amount(sheet.getCell(174, column));
       if (!occurredAt || amountCents <= BigInt(0)) continue;
-      await prisma.cashMovement.create({ data: { collectorId: collector.id, type: "MICROINSURANCE", direction: "IN", amountCents, occurredAt, note: "Microseguro diario importado del Excel" } });
+      await prisma.cashMovement.create({ data: { collectorId: collector.id, type: "MICROINSURANCE", direction: "IN", amountCents, occurredAt: businessTimestamp(occurredAt), note: "Microseguro diario importado del Excel" } });
       movements++; totalCents += amountCents;
     }
     await prisma.systemSetting.create({ data: { key: "excel_microinsurance_2026_09_02", value: { movements, totalCents: totalCents.toString(), importedAt: new Date().toISOString() } } });
     console.log(`Microseguro histórico: ${movements} movimientos, S/ ${(Number(totalCents) / 100).toFixed(2)}.`);
+  }
+  const balanceDetailMarker = await prisma.systemSetting.findUnique({ where: { key: "excel_balance_detail_2026_09_02" } });
+  if (!balanceDetailMarker) {
+    const totalAssignedClients = Number(value(sheet.getCell(187, 3)) ?? 0);
+    const overdue30Count = Number(value(sheet.getCell(189, 3)) ?? 0);
+    const zeroBalanceCount = Number(value(sheet.getCell(191, 3)) ?? 0);
+    const legacyDays = [
+      {
+        id: "excel-liquidation-2026-08-31", date: date(sheet.getCell(1, 144))!,
+        base: amount(balance.getCell(5, 3)), collected: amount(balance.getCell(7, 3)),
+        disbursed: amount(balance.getCell(8, 3)), expenses: amount(balance.getCell(9, 3)),
+        closing: amount(balance.getCell(11, 3)), microinsurance: amount(sheet.getCell(174, 144)),
+        newClients: Number(value(balance.getCell(44, 2)) ?? 0),
+        notes: "Importado de BALANCE. Gastos anotados: 255 supervisor; 50 gasolina; 40 plan; 12 parchada.",
+      },
+      {
+        id: "excel-liquidation-2026-09-01", date: date(sheet.getCell(1, 145))!,
+        base: amount(balance.getCell(5, 6)), collected: amount(balance.getCell(7, 6)),
+        disbursed: amount(balance.getCell(8, 6)), expenses: amount(balance.getCell(9, 6)),
+        closing: amount(balance.getCell(11, 6)), microinsurance: amount(sheet.getCell(174, 145)),
+        newClients: Number(value(balance.getCell(44, 3)) ?? 0),
+        notes: "Importado de LIQUIDACION/BALANCE. Préstamo anotado: 837 compra de moto y GPS. Gastos anotados: arriendo supervisor y plan.",
+      },
+    ];
+    for (const item of legacyDays) {
+      const difference = item.base + item.collected - item.disbursed - item.expenses - item.closing;
+      await prisma.liquidation.upsert({
+        where: { collectorId_date: { collectorId: collector.id, date: item.date } },
+        create: {
+          id: item.id, collectorId: collector.id, date: item.date, openingBaseCents: item.base,
+          cashOutCents: item.disbursed, collectedCashCents: item.collected, disbursedCents: item.disbursed,
+          expensesCents: item.expenses, microinsuranceCents: item.microinsurance,
+          closingCashCents: item.closing, expectedClosingCents: item.closing + difference,
+          differenceCents: -difference, newClientsCount: item.newClients, totalAssignedClients,
+          overdue30Count, zeroBalanceCount, status: "LEGACY_IMPORTED", notes: item.notes,
+        },
+        update: {},
+      });
+    }
+    await prisma.systemSetting.create({
+      data: {
+        key: "excel_balance_detail_2026_09_02",
+        value: {
+          collectorEmail: collector.email,
+          initialChainCapitalCents: "150000",
+          dailyNotes: [
+            { date: "2026-08-31", notes: ["255 gastos supervisor", "50 gasolina", "40 plan", "12 parchada"] },
+            { date: "2026-09-01", notes: ["837 compra de moto y GPS", "300 arriendo supervisor", "30 plan"] },
+            { date: "2026-09-02", notes: ["12 lavada"] },
+            { date: "2026-09-03", notes: ["620 gastos empresa", "135 amigos"] },
+            { date: "2026-09-04", notes: ["112 tarjetería"] },
+            { date: "2026-09-05", notes: ["500 sueldo", "295 administración", "86 medicamento", "53 taller", "38 abogado", "12 lavada"] },
+          ],
+          undatedSnapshots: [{ label: "INSERTOS · registro adicional sin fecha", baseCents: "202500", collectedCents: "237200", disbursedCents: "275000", expensesCents: "5500", collectorCents: "0", closingCashCents: "159200", differenceCents: "0" }],
+        },
+      },
+    });
   }
   const marker = await prisma.systemSetting.findUnique({ where: { key: "excel_import_2026_09_02" } });
   if (marker) { console.log("El Excel del 02/09/2026 ya fue importado; no se duplicó información."); return; }
@@ -54,10 +112,10 @@ async function main() {
     }
     const interestCents = principalCents * BigInt(20) / BigInt(100); const totalDueCents = principalCents + interestCents; const baseInstallment = totalDueCents / BigInt(24); const remainder = totalDueCents - baseInstallment * BigInt(24);
     const paymentCells: { paidAt: Date; amountCents: bigint }[] = [];
-    for (let column = 28; column <= 146; column++) { const paidAt = date(sheet.getCell(1, column)); const paid = amount(sheet.getCell(row, column)); if (paidAt && paid > BigInt(0)) paymentCells.push({ paidAt, amountCents: paid }); }
+    for (let column = 28; column <= 146; column++) { const paidAt = date(sheet.getCell(1, column)); const paid = amount(sheet.getCell(row, column)); if (paidAt && paid > BigInt(0)) paymentCells.push({ paidAt: businessTimestamp(paidAt), amountCents: paid }); }
     const paidCents = paymentCells.reduce((sum, item) => sum + item.amountCents, BigInt(0)); const balanceCents = totalDueCents - paidCents; const maturityDate = addDays(disbursedAt, 23); const status = balanceCents <= BigInt(0) ? "PAID" : maturityDate < new Date("2026-09-02T23:59:59Z") ? "OVERDUE" : "ACTIVE";
     const credit = await prisma.credit.create({ data: { code: code("IMP-CR", `${row}-${name}-${disbursedAt.toISOString()}`), clientId, collectorId: collector.id, principalCents, interestRateBps: 2000, interestCents, totalDueCents, installmentCount: 24, installmentCents: baseInstallment, disbursedAt, maturityDate, status, microinsuranceCents: BigInt(0), advancePaymentCents: BigInt(0), priorSettlementCents: BigInt(0), cashDeliveredCents: principalCents, paidCents: BigInt(0), balanceCents: totalDueCents, notes: "Saldo y pagos importados fielmente del Excel; la cuota adelantada histórica no estaba identificada por separado.", installments: { create: Array.from({length:24},(_,index)=>({number:index+1,dueDate:addDays(disbursedAt,index),expectedCents:baseInstallment+(BigInt(index)<remainder?BigInt(1):BigInt(0))})) } } });
-    await prisma.cashMovement.create({ data: { collectorId: collector.id, creditId: credit.id, type: "DISBURSEMENT", direction: "OUT", amountCents: principalCents, occurredAt: disbursedAt, note: "Importado de Excel" } });
+    await prisma.cashMovement.create({ data: { collectorId: collector.id, creditId: credit.id, type: "DISBURSEMENT", direction: "OUT", amountCents: principalCents, occurredAt: businessTimestamp(disbursedAt), note: "Importado de Excel" } });
     for (const importedPayment of paymentCells) {
       const payment = await prisma.payment.create({ data: { creditId: credit.id, collectorId: collector.id, amountCents: importedPayment.amountCents, paidAt: importedPayment.paidAt, method: "CASH", source: "EXCEL_IMPORT", note: "Movimiento histórico importado" } });
       let remaining = importedPayment.amountCents; const pending = await prisma.installment.findMany({ where: { creditId: credit.id, status: { not: "PAID" } }, orderBy: { number: "asc" } });
