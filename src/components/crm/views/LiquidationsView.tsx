@@ -28,21 +28,20 @@ function value(currency: Currency, cents: number | null, future = false) {
 function DailyWeekCard({ day, currency }: { day: FinancialDay; currency: Currency }) {
   const rows = [
     ["BASE", day.openingBaseCents],
-    ["SALIÓ", day.openingBaseCents],
-    ["COBRO", day.ledgerCollectedCashCents],
-    ["YAPES", day.collectedDigitalCents],
-    ["PRESTÓ", day.disbursedCents],
+    ["E. COBRADOR", day.collectorWithdrawalCents],
+    ["COBRADO", day.ledgerCollectedCashCents],
     ["M.S", day.microinsuranceCents],
+    ["TOTAL INGRESADO", day.totalIncomeCents],
+    ["PRÉSTAMOS", day.disbursedCents],
     ["GASTOS", day.expensesCents],
-    ["COBRADOR", day.collectorWithdrawalCents],
-    ["ENTREGA", day.expectedClosingCents],
+    ["ENTREGA ESPERADA", day.expectedClosingCents],
     ["CAJA", day.closingCashCents],
     ["DIFERENCIA", day.differenceCents],
   ] as const;
   return <article className={`excel-day-card ${day.isFuture ? "future" : ""}`}>
     <header><div><strong>{day.dayName}</strong><span>{shortDate(day.date)}</span></div><b className={`source-pill ${day.source.toLowerCase()}`}>{day.source === "EXCEL" ? "Excel" : day.source === "SUBMITTED" ? "Cerrado" : day.isFuture ? "Próximo" : "En vivo"}</b></header>
-    <div className="excel-day-values">{rows.map(([label, cents]) => <div className={label === "M.S" ? "micro-row" : label === "DIFERENCIA" ? "difference-row" : ""} key={label}><span>{label}</span><strong>{value(currency, cents, day.isFuture)}</strong></div>)}</div>
-    <footer><span><UsersRound />{day.newClientsCount} clientes nuevos</span><span>{day.movementCount} movimientos</span></footer>
+    <div className="excel-day-values">{rows.map(([label, cents]) => <div className={label === "M.S" ? "micro-row" : label === "TOTAL INGRESADO" ? "total-income-row" : label === "DIFERENCIA" ? "difference-row" : ""} key={label}><span>{label}</span><strong>{value(currency, cents, day.isFuture)}</strong></div>)}</div>
+    <footer><span><UsersRound />{day.newClientsCount} clientes nuevos</span><span>Yape/transfer.: {value(currency, day.collectedDigitalCents, day.isFuture)}</span><span>{day.movementCount} movimientos</span></footer>
     {(day.notes || day.detailNotes.length > 0) && <div className="legacy-notes"><strong>Notas del registro</strong>{day.notes && <p>{day.notes}</p>}{day.detailNotes.map((note) => <p key={note}>• {note}</p>)}</div>}
   </article>;
 }
@@ -57,13 +56,14 @@ function FullBalance({ overview, currency }: { overview: FinancialOverview; curr
     <section className="weekly-summary-card">
       <header><div><p>BALANCE SEMANAL</p><h2>Resultado de la semana</h2></div><span className="weekly-profit"><small>GANANCIA</small><strong>{currency.money(overview.weekly.profitCents)}</strong></span></header>
       <div className="weekly-summary-grid">
-        <div><span>COBRO</span><strong>{currency.money(overview.weekly.collectedCents)}</strong><small>Total registrado</small></div>
-        <div><span>% COBRADOR</span><strong>{currency.money(overview.weekly.collectionCommissionCents)}</strong><small>3% del cobro</small></div>
-        <div><span>PRESTÓ</span><strong>{currency.money(overview.weekly.disbursedCents)}</strong><small>Capital colocado</small></div>
-        <div><span>INTERÉS</span><strong>{currency.money(overview.weekly.projectedInterestCents)}</strong><small>20% del capital</small></div>
+        <div><span>COBRADO</span><strong>{currency.money(overview.weekly.collectedBeforeMicroinsuranceCents)}</strong><small>Sin sumar el M.S</small></div>
         <div className="micro-highlight"><span>M.S</span><strong>{currency.money(overview.weekly.microinsuranceCents)}</strong><small>Microseguro acumulado</small></div>
+        <div><span>TOTAL INGRESADO</span><strong>{currency.money(overview.weekly.collectedCents)}</strong><small>Cobrado + M.S</small></div>
+        <div><span>% COBRADOR</span><strong>{currency.money(overview.weekly.collectionCommissionCents)}</strong><small>3% del cobro</small></div>
+        <div><span>PRÉSTAMOS</span><strong>{currency.money(overview.weekly.disbursedCents)}</strong><small>Capital colocado</small></div>
+        <div><span>INTERÉS</span><strong>{currency.money(overview.weekly.projectedInterestCents)}</strong><small>20% del capital</small></div>
         <div><span>GASTOS</span><strong>{currency.money(overview.weekly.expensesCents)}</strong><small>Salidas declaradas</small></div>
-        <div><span>COBRADOR</span><strong>{currency.money(overview.weekly.collectorWithdrawalCents)}</strong><small>Retiro confirmado</small></div>
+        <div><span>E. COBRADOR</span><strong>{currency.money(overview.weekly.collectorWithdrawalCents)}</strong><small>Entrega/retiro confirmado</small></div>
         <div><span>RESULTADO NETO</span><strong>{currency.money(overview.weekly.netResultCents)}</strong><small>Interés + M.S − gastos − 3% − retiro</small></div>
       </div>
       <div className="new-clients-week"><div><UsersRound /><span><strong>CLIENTES NUEVOS SEMANALES</strong><small>Altas registradas por cada día</small></span></div><div>{overview.days.map((day) => <span key={day.date}><small>{day.dayName.slice(0, 3)}</small><strong>{day.isFuture ? "—" : day.newClientsCount}</strong></span>)}<span className="total"><small>TOTAL</small><strong>{overview.weekly.newClientsCount}</strong></span></div></div>
@@ -92,7 +92,6 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
-  const [openingBase, setOpeningBase] = useState("0.00");
   const [expenses, setExpenses] = useState("0.00");
   const [withdrawal, setWithdrawal] = useState("0.00");
   const [closingCash, setClosingCash] = useState("");
@@ -126,7 +125,6 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
       setSummary(data.summary);
       setOverview(data.overview);
       const close = data.liquidations.find((item) => item.date.slice(0, 10) === date);
-      setOpeningBase(centsInput(data.summary.openingBaseCents));
       setExpenses(centsInput(data.summary.expensesCents));
       setWithdrawal(centsInput(data.summary.collectorWithdrawalCents));
       setClosingCash(close ? centsInput(close.closingCashCents) : "");
@@ -141,15 +139,15 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
 
   const expectedClosingCents = useMemo(() => {
     if (!summary) return 0;
-    return Math.round(Number(openingBase || 0) * 100) + summary.ledgerCollectedCashCents - summary.disbursedCents - Math.round(Number(expenses || 0) * 100) - Math.round(Number(withdrawal || 0) * 100);
-  }, [expenses, openingBase, summary, withdrawal]);
+    return summary.openingBaseCents + summary.totalIncomeCents - summary.disbursedCents - Math.round(Number(expenses || 0) * 100) - Math.round(Number(withdrawal || 0) * 100);
+  }, [expenses, summary, withdrawal]);
   const declaredClosingCents = Math.round(Number(closingCash || 0) * 100);
   const differenceCents = declaredClosingCents - expectedClosingCents;
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setSaving(true);
     try {
-      const data = await api<{ liquidation: Liquidation }>("/api/liquidations", { method: "POST", body: JSON.stringify({ date, openingBase, expenses, collectorWithdrawal: withdrawal, closingCash, notes }) });
+      const data = await api<{ liquidation: Liquidation }>("/api/liquidations", { method: "POST", body: JSON.stringify({ date, expenses, collectorWithdrawal: withdrawal, closingCash, notes }) });
       if (files.length) {
         const upload = new FormData(); files.forEach((file) => upload.append("files", file)); upload.append("category", "YAPE"); upload.append("liquidationId", data.liquidation.id);
         await api("/api/uploads", { method: "POST", body: upload });
@@ -168,29 +166,26 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
 
         {loading ? <LoadingState /> : summary ? <>
           <div className="daily-ledger">
-            <header><div><p>LIQUIDACIÓN DEL DÍA</p><h3>{collectorName || user.name}</h3></div><span className="ledger-ms"><small>M.S DIARIO</small><strong>{currency.money(summary.microinsuranceCents)}</strong></span></header>
+            <header><div><p>LIQUIDACIÓN DEL DÍA</p><h3>{collectorName || user.name}</h3></div><span className="ledger-ms"><small>TOTAL INGRESADO</small><strong>{currency.money(summary.totalIncomeCents)}</strong></span></header>
             <div className="ledger-lines">
-              <div><span>BASE</span><strong>{currency.money(Math.round(Number(openingBase || 0) * 100))}</strong></div>
-              <div><span>SALIÓ</span><strong>{currency.money(Math.round(Number(openingBase || 0) * 100))}</strong></div>
-              <div><span>COBRO</span><strong>{currency.money(summary.ledgerCollectedCashCents)}</strong></div>
-              <div><span>YAPES / TRANSFERENCIAS</span><strong>{currency.money(summary.collectedDigitalCents)}</strong></div>
-              <div><span>PRESTÓ</span><strong>{currency.money(summary.disbursedCents)}</strong></div>
+              <div><span>BASE</span><strong>{currency.money(summary.openingBaseCents)}</strong></div>
+              <div><span>E. COBRADOR</span><strong>{currency.money(Math.round(Number(withdrawal || 0) * 100))}</strong></div>
+              <div><span>COBRADO</span><strong>{currency.money(summary.ledgerCollectedCashCents)}</strong></div>
               <div className="micro-row"><span>MICROSEGURO (M.S)</span><strong>{currency.money(summary.microinsuranceCents)}</strong></div>
-              {summary.advancePaymentCents > 0 && <div><span>PRIMERAS CUOTAS</span><strong>{currency.money(summary.advancePaymentCents)}</strong></div>}
-              {summary.renewalSettlementCents > 0 && <div><span>LIQ. ANTERIORES</span><strong>{currency.money(summary.renewalSettlementCents)}</strong></div>}
+              <div className="total-income-row"><span>TOTAL INGRESADO</span><strong>{currency.money(summary.totalIncomeCents)}</strong></div>
+              <div><span>PRÉSTAMOS</span><strong>{currency.money(summary.disbursedCents)}</strong></div>
               <div><span>GASTOS</span><strong>{currency.money(Math.round(Number(expenses || 0) * 100))}</strong></div>
-              <div><span>COBRADOR</span><strong>{currency.money(Math.round(Number(withdrawal || 0) * 100))}</strong></div>
               <div className="delivery-row"><span>ENTREGA ESPERADA</span><strong>{currency.money(expectedClosingCents)}</strong></div>
               <div><span>CAJA</span><strong>{closingCash || selectedClose ? currency.money(declaredClosingCents) : "Por confirmar"}</strong></div>
               <div className={differenceCents === 0 && closingCash ? "balanced-row" : "difference-row"}><span>DIFERENCIA</span><strong>{closingCash || selectedClose ? currency.money(differenceCents) : "—"}</strong></div>
             </div>
-            <footer><span><strong>{summary.totalAssignedClients}</strong> clientes totales</span><span><strong>{summary.newClientsCount}</strong> clientes nuevos</span><span><strong>{summary.overdue30Count}</strong> con más de 30 días</span><span><strong>{summary.zeroBalanceCount}</strong> cerrados hoy</span></footer>
+            <footer><span><strong>{summary.totalAssignedClients}</strong> clientes totales</span><span><strong>{summary.newClientsCount}</strong> clientes nuevos</span><span><strong>{summary.overdue30Count}</strong> con más de 30 días</span><span><strong>{summary.zeroBalanceCount}</strong> cerrados hoy</span><span>Yape/transferencias fuera de caja: <strong>{currency.money(summary.collectedDigitalCents)}</strong></span>{summary.advancePaymentCents > 0 && <span>Primeras cuotas incluidas: <strong>{currency.money(summary.advancePaymentCents)}</strong></span>}{summary.renewalSettlementCents > 0 && <span>Liquidaciones anteriores incluidas: <strong>{currency.money(summary.renewalSettlementCents)}</strong></span>}</footer>
           </div>
 
           {isMaster || selectedClose?.status === "LEGACY_IMPORTED" ? <div className="master-liquidation-review">{selectedClose ? <><div className="review-status success"><CheckCircle2 /><div><strong>{selectedClose.status === "LEGACY_IMPORTED" ? "Registro preservado del Excel" : `Cierre confirmado por ${selectedClose.collector.name}`}</strong><span>{shortDate(selectedClose.date)}</span></div></div>{selectedClose.notes && <p className="liquidation-note"><strong>Nota:</strong> {selectedClose.notes}</p>}{selectedClose.documents?.length ? <div className="detail-section"><h3><FileImage />Comprobantes</h3>{selectedClose.documents.map((document) => <a className="document-row" key={document.id} href={`/api/documents/${document.id}`} target="_blank"><span>{document.fileName}</span><small>Ver archivo</small></a>)}</div> : null}</> : <div className="review-status pending"><History /><div><strong>Jornada todavía sin confirmar</strong><span>Los movimientos ya están calculados; falta el conteo final del cobrador.</span></div></div>}</div> :
             <form className="liquidation-form" onSubmit={submit}>
-              <div className="form-grid"><label className="field"><span>Base inicial (S/)</span><input type="number" min="0" step="0.01" value={openingBase} onChange={(event) => setOpeningBase(event.target.value)} required /></label><div className="field-help"><strong>{summary.previousClosingCents == null ? "Primera base" : "Base recuperada"}</strong><span>{summary.previousClosingCents == null ? "Indica el dinero con el que inició la ruta." : `Viene del cierre anterior: ${currency.money(summary.previousClosingCents)}`}</span></div><label className="field"><span>Gastos del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => setExpenses(event.target.value)} required /></label><label className="field"><span>Retiro del cobrador (S/)</span><input type="number" min="0" step="0.01" value={withdrawal} onChange={(event) => setWithdrawal(event.target.value)} required /></label></div>
-              <div className="cash-reconciliation"><div><span>Caja esperada automáticamente</span><strong>{currency.money(expectedClosingCents)}</strong><small>Base + cobro − prestó − gastos − cobrador</small></div><label className="field"><span>Caja real contada (S/)</span><input type="number" min="0" step="0.01" value={closingCash} onChange={(event) => setClosingCash(event.target.value)} required /></label><div className={differenceCents === 0 ? "cash-difference balanced" : "cash-difference"}><span>Diferencia</span><strong>{closingCash ? currency.money(differenceCents) : "—"}</strong></div></div>
+              <div className="form-grid"><div className="field-help"><strong>Base automática · {currency.money(summary.openingBaseCents)}</strong><span>{summary.previousClosingCents == null ? "Base inicial fija de S/30.000 para un cobrador nuevo." : `Es la caja del cierre anterior: ${currency.money(summary.previousClosingCents)}`}</span></div><label className="field"><span>Gastos del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => setExpenses(event.target.value)} required /></label><label className="field"><span>E. cobrador (S/)</span><input type="number" min="0" step="0.01" value={withdrawal} onChange={(event) => setWithdrawal(event.target.value)} required /></label></div>
+              <div className="cash-reconciliation"><div><span>Caja esperada automáticamente</span><strong>{currency.money(expectedClosingCents)}</strong><small>Base + cobrado + M.S − préstamos − gastos − E. cobrador</small></div><label className="field"><span>Caja real contada (S/)</span><input type="number" min="0" step="0.01" value={closingCash} onChange={(event) => setClosingCash(event.target.value)} required /></label><div className={differenceCents === 0 ? "cash-difference balanced" : "cash-difference"}><span>Diferencia</span><strong>{closingCash ? currency.money(differenceCents) : "—"}</strong></div></div>
               <label className="field"><span>Notas de la jornada</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Explica gastos, diferencias u observaciones" /></label>
               <label className="upload-drop"><Upload /><strong>Comprobantes Yape del día</strong><span>Fotos o vídeos, puedes seleccionar varios</span><input type="file" accept="image/*,video/*" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />{files.length > 0 && <b>{files.length} archivo(s) listo(s)</b>}</label>
               <button className="primary-button full" disabled={saving}>{saving ? "Confirmando cierre…" : selectedClose ? "Actualizar cierre automático" : "Confirmar cierre automático"}</button>

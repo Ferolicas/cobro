@@ -27,10 +27,11 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 5. Un crédito nace con capital, 20% de interés, 24 cuotas y primera cuota retenida.
 6. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente; al día siguiente se suma a lo vencido, sin penalidad.
 7. La renovación paga el saldo anterior desde el capital nuevo, descuenta la primera cuota y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo.
-8. La liquidación se arma desde los movimientos del día; el cobrador solo declara base inicial, gastos, retiro y caja física contada antes de confirmar. El cuadro expone BASE, SALIÓ, COBRO, YAPES, PRESTÓ, M.S, GASTOS, COBRADOR, ENTREGA, CAJA y diferencia.
-9. Cada cobrador tiene un control financiero completo accesible desde su tarjeta: seis días, balance semanal, clientes nuevos diarios y cadena de 11 semanas.
-10. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida las vistas en tiempo real.
-11. Al pulsar una notificación, el maestro ve un modal con mensaje, actor, hora, todos los detalles y enlace al registro relacionado.
+8. La liquidación se arma desde los movimientos del día; el cobrador solo declara gastos, E. COBRADOR y caja física contada antes de confirmar. El cuadro expone BASE, E. COBRADOR, COBRADO, M.S, TOTAL INGRESADO, PRÉSTAMOS, GASTOS, ENTREGA ESPERADA, CAJA y DIFERENCIA. Yape/transferencias se informa aparte.
+9. Todo cobrador inicia con una BASE fija de S/30.000. Tras el primer cierre, la CAJA confirmada se hereda automáticamente como BASE de la siguiente jornada; SALIÓ se eliminó porque duplicaba BASE.
+10. Cada cobrador tiene un control financiero completo accesible desde su tarjeta: seis días, balance semanal, clientes nuevos diarios y cadena de 11 semanas.
+11. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida las vistas en tiempo real.
+12. Al pulsar una notificación, el maestro ve un modal con mensaje, actor, hora, todos los detalles y enlace al registro relacionado.
 
 ## Módulos de interfaz
 
@@ -61,9 +62,11 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
 - Caja neta de desembolso = capital − primera cuota − microseguro − liquidación anterior.
-- Caja esperada del cobrador = base + pagos en efectivo − efectivo neto entregado − gastos − retiro. Yape y transferencias se informan, pero no aumentan la caja física.
+- Caja esperada del cobrador = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS − E. COBRADOR. Yape y transferencias se informan, pero no aumentan la caja física.
+- TOTAL INGRESADO = COBRADO + M.S. COBRADO incluye efectivo, primera cuota y saldo anterior retenido en una renovación, pero excluye el microseguro para que este se vea y se sume exactamente una vez.
+- La BASE inicial es S/30.000 y, desde el segundo cierre, siempre proviene de la última CAJA confirmada del cobrador.
 - Los campos derivados de liquidación se recalculan en el servidor desde `CashMovement`; el cliente no puede enviarlos ni alterarlos.
-- En el formato tipo Excel, COBRO incluye efectivo cobrado más primera cuota, M.S y saldo de renovación retenidos; así el cuadre usa el capital bruto PRESTÓ sin duplicar caja. Yape/transferencia permanece separado.
+- En el formato tipo Excel, PRÉSTAMOS usa el capital bruto. La primera cuota y el saldo de renovación retenido forman parte de COBRADO; M.S permanece separado y ambos forman TOTAL INGRESADO. Yape/transferencia permanece separado de la caja física.
 - Balance semanal: 3% informativo del cobro, interés proyectado del 20%, M.S real, gastos, retiro, ganancia compatible con el Excel y resultado neto ampliado.
 - Pérdida = saldo castigado; no se confunde con interés que dejó de ganarse.
 - Estados principales: `ACTIVE`, `OVERDUE`, `PAID`, `RENEWED`, `WRITTEN_OFF`.

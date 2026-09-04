@@ -9,6 +9,7 @@ function day(values: Partial<FinancialDay>): FinancialDay {
     source: "EXCEL",
     openingBaseCents: BigInt(0),
     ledgerCollectedCashCents: BigInt(0),
+    totalIncomeCents: BigInt(0),
     collectedDigitalCents: BigInt(0),
     disbursedCents: BigInt(0),
     microinsuranceCents: BigInt(0),
@@ -33,10 +34,11 @@ function day(values: Partial<FinancialDay>): FinancialDay {
 describe("calculateWeeklyBalance", () => {
   it("reproduce el balance semanal del Excel de Beatriz", () => {
     const result = calculateWeeklyBalance([
-      day({ ledgerCollectedCashCents: BigInt(315_500), disbursedCents: BigInt(380_000), expensesCents: BigInt(3_500), microinsuranceCents: BigInt(18_000), newClientsCount: 6 }),
-      day({ date: "2026-09-01", dayName: "MARTES", ledgerCollectedCashCents: BigInt(213_700), disbursedCents: BigInt(110_000), expensesCents: BigInt(30_000), microinsuranceCents: BigInt(5_500), newClientsCount: 3 }),
+      day({ ledgerCollectedCashCents: BigInt(297_500), totalIncomeCents: BigInt(315_500), disbursedCents: BigInt(380_000), expensesCents: BigInt(3_500), microinsuranceCents: BigInt(18_000), newClientsCount: 6 }),
+      day({ date: "2026-09-01", dayName: "MARTES", ledgerCollectedCashCents: BigInt(208_200), totalIncomeCents: BigInt(213_700), disbursedCents: BigInt(110_000), expensesCents: BigInt(30_000), microinsuranceCents: BigInt(5_500), newClientsCount: 3 }),
     ]);
 
+    expect(result.collectedBeforeMicroinsuranceCents).toBe(BigInt(505_700));
     expect(result.collectedCents).toBe(BigInt(529_200));
     expect(result.collectionCommissionCents).toBe(BigInt(15_876));
     expect(result.disbursedCents).toBe(BigInt(490_000));

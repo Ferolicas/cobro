@@ -37,7 +37,8 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 - El cobrador solo accede a su cartera. La autorización siempre se verifica en servidor.
 - El maestro es supervisor: puede ver toda la información y ejecutar acciones administrativas, pero no puede registrar clientes, desembolsos, renovaciones, pagos, documentos ni cierres diarios.
 - Solo el cobrador realiza operaciones de ruta. La liquidación toma cobros, desembolsos, primera cuota, microseguro, renovaciones y conteos desde PostgreSQL; nunca acepta que el formulario reescriba esos totales.
-- La vista financiera conserva todos los bloques del Excel: cuadre diario BASE/SALIÓ/COBRO/YAPES/PRESTÓ/M.S/GASTOS/COBRADOR/ENTREGA/CAJA, balance semanal, clientes nuevos y cadena de 11 semanas.
+- La vista financiera conserva todo el control del Excel con una lectura inequívoca: BASE/E. COBRADOR/COBRADO/M.S/TOTAL INGRESADO/PRÉSTAMOS/GASTOS/ENTREGA ESPERADA/CAJA/DIFERENCIA, balance semanal, clientes nuevos y cadena de 11 semanas.
+- La primera base de cada cobrador es S/30.000; después, la CAJA confirmada de su último cierre se convierte automáticamente en la BASE siguiente. El cobrador nunca reescribe la base.
 - Los cierres con `status=LEGACY_IMPORTED` son históricos inmutables del Excel; no se pueden sobrescribir desde el panel del cobrador.
 - Las notificaciones se guardan antes de emitir el evento WebSocket y deben conservar `details` completos y `actionUrl`.
 - No subir `.env`, secretos, Excel ni datos personales al repositorio.

@@ -12,9 +12,9 @@ import { toCents } from "@/lib/money";
 import { notifyMasters } from "@/lib/notify";
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+const INITIAL_COLLECTOR_BASE_CENTS = BigInt(3_000_000);
 const closeSchema = z.object({
   date: dateSchema,
-  openingBase: z.coerce.number().min(0).max(10_000_000),
   expenses: z.coerce.number().min(0).max(10_000_000).default(0),
   collectorWithdrawal: z.coerce.number().min(0).max(10_000_000).default(0),
   closingCash: z.coerce.number().min(0).max(10_000_000),
@@ -63,7 +63,7 @@ async function dailySummary(
   db: LiquidationDb,
   collectorId: string,
   date: Date,
-  manual?: { openingBaseCents: bigint; expensesCents: bigint; collectorWithdrawalCents: bigint },
+  manual?: { expensesCents: bigint; collectorWithdrawalCents: bigint },
 ) {
   const { start, end } = dayBounds(date);
   const [existing, previous, movements, totalAssignedClients, newClientsCount, overdue30Count, zeroBalanceCount] =
@@ -90,13 +90,17 @@ async function dailySummary(
     ]);
 
   if (existing?.status === "LEGACY_IMPORTED") {
+    const collectedBeforeMicroinsuranceCents = existing.collectedCashCents > existing.microinsuranceCents
+      ? existing.collectedCashCents - existing.microinsuranceCents
+      : BigInt(0);
     return {
       collectedCashCents: existing.collectedCashCents,
       collectedYapeCents: existing.collectedYapeCents,
       collectedTransferCents: BigInt(0),
       collectedDigitalCents: existing.collectedYapeCents,
       totalCollectedCents: existing.collectedCashCents + existing.collectedYapeCents,
-      ledgerCollectedCashCents: existing.collectedCashCents,
+      ledgerCollectedCashCents: collectedBeforeMicroinsuranceCents,
+      totalIncomeCents: existing.collectedCashCents,
       ledgerCollectedTotalCents: existing.collectedCashCents + existing.collectedYapeCents,
       disbursedCents: existing.disbursedCents,
       advancePaymentCents: BigInt(0),
@@ -120,7 +124,7 @@ async function dailySummary(
     };
   }
 
-  const openingBaseCents = manual?.openingBaseCents ?? existing?.openingBaseCents ?? previous?.closingCashCents ?? BigInt(0);
+  const openingBaseCents = existing?.openingBaseCents ?? previous?.closingCashCents ?? INITIAL_COLLECTOR_BASE_CENTS;
   const expensesCents = manual?.expensesCents ?? existing?.expensesCents ?? BigInt(0);
   const collectorWithdrawalCents = manual?.collectorWithdrawalCents ?? existing?.collectorWithdrawalCents ?? BigInt(0);
   const automatic = calculateAutomaticLiquidation({ movements, openingBaseCents, expensesCents, collectorWithdrawalCents });
@@ -164,6 +168,7 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
       source: summary.status === "LEGACY_IMPORTED" ? "EXCEL" : summary.status === "OPEN" ? "AUTOMATIC" : "SUBMITTED",
       openingBaseCents: summary.openingBaseCents,
       ledgerCollectedCashCents: summary.ledgerCollectedCashCents,
+      totalIncomeCents: summary.totalIncomeCents,
       collectedDigitalCents: summary.collectedDigitalCents,
       disbursedCents: summary.disbursedCents,
       microinsuranceCents: summary.microinsuranceCents,
@@ -282,7 +287,6 @@ export async function POST(request: Request) {
     const legacy = await prisma.liquidation.findUnique({ where: { collectorId_date: { collectorId: user.id, date } }, select: { status: true } });
     if (legacy?.status === "LEGACY_IMPORTED") return Response.json({ error: "Este cierre pertenece al Excel histórico y es de solo lectura" }, { status: 409 });
     const manual = {
-      openingBaseCents: toCents(input.openingBase),
       expensesCents: toCents(input.expenses),
       collectorWithdrawalCents: toCents(input.collectorWithdrawal),
     };
@@ -296,7 +300,9 @@ export async function POST(request: Request) {
         date,
         openingBaseCents: summary.openingBaseCents,
         cashOutCents: summary.cashOutCents,
-        collectedCashCents: summary.ledgerCollectedCashCents,
+        // Se persiste el total físico ingresado para conservar compatibilidad
+        // con los cierres históricos; la API separa COBRADO y M.S al leerlo.
+        collectedCashCents: summary.totalIncomeCents,
         collectedYapeCents: summary.collectedDigitalCents,
         disbursedCents: summary.disbursedCents,
         expensesCents: summary.expensesCents,
@@ -337,13 +343,14 @@ export async function POST(request: Request) {
       details: {
         cobrador: liquidation.collector.name,
         fecha: input.date,
-        base: input.openingBase,
-        cobroCalculado: Number(liquidation.collectedCashCents) / 100,
+        base: Number(liquidation.openingBaseCents) / 100,
+        entregaCobrador: input.collectorWithdrawal,
+        cobradoSinMicroseguro: Number(liquidation.collectedCashCents - liquidation.microinsuranceCents) / 100,
+        totalIngresado: Number(liquidation.collectedCashCents) / 100,
         cobroDigitalCalculado: Number(liquidation.collectedYapeCents) / 100,
         capitalPrestadoCalculado: Number(liquidation.disbursedCents) / 100,
         microseguroCalculado: Number(liquidation.microinsuranceCents) / 100,
         gastos: input.expenses,
-        retiroCobrador: input.collectorWithdrawal,
         cajaDeclarada: input.closingCash,
         cajaEsperada: Number(liquidation.expectedClosingCents) / 100,
         diferencia: Number(liquidation.differenceCents) / 100,

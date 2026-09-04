@@ -23,16 +23,17 @@ export function calculateAutomaticLiquidation(input: {
   const advancePaymentCents = sumType(input.movements, "ADVANCE_INSTALLMENT");
   const microinsuranceCents = sumType(input.movements, "MICROINSURANCE");
   const renewalSettlementCents = sumType(input.movements, "RENEWAL_SETTLEMENT");
-  const retainedFromDisbursements = advancePaymentCents + microinsuranceCents + renewalSettlementCents;
+  const retainedBeforeMicroinsuranceCents = advancePaymentCents + renewalSettlementCents;
+  const retainedFromDisbursements = retainedBeforeMicroinsuranceCents + microinsuranceCents;
   const cashOutCents = disbursedCents > retainedFromDisbursements ? disbursedCents - retainedFromDisbursements : BigInt(0);
   const collectedDigitalCents = collectedYapeCents + collectedTransferCents;
   const totalCollectedCents = collectedCashCents + collectedDigitalCents;
-  // El Excel usa PRESTÓ como capital bruto. Para que el cuadre siga siendo
-  // BASE + COBRO - PRESTÓ - GASTOS - COBRADOR, COBRO incluye todo lo que se
-  // retuvo al desembolsar: primera cuota, microseguro y saldo de renovación.
-  const ledgerCollectedCashCents = collectedCashCents + retainedFromDisbursements;
-  const ledgerCollectedTotalCents = ledgerCollectedCashCents + collectedDigitalCents;
-  const expectedClosingCents = input.openingBaseCents + ledgerCollectedCashCents - disbursedCents - input.expensesCents - input.collectorWithdrawalCents;
+  // PRESTAMOS es el capital bruto. COBRADO incluye pagos en efectivo, primeras
+  // cuotas y saldos retenidos por renovación; M.S se muestra y se suma aparte.
+  const ledgerCollectedCashCents = collectedCashCents + retainedBeforeMicroinsuranceCents;
+  const totalIncomeCents = ledgerCollectedCashCents + microinsuranceCents;
+  const ledgerCollectedTotalCents = totalIncomeCents + collectedDigitalCents;
+  const expectedClosingCents = input.openingBaseCents + totalIncomeCents - disbursedCents - input.expensesCents - input.collectorWithdrawalCents;
 
   return {
     collectedCashCents,
@@ -41,6 +42,7 @@ export function calculateAutomaticLiquidation(input: {
     collectedDigitalCents,
     totalCollectedCents,
     ledgerCollectedCashCents,
+    totalIncomeCents,
     ledgerCollectedTotalCents,
     disbursedCents,
     advancePaymentCents,

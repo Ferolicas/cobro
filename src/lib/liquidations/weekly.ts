@@ -5,6 +5,7 @@ export type FinancialDay = {
   source: "AUTOMATIC" | "SUBMITTED" | "EXCEL";
   openingBaseCents: bigint;
   ledgerCollectedCashCents: bigint;
+  totalIncomeCents: bigint;
   collectedDigitalCents: bigint;
   disbursedCents: bigint;
   microinsuranceCents: bigint;
@@ -28,7 +29,8 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
   const activeDays = days.filter((day) => !day.isFuture);
   const sum = (field: keyof FinancialDay) =>
     activeDays.reduce((total, day) => total + BigInt(day[field] as bigint), BigInt(0));
-  const collectedCents = sum("ledgerCollectedCashCents") + sum("collectedDigitalCents");
+  const collectedBeforeMicroinsuranceCents = sum("ledgerCollectedCashCents") + sum("collectedDigitalCents");
+  const collectedCents = sum("totalIncomeCents") + sum("collectedDigitalCents");
   const disbursedCents = sum("disbursedCents");
   const expensesCents = sum("expensesCents");
   const microinsuranceCents = sum("microinsuranceCents");
@@ -39,6 +41,7 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
   const netResultCents = projectedInterestCents + microinsuranceCents - expensesCents - collectionCommissionCents - collectorWithdrawalCents;
 
   return {
+    collectedBeforeMicroinsuranceCents,
     collectedCents,
     collectionCommissionCents,
     disbursedCents,
