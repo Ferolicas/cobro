@@ -81,8 +81,9 @@ function FullBalance({ overview, currency }: { overview: FinancialOverview; curr
 export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser; currency: Currency; refreshKey: number }) {
   const params = useSearchParams();
   const isMaster = user.role === "MASTER";
+  const requestedCollectorId = params.get("collectorId") ?? "";
   const [date, setDate] = useState(params.get("date") ?? todayInput());
-  const [collectorId, setCollectorId] = useState(isMaster ? params.get("collectorId") ?? "" : user.id);
+  const [collectorId, setCollectorId] = useState(isMaster ? requestedCollectorId : user.id);
   const [collectorName, setCollectorName] = useState("");
   const [collectors, setCollectors] = useState<Collector[]>([]);
   const [summary, setSummary] = useState<LiquidationSummary | null>(null);
@@ -107,6 +108,10 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
       setCollectorId((current) => current || active[0]?.id || "");
     });
   }, [isMaster]);
+
+  useEffect(() => {
+    if (isMaster && requestedCollectorId) setCollectorId(requestedCollectorId);
+  }, [isMaster, requestedCollectorId]);
 
   async function load() {
     const id = isMaster ? collectorId : user.id;
