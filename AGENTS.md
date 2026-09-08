@@ -39,6 +39,8 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 - Solo el cobrador realiza operaciones de ruta. La liquidación toma cobros, desembolsos, pago inicial, microseguro, renovaciones, sueldo y cadena desde PostgreSQL; el formulario solo declara gastos manuales, caja real y notas.
 - La vista financiera conserva el control del Excel con una lectura inequívoca: BASE/SALIDA/COBRADO/M.S/TOTAL INGRESADO/PRÉSTAMOS/GASTOS MANUALES/SUELDO 3%/RETIRO CADENA/SOBRANTE/ENTREGA ESPERADA/CAJA/DIFERENCIA, balance semanal, clientes nuevos y cadena neta de 11 semanas.
 - BASE y SALIDA son siempre S/30.000 por cobrador. El sueldo es 3% de lo cobrado sin M.S y se carga el sábado; el miércoles la cadena retira automáticamente como máximo el sobrante sobre la base. Un déficit se muestra como apoyo requerido de otro cobrador, sin inventar transferencias.
+- El resultado semanal y cada resultado dinámico de la cadena se calculan como COBRADO − PRÉSTAMOS − GASTOS TOTALES + M.S. El sueldo permanece en 3% de COBRADO y nunca incluye M.S.
+- En Nuevo crédito, elegir un cliente con crédito activo abre directamente la renovación de ese crédito. En el plan, una cuota pagada después de su vencimiento se conserva pagada pero se distingue en amarillo.
 - El alta de cliente exige zona activa, DNI, ubicación GPS actual, evidencias y crédito inicial. Yape/transferencia exige justificante ligado al pago; sus archivos se numeran de forma persistente.
 - Los cierres con `status=LEGACY_IMPORTED` son históricos inmutables del Excel; no se pueden sobrescribir desde el panel del cobrador.
 - Las notificaciones se guardan antes de emitir el evento WebSocket y deben conservar `details` completos y `actionUrl`.

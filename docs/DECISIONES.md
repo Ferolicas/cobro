@@ -1,6 +1,6 @@
 # Decisiones de producto y operación
 
-Actualizado: 2026-09-04
+Actualizado: 2026-09-08
 
 ## Producto y usuarios
 
@@ -45,7 +45,7 @@ Actualizado: 2026-09-04
 - El maestro es un perfil de supervisión: consulta toda la cartera, liquidaciones, caja y auditoría, pero no registra clientes, créditos, pagos, renovaciones, comprobantes ni cierres diarios.
 - El cobrador es el único perfil operativo. Su liquidación se calcula desde los movimientos reales del día; solo declara base inicial, gastos, retiro, caja física final, notas y comprobantes.
 - La caja esperada se calcula como `base + cobro en efectivo - efectivo neto entregado - gastos - retiro`. Yape y transferencias se informan aparte y no inflan la caja física.
-- La presentación mantiene literalmente los bloques del Excel: liquidación diaria, seis días, M.S diario/semanal, 3%, interés 20%, clientes nuevos y cadena de 11 semanas. Se añade resultado neto sin eliminar la ganancia histórica del libro.
+- La presentación mantiene los bloques operativos del Excel: liquidación diaria, seis días, M.S diario/semanal, 3%, clientes nuevos y cadena de 11 semanas. El resultado neto dinámico es `COBRADO − PRÉSTAMOS − GASTOS TOTALES + M.S`; los importes históricos ya importados no se reescriben.
 - Los datos históricos del Excel son inmutables y se distinguen visualmente de los cálculos en vivo.
 - CI/CD: cada push a `main` despliega con migraciones, seed idempotente, build, recarga y healthcheck.
 - Tipo de cambio: Frankfurter v2, PEN→COP, con caché diaria en PostgreSQL.

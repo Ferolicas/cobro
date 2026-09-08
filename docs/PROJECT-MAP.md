@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-08 · Commit: 73c4aa4
+Actualizado: 2026-09-08 · Commit: 04db980
 
 ## Producto
 
@@ -25,7 +25,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
 4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. El maestro ve estas acciones, ubicaciones y evidencias en tiempo real.
 5. El alta guiada del cliente pasa por datos y zona, DNI/fotos/vídeo/ubicación GPS actual y crédito inicial. La ubicación conserva coordenadas, precisión y fecha de captura.
-6. Un crédito nace con capital, 20% de interés, 24 cuotas y un pago inicial que cubre como mínimo la primera cuota; `/api/credits/preview` calcula el contrato y efectivo antes de confirmar.
+6. Un crédito nace con capital, 20% de interés, 24 cuotas y un pago inicial que cubre como mínimo la primera cuota; `/api/credits/preview` calcula el contrato y efectivo antes de confirmar. En “Nuevo crédito”, elegir un cliente con crédito activo cambia directamente al formulario de renovación de su crédito vigente.
 7. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente. Yape/transferencia requiere uno o más justificantes pre-subidos y ligados transaccionalmente al pago; efectivo no los acepta. Cada cobro muestra cuota actual, total y cuotas pagadas.
 8. “No pagó” crea una actividad diaria idempotente, auditoría y notificación sin alterar deuda ni caja.
 9. La renovación paga el saldo anterior desde el capital nuevo, descuenta el pago inicial y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo. También se lanza desde la ficha del cliente.
@@ -41,7 +41,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
 - `views/TodayView.tsx`: ruta diaria, cuota actual, pago con prueba digital y “No pagó”, exclusivo del cobrador.
 - `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa para el maestro.
-- `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; solo lectura operativa para el maestro.
+- `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan diferencia en amarillo las cuotas completadas después de vencer; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE/SALIDA fija, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
 - `views/CollectorsView.tsx`: zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
@@ -71,8 +71,8 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - BASE y SALIDA son referencias operativas fijas de S/30.000 por cobrador; la caja puede ser negativa y entonces se muestra el apoyo necesario.
 - Los campos derivados de liquidación se recalculan en el servidor desde `CashMovement`; el cliente no puede enviarlos ni alterarlos.
 - En el formato tipo Excel, PRÉSTAMOS usa el capital bruto. La primera cuota y el saldo de renovación retenido forman parte de COBRADO; M.S permanece separado y ambos forman TOTAL INGRESADO. Yape/transferencia permanece separado de la caja física.
-- Balance semanal: sueldo = 3% de COBRADO sin M.S; gasto total = manual + sueldo + cadena; resultado neto = interés proyectado + M.S − gasto total.
-- Cadena: retiro automático el miércoles limitado al sobrante sobre S/30.000; la tabla de 11 semanas suma resultados netos con interés, M.S, gastos, sueldo y retiro.
+- Balance semanal: sueldo = 3% de COBRADO sin M.S; gasto total = manual + sueldo + cadena; resultado neto = COBRADO − PRÉSTAMOS − gasto total + M.S. El panel muestra también los resultados intermedios antes de gastos y antes de M.S.
+- Cadena: retiro automático el miércoles limitado al sobrante sobre S/30.000; sus semanas dinámicas usan la misma fórmula neta del balance semanal y los valores históricos importados permanecen intactos.
 - Pérdida = saldo castigado; no se confunde con interés que dejó de ganarse.
 - Estados principales: `ACTIVE`, `OVERDUE`, `PAID`, `RENEWED`, `WRITTEN_OFF`.
 
