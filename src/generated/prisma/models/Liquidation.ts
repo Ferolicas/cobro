@@ -35,6 +35,10 @@ export type LiquidationAvgAggregateOutputType = {
   expensesCents: number | null
   collectorWithdrawalCents: number | null
   microinsuranceCents: number | null
+  manualExpensesCents: number | null
+  collectorSalaryCents: number | null
+  chainWithdrawalCents: number | null
+  surplusCents: number | null
   closingCashCents: number | null
   expectedClosingCents: number | null
   differenceCents: number | null
@@ -53,6 +57,10 @@ export type LiquidationSumAggregateOutputType = {
   expensesCents: bigint | null
   collectorWithdrawalCents: bigint | null
   microinsuranceCents: bigint | null
+  manualExpensesCents: bigint | null
+  collectorSalaryCents: bigint | null
+  chainWithdrawalCents: bigint | null
+  surplusCents: bigint | null
   closingCashCents: bigint | null
   expectedClosingCents: bigint | null
   differenceCents: bigint | null
@@ -74,6 +82,10 @@ export type LiquidationMinAggregateOutputType = {
   expensesCents: bigint | null
   collectorWithdrawalCents: bigint | null
   microinsuranceCents: bigint | null
+  manualExpensesCents: bigint | null
+  collectorSalaryCents: bigint | null
+  chainWithdrawalCents: bigint | null
+  surplusCents: bigint | null
   closingCashCents: bigint | null
   expectedClosingCents: bigint | null
   differenceCents: bigint | null
@@ -100,6 +112,10 @@ export type LiquidationMaxAggregateOutputType = {
   expensesCents: bigint | null
   collectorWithdrawalCents: bigint | null
   microinsuranceCents: bigint | null
+  manualExpensesCents: bigint | null
+  collectorSalaryCents: bigint | null
+  chainWithdrawalCents: bigint | null
+  surplusCents: bigint | null
   closingCashCents: bigint | null
   expectedClosingCents: bigint | null
   differenceCents: bigint | null
@@ -126,6 +142,10 @@ export type LiquidationCountAggregateOutputType = {
   expensesCents: number
   collectorWithdrawalCents: number
   microinsuranceCents: number
+  manualExpensesCents: number
+  collectorSalaryCents: number
+  chainWithdrawalCents: number
+  surplusCents: number
   closingCashCents: number
   expectedClosingCents: number
   differenceCents: number
@@ -151,6 +171,10 @@ export type LiquidationAvgAggregateInputType = {
   expensesCents?: true
   collectorWithdrawalCents?: true
   microinsuranceCents?: true
+  manualExpensesCents?: true
+  collectorSalaryCents?: true
+  chainWithdrawalCents?: true
+  surplusCents?: true
   closingCashCents?: true
   expectedClosingCents?: true
   differenceCents?: true
@@ -169,6 +193,10 @@ export type LiquidationSumAggregateInputType = {
   expensesCents?: true
   collectorWithdrawalCents?: true
   microinsuranceCents?: true
+  manualExpensesCents?: true
+  collectorSalaryCents?: true
+  chainWithdrawalCents?: true
+  surplusCents?: true
   closingCashCents?: true
   expectedClosingCents?: true
   differenceCents?: true
@@ -190,6 +218,10 @@ export type LiquidationMinAggregateInputType = {
   expensesCents?: true
   collectorWithdrawalCents?: true
   microinsuranceCents?: true
+  manualExpensesCents?: true
+  collectorSalaryCents?: true
+  chainWithdrawalCents?: true
+  surplusCents?: true
   closingCashCents?: true
   expectedClosingCents?: true
   differenceCents?: true
@@ -216,6 +248,10 @@ export type LiquidationMaxAggregateInputType = {
   expensesCents?: true
   collectorWithdrawalCents?: true
   microinsuranceCents?: true
+  manualExpensesCents?: true
+  collectorSalaryCents?: true
+  chainWithdrawalCents?: true
+  surplusCents?: true
   closingCashCents?: true
   expectedClosingCents?: true
   differenceCents?: true
@@ -242,6 +278,10 @@ export type LiquidationCountAggregateInputType = {
   expensesCents?: true
   collectorWithdrawalCents?: true
   microinsuranceCents?: true
+  manualExpensesCents?: true
+  collectorSalaryCents?: true
+  chainWithdrawalCents?: true
+  surplusCents?: true
   closingCashCents?: true
   expectedClosingCents?: true
   differenceCents?: true
@@ -355,6 +395,10 @@ export type LiquidationGroupByOutputType = {
   expensesCents: bigint
   collectorWithdrawalCents: bigint
   microinsuranceCents: bigint
+  manualExpensesCents: bigint
+  collectorSalaryCents: bigint
+  chainWithdrawalCents: bigint
+  surplusCents: bigint
   closingCashCents: bigint
   expectedClosingCents: bigint
   differenceCents: bigint
@@ -404,6 +448,10 @@ export type LiquidationWhereInput = {
   expensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   microinsuranceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  manualExpensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  surplusCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   closingCashCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   expectedClosingCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   differenceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -433,6 +481,10 @@ export type LiquidationOrderByWithRelationInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -466,6 +518,10 @@ export type LiquidationWhereUniqueInput = Prisma.AtLeast<{
   expensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   microinsuranceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  manualExpensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  surplusCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   closingCashCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   expectedClosingCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   differenceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -495,6 +551,10 @@ export type LiquidationOrderByWithAggregationInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -529,6 +589,10 @@ export type LiquidationScalarWhereWithAggregatesInput = {
   expensesCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   microinsuranceCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
+  manualExpensesCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
+  collectorSalaryCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
+  surplusCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   closingCashCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   expectedClosingCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   differenceCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
@@ -554,6 +618,10 @@ export type LiquidationCreateInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -583,6 +651,10 @@ export type LiquidationUncheckedCreateInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -610,6 +682,10 @@ export type LiquidationUpdateInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -639,6 +715,10 @@ export type LiquidationUncheckedUpdateInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -667,6 +747,10 @@ export type LiquidationCreateManyInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -692,6 +776,10 @@ export type LiquidationUpdateManyMutationInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -718,6 +806,10 @@ export type LiquidationUncheckedUpdateManyInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -759,6 +851,10 @@ export type LiquidationCountOrderByAggregateInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -782,6 +878,10 @@ export type LiquidationAvgOrderByAggregateInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -803,6 +903,10 @@ export type LiquidationMaxOrderByAggregateInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -829,6 +933,10 @@ export type LiquidationMinOrderByAggregateInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -852,6 +960,10 @@ export type LiquidationSumOrderByAggregateInput = {
   expensesCents?: Prisma.SortOrder
   collectorWithdrawalCents?: Prisma.SortOrder
   microinsuranceCents?: Prisma.SortOrder
+  manualExpensesCents?: Prisma.SortOrder
+  collectorSalaryCents?: Prisma.SortOrder
+  chainWithdrawalCents?: Prisma.SortOrder
+  surplusCents?: Prisma.SortOrder
   closingCashCents?: Prisma.SortOrder
   expectedClosingCents?: Prisma.SortOrder
   differenceCents?: Prisma.SortOrder
@@ -951,6 +1063,10 @@ export type LiquidationCreateWithoutCollectorInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -978,6 +1094,10 @@ export type LiquidationUncheckedCreateWithoutCollectorInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1035,6 +1155,10 @@ export type LiquidationScalarWhereInput = {
   expensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   microinsuranceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  manualExpensesCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
+  surplusCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   closingCashCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   expectedClosingCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   differenceCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -1060,6 +1184,10 @@ export type LiquidationCreateWithoutDocumentsInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1088,6 +1216,10 @@ export type LiquidationUncheckedCreateWithoutDocumentsInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1130,6 +1262,10 @@ export type LiquidationUpdateWithoutDocumentsInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1158,6 +1294,10 @@ export type LiquidationUncheckedUpdateWithoutDocumentsInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1184,6 +1324,10 @@ export type LiquidationCreateWithoutCashMovementsInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1212,6 +1356,10 @@ export type LiquidationUncheckedCreateWithoutCashMovementsInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1254,6 +1402,10 @@ export type LiquidationUpdateWithoutCashMovementsInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1282,6 +1434,10 @@ export type LiquidationUncheckedUpdateWithoutCashMovementsInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1308,6 +1464,10 @@ export type LiquidationCreateManyCollectorInput = {
   expensesCents?: bigint | number
   collectorWithdrawalCents?: bigint | number
   microinsuranceCents?: bigint | number
+  manualExpensesCents?: bigint | number
+  collectorSalaryCents?: bigint | number
+  chainWithdrawalCents?: bigint | number
+  surplusCents?: bigint | number
   closingCashCents: bigint | number
   expectedClosingCents: bigint | number
   differenceCents: bigint | number
@@ -1333,6 +1493,10 @@ export type LiquidationUpdateWithoutCollectorInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1360,6 +1524,10 @@ export type LiquidationUncheckedUpdateWithoutCollectorInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1387,6 +1555,10 @@ export type LiquidationUncheckedUpdateManyWithoutCollectorInput = {
   expensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   collectorWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   microinsuranceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  manualExpensesCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  collectorSalaryCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  chainWithdrawalCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
+  surplusCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   closingCashCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   expectedClosingCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   differenceCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1453,6 +1625,10 @@ export type LiquidationSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   expensesCents?: boolean
   collectorWithdrawalCents?: boolean
   microinsuranceCents?: boolean
+  manualExpensesCents?: boolean
+  collectorSalaryCents?: boolean
+  chainWithdrawalCents?: boolean
+  surplusCents?: boolean
   closingCashCents?: boolean
   expectedClosingCents?: boolean
   differenceCents?: boolean
@@ -1483,6 +1659,10 @@ export type LiquidationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   expensesCents?: boolean
   collectorWithdrawalCents?: boolean
   microinsuranceCents?: boolean
+  manualExpensesCents?: boolean
+  collectorSalaryCents?: boolean
+  chainWithdrawalCents?: boolean
+  surplusCents?: boolean
   closingCashCents?: boolean
   expectedClosingCents?: boolean
   differenceCents?: boolean
@@ -1510,6 +1690,10 @@ export type LiquidationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   expensesCents?: boolean
   collectorWithdrawalCents?: boolean
   microinsuranceCents?: boolean
+  manualExpensesCents?: boolean
+  collectorSalaryCents?: boolean
+  chainWithdrawalCents?: boolean
+  surplusCents?: boolean
   closingCashCents?: boolean
   expectedClosingCents?: boolean
   differenceCents?: boolean
@@ -1537,6 +1721,10 @@ export type LiquidationSelectScalar = {
   expensesCents?: boolean
   collectorWithdrawalCents?: boolean
   microinsuranceCents?: boolean
+  manualExpensesCents?: boolean
+  collectorSalaryCents?: boolean
+  chainWithdrawalCents?: boolean
+  surplusCents?: boolean
   closingCashCents?: boolean
   expectedClosingCents?: boolean
   differenceCents?: boolean
@@ -1551,7 +1739,7 @@ export type LiquidationSelectScalar = {
   updatedAt?: boolean
 }
 
-export type LiquidationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "collectorId" | "date" | "openingBaseCents" | "cashOutCents" | "collectedCashCents" | "collectedYapeCents" | "disbursedCents" | "expensesCents" | "collectorWithdrawalCents" | "microinsuranceCents" | "closingCashCents" | "expectedClosingCents" | "differenceCents" | "newClientsCount" | "totalAssignedClients" | "overdue30Count" | "zeroBalanceCount" | "status" | "notes" | "reviewedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liquidation"]>
+export type LiquidationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "collectorId" | "date" | "openingBaseCents" | "cashOutCents" | "collectedCashCents" | "collectedYapeCents" | "disbursedCents" | "expensesCents" | "collectorWithdrawalCents" | "microinsuranceCents" | "manualExpensesCents" | "collectorSalaryCents" | "chainWithdrawalCents" | "surplusCents" | "closingCashCents" | "expectedClosingCents" | "differenceCents" | "newClientsCount" | "totalAssignedClients" | "overdue30Count" | "zeroBalanceCount" | "status" | "notes" | "reviewedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liquidation"]>
 export type LiquidationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
   documents?: boolean | Prisma.Liquidation$documentsArgs<ExtArgs>
@@ -1584,6 +1772,10 @@ export type $LiquidationPayload<ExtArgs extends runtime.Types.Extensions.Interna
     expensesCents: bigint
     collectorWithdrawalCents: bigint
     microinsuranceCents: bigint
+    manualExpensesCents: bigint
+    collectorSalaryCents: bigint
+    chainWithdrawalCents: bigint
+    surplusCents: bigint
     closingCashCents: bigint
     expectedClosingCents: bigint
     differenceCents: bigint
@@ -2033,6 +2225,10 @@ export interface LiquidationFieldRefs {
   readonly expensesCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
   readonly collectorWithdrawalCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
   readonly microinsuranceCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
+  readonly manualExpensesCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
+  readonly collectorSalaryCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
+  readonly chainWithdrawalCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
+  readonly surplusCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
   readonly closingCashCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
   readonly expectedClosingCents: Prisma.FieldRef<"Liquidation", 'BigInt'>
   readonly differenceCents: Prisma.FieldRef<"Liquidation", 'BigInt'>

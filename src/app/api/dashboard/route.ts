@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { creditProgress, refreshOverdueStatuses } from "@/lib/loans/service";
 import { businessDateKey, businessDayStartUtc, businessToday } from "@/lib/loans/calculation";
+import { addDays } from "date-fns";
+import { COLLECTOR_BASE_CENTS } from "@/lib/liquidations/constants";
 
 export async function GET(request: Request) {
   try {
@@ -12,13 +14,13 @@ export async function GET(request: Request) {
     const collectorScope = user.role === "COLLECTOR" ? { collectorId: user.id } : {};
     const today = businessToday();
     const todayStart = businessDayStartUtc();
-    const [clients, credits, collectors, todayPayments, recentPayments, unread] = await Promise.all([
+    const [clients, credits, collectors, todayPayments, recentPayments, unread, todayMovements, todayLiquidations] = await Promise.all([
       prisma.client.count({ where: { ...collectorScope, active: true } }),
       prisma.credit.findMany({
         where: { ...collectorScope, status: { in: ["ACTIVE", "OVERDUE"] } },
         include: {
           client: { select: { id: true, name: true, phone: true, businessName: true } },
-          installments: { select: { dueDate: true, expectedCents: true, paidCents: true } },
+          installments: { select: { number: true, dueDate: true, expectedCents: true, paidCents: true } },
         },
         orderBy: [{ maturityDate: "asc" }, { createdAt: "desc" }],
       }),
@@ -32,12 +34,31 @@ export async function GET(request: Request) {
         select: { paidAt: true, amountCents: true },
       }),
       prisma.notification.count({ where: { recipientId: user.id, readAt: null } }),
+      prisma.cashMovement.findMany({
+        where: { ...collectorScope, occurredAt: { gte: todayStart, lt: addDays(todayStart, 1) } },
+        select: { type: true, amountCents: true },
+      }),
+      prisma.liquidation.findMany({
+        where: { ...collectorScope, date: today },
+        select: { expensesCents: true },
+      }),
     ]);
     const activeCapitalCents = credits.reduce((sum, credit) => sum + credit.principalCents, BigInt(0));
     const portfolioCents = credits.reduce((sum, credit) => sum + credit.balanceCents, BigInt(0));
     const expectedProfitCents = credits.reduce((sum, credit) => sum + credit.interestCents, BigInt(0));
     const todayDueCents = credits.reduce((sum, credit) => sum + creditProgress(credit).dueTodayCents, BigInt(0));
     const overdue = credits.filter((credit) => credit.maturityDate < today && credit.balanceCents > BigInt(0)).length;
+    const operationalBaseCents = COLLECTOR_BASE_CENTS * BigInt(user.role === "MASTER" ? collectors : 1);
+    const physicalIncomeCents = todayMovements
+      .filter((movement) => ["PAYMENT_CASH", "ADVANCE_INSTALLMENT", "MICROINSURANCE", "RENEWAL_SETTLEMENT"].includes(movement.type))
+      .reduce((total, movement) => total + movement.amountCents, BigInt(0));
+    const disbursedTodayCents = todayMovements
+      .filter((movement) => movement.type === "DISBURSEMENT")
+      .reduce((total, movement) => total + movement.amountCents, BigInt(0));
+    const expensesTodayCents = todayLiquidations.reduce((total, item) => total + item.expensesCents, BigInt(0));
+    const availableBaseCents = operationalBaseCents + physicalIncomeCents - disbursedTodayCents - expensesTodayCents;
+    const supportNeededCents = availableBaseCents < BigInt(0) ? -availableBaseCents : BigInt(0);
+    const surplusCents = availableBaseCents > operationalBaseCents ? availableBaseCents - operationalBaseCents : BigInt(0);
     const series = Array.from({ length: 7 }, (_, index) => {
       const date = subDays(todayStart, 6 - index);
       const key = businessDateKey(date);
@@ -49,7 +70,7 @@ export async function GET(request: Request) {
       };
     });
     return jsonResponse({
-      stats: { clients, collectors, activeCredits: credits.length, overdue, activeCapitalCents, portfolioCents, expectedProfitCents, todayDueCents, collectedTodayCents: todayPayments._sum.amountCents ?? BigInt(0), unread },
+      stats: { clients, collectors, activeCredits: credits.length, overdue, activeCapitalCents, portfolioCents, expectedProfitCents, todayDueCents, collectedTodayCents: todayPayments._sum.amountCents ?? BigInt(0), operationalBaseCents, availableBaseCents, supportNeededCents, surplusCents, unread },
       urgentCredits: credits.slice(0, 10).map((credit) => ({ ...credit, ...creditProgress(credit) })),
       series,
     });

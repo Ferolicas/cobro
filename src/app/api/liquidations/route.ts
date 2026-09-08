@@ -6,18 +6,18 @@ import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { calculateAutomaticLiquidation } from "@/lib/liquidations/calculation";
+import { COLLECTOR_BASE_CENTS, COLLECTOR_SALARY_PERCENT } from "@/lib/liquidations/constants";
 import { calculateWeeklyBalance, type FinancialDay } from "@/lib/liquidations/weekly";
 import { businessDateKey, dateOnly } from "@/lib/loans/calculation";
 import { toCents } from "@/lib/money";
 import { notifyMasters } from "@/lib/notify";
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-const INITIAL_COLLECTOR_BASE_CENTS = BigInt(3_000_000);
 const closeSchema = z.object({
   date: dateSchema,
   expenses: z.coerce.number().min(0).max(10_000_000).default(0),
-  collectorWithdrawal: z.coerce.number().min(0).max(10_000_000).default(0),
-  closingCash: z.coerce.number().min(0).max(10_000_000),
+  collectorWithdrawal: z.coerce.number().min(0).max(10_000_000).optional(),
+  closingCash: z.coerce.number().min(-10_000_000).max(10_000_000),
   notes: z.string().trim().max(2000).optional().nullable(),
 });
 
@@ -63,14 +63,16 @@ async function dailySummary(
   db: LiquidationDb,
   collectorId: string,
   date: Date,
-  manual?: { expensesCents: bigint; collectorWithdrawalCents: bigint },
+  manual?: { manualExpensesCents: bigint },
 ) {
   const { start, end } = dayBounds(date);
-  const [existing, previous, movements, totalAssignedClients, newClientsCount, overdue30Count, zeroBalanceCount] =
+  const startOfWeek = dayBounds(weekStart(date)).start;
+  const [existing, previous, movements, weekMovements, totalAssignedClients, newClientsCount, overdue30Count, zeroBalanceCount] =
     await Promise.all([
       db.liquidation.findUnique({ where: { collectorId_date: { collectorId, date } } }),
       db.liquidation.findFirst({ where: { collectorId, date: { lt: date } }, orderBy: { date: "desc" } }),
       db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: start, lt: end } }, orderBy: { occurredAt: "asc" } }),
+      db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: startOfWeek, lt: end } } }),
       db.client.count({ where: { collectorId, active: true } }),
       db.client.count({
         where: {
@@ -107,6 +109,10 @@ async function dailySummary(
       microinsuranceCents: existing.microinsuranceCents,
       renewalSettlementCents: BigInt(0),
       cashOutCents: existing.cashOutCents,
+      manualExpensesCents: existing.manualExpensesCents || existing.expensesCents,
+      collectorSalaryCents: existing.collectorSalaryCents || existing.collectorWithdrawalCents,
+      chainWithdrawalCents: existing.chainWithdrawalCents,
+      surplusCents: existing.surplusCents,
       expectedClosingCents: existing.expectedClosingCents,
       openingBaseCents: existing.openingBaseCents,
       expensesCents: existing.expensesCents,
@@ -124,16 +130,28 @@ async function dailySummary(
     };
   }
 
-  const openingBaseCents = existing?.openingBaseCents ?? previous?.closingCashCents ?? INITIAL_COLLECTOR_BASE_CENTS;
-  const expensesCents = manual?.expensesCents ?? existing?.expensesCents ?? BigInt(0);
-  const collectorWithdrawalCents = manual?.collectorWithdrawalCents ?? existing?.collectorWithdrawalCents ?? BigInt(0);
-  const automatic = calculateAutomaticLiquidation({ movements, openingBaseCents, expensesCents, collectorWithdrawalCents });
+  const openingBaseCents = existing?.openingBaseCents ?? COLLECTOR_BASE_CENTS;
+  const manualExpensesCents = manual?.manualExpensesCents ?? existing?.manualExpensesCents ?? existing?.expensesCents ?? BigInt(0);
+  const collectedForSalaryCents = weekMovements
+    .filter((movement) => ["PAYMENT_CASH", "PAYMENT_YAPE", "PAYMENT_TRANSFER", "ADVANCE_INSTALLMENT", "RENEWAL_SETTLEMENT"].includes(movement.type))
+    .reduce((total, movement) => total + movement.amountCents, BigInt(0));
+  const automaticSalaryCents = date.getUTCDay() === 6
+    ? (collectedForSalaryCents * BigInt(COLLECTOR_SALARY_PERCENT)) / BigInt(100)
+    : BigInt(0);
+  const collectorSalaryCents = manual
+    ? automaticSalaryCents
+    : existing?.collectorSalaryCents || existing?.collectorWithdrawalCents || automaticSalaryCents;
+  const withoutChain = calculateAutomaticLiquidation({ movements, openingBaseCents, manualExpensesCents, collectorSalaryCents, chainWithdrawalCents: BigInt(0) });
+  const chainWithdrawalCents = manual
+    ? (date.getUTCDay() === 3 ? withoutChain.surplusCents : BigInt(0))
+    : existing?.chainWithdrawalCents || (date.getUTCDay() === 3 ? withoutChain.surplusCents : BigInt(0));
+  const automatic = calculateAutomaticLiquidation({ movements, openingBaseCents, manualExpensesCents, collectorSalaryCents, chainWithdrawalCents });
 
   return {
     ...automatic,
     openingBaseCents,
-    expensesCents,
-    collectorWithdrawalCents,
+    expensesCents: automatic.expensesCents,
+    collectorWithdrawalCents: collectorSalaryCents,
     totalAssignedClients,
     newClientsCount,
     overdue30Count,
@@ -174,6 +192,10 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
       microinsuranceCents: summary.microinsuranceCents,
       advancePaymentCents: summary.advancePaymentCents,
       renewalSettlementCents: summary.renewalSettlementCents,
+      manualExpensesCents: summary.manualExpensesCents,
+      collectorSalaryCents: summary.collectorSalaryCents,
+      chainWithdrawalCents: summary.chainWithdrawalCents,
+      surplusCents: summary.surplusCents,
       expensesCents: summary.expensesCents,
       collectorWithdrawalCents: summary.collectorWithdrawalCents,
       expectedClosingCents: summary.expectedClosingCents,
@@ -203,37 +225,41 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
   const chainEnd = dayBounds(addDays(chainDates[10], 1)).start;
   const [chainMovements, chainLiquidations] = await Promise.all([
     prisma.cashMovement.findMany({
-      where: { collectorId, type: "DISBURSEMENT", occurredAt: { gte: chainStart, lt: chainEnd } },
-      select: { amountCents: true, occurredAt: true },
+      where: { collectorId, type: { in: ["DISBURSEMENT", "MICROINSURANCE", "PAYMENT_CASH", "PAYMENT_YAPE", "PAYMENT_TRANSFER", "ADVANCE_INSTALLMENT", "RENEWAL_SETTLEMENT"] }, occurredAt: { gte: chainStart, lt: chainEnd } },
+      select: { type: true, amountCents: true, occurredAt: true },
     }),
     prisma.liquidation.findMany({
       where: { collectorId, date: { gte: addDays(chainDates[0], -5), lte: chainDates[10] } },
-      select: { date: true, expensesCents: true },
+      select: { date: true, manualExpensesCents: true, chainWithdrawalCents: true },
     }),
   ]);
-  const dynamicByWeek = new Map<string, { disbursed: bigint; expenses: bigint }>();
+  const dynamicByWeek = new Map<string, { disbursed: bigint; microinsurance: bigint; collected: bigint; manualExpenses: bigint; chainWithdrawal: bigint }>();
   for (const movement of chainMovements) {
     const key = weekEndKey(dateOnly(businessDateKey(movement.occurredAt)));
-    const current = dynamicByWeek.get(key) ?? { disbursed: BigInt(0), expenses: BigInt(0) };
-    current.disbursed += movement.amountCents;
+    const current = dynamicByWeek.get(key) ?? { disbursed: BigInt(0), microinsurance: BigInt(0), collected: BigInt(0), manualExpenses: BigInt(0), chainWithdrawal: BigInt(0) };
+    if (movement.type === "DISBURSEMENT") current.disbursed += movement.amountCents;
+    else if (movement.type === "MICROINSURANCE") current.microinsurance += movement.amountCents;
+    else current.collected += movement.amountCents;
     dynamicByWeek.set(key, current);
   }
   for (const liquidation of chainLiquidations) {
     const key = weekEndKey(liquidation.date);
-    const current = dynamicByWeek.get(key) ?? { disbursed: BigInt(0), expenses: BigInt(0) };
-    current.expenses += liquidation.expensesCents;
+    const current = dynamicByWeek.get(key) ?? { disbursed: BigInt(0), microinsurance: BigInt(0), collected: BigInt(0), manualExpenses: BigInt(0), chainWithdrawal: BigInt(0) };
+    current.manualExpenses += liquidation.manualExpensesCents;
+    current.chainWithdrawal += liquidation.chainWithdrawalCents;
     dynamicByWeek.set(key, current);
   }
   const chain = chainDates.map((date, index) => {
     const dateKey = date.toISOString().slice(0, 10);
     const legacy = legacyRows[index];
     const dynamic = dynamicByWeek.get(dateKey);
-    const dynamicProfit = dynamic ? (dynamic.disbursed * BigInt(20)) / BigInt(100) - dynamic.expenses : BigInt(0);
+    const dynamicSalary = dynamic ? (dynamic.collected * BigInt(COLLECTOR_SALARY_PERCENT)) / BigInt(100) : BigInt(0);
+    const dynamicProfit = dynamic ? (dynamic.disbursed * BigInt(20)) / BigInt(100) + dynamic.microinsurance - dynamic.manualExpenses - dynamicSalary - dynamic.chainWithdrawal : BigInt(0);
     const hasLegacyValue = Boolean(legacy?.date);
     const hasDynamicValue = Boolean(dynamic) && dateKey <= todayKey && date <= selectedWeekEnd;
     return {
       week: index + 1,
-      chain: legacy?.chain || "CADENA",
+      chain: legacy?.chain || "RETIRO",
       date: hasLegacyValue || hasDynamicValue ? dateKey : null,
       profitCents: hasLegacyValue ? BigInt(Math.round(legacy.profit * 100)) : hasDynamicValue ? dynamicProfit : null,
       source: hasLegacyValue ? "EXCEL" : hasDynamicValue ? "SYSTEM" : "EMPTY",
@@ -244,7 +270,7 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
     days,
     weekly,
     chain: {
-      initialCapitalCents: BigInt(isExcelCollector ? detailSetting?.initialChainCapitalCents ?? "0" : "0"),
+      initialCapitalCents: BigInt(isExcelCollector ? detailSetting?.initialChainCapitalCents ?? COLLECTOR_BASE_CENTS.toString() : COLLECTOR_BASE_CENTS),
       rows: chain,
       totalProfitCents: chain.reduce((total, row) => total + (row.profitCents ?? BigInt(0)), BigInt(0)),
     },
@@ -287,8 +313,7 @@ export async function POST(request: Request) {
     const legacy = await prisma.liquidation.findUnique({ where: { collectorId_date: { collectorId: user.id, date } }, select: { status: true } });
     if (legacy?.status === "LEGACY_IMPORTED") return Response.json({ error: "Este cierre pertenece al Excel histórico y es de solo lectura" }, { status: 409 });
     const manual = {
-      expensesCents: toCents(input.expenses),
-      collectorWithdrawalCents: toCents(input.collectorWithdrawal),
+      manualExpensesCents: toCents(input.expenses),
     };
     const closingCashCents = toCents(input.closingCash);
 
@@ -306,8 +331,12 @@ export async function POST(request: Request) {
         collectedYapeCents: summary.collectedDigitalCents,
         disbursedCents: summary.disbursedCents,
         expensesCents: summary.expensesCents,
-        collectorWithdrawalCents: summary.collectorWithdrawalCents,
+        collectorWithdrawalCents: summary.collectorSalaryCents,
         microinsuranceCents: summary.microinsuranceCents,
+        manualExpensesCents: summary.manualExpensesCents,
+        collectorSalaryCents: summary.collectorSalaryCents,
+        chainWithdrawalCents: summary.chainWithdrawalCents,
+        surplusCents: summary.surplusCents,
         closingCashCents,
         expectedClosingCents: summary.expectedClosingCents,
         differenceCents: closingCashCents - summary.expectedClosingCents,
@@ -344,13 +373,16 @@ export async function POST(request: Request) {
         cobrador: liquidation.collector.name,
         fecha: input.date,
         base: Number(liquidation.openingBaseCents) / 100,
-        entregaCobrador: input.collectorWithdrawal,
+        sueldoCobrador3PorCiento: Number(liquidation.collectorSalaryCents) / 100,
+        retiroCadena: Number(liquidation.chainWithdrawalCents) / 100,
+        sobranteMáximo: Number(liquidation.surplusCents) / 100,
         cobradoSinMicroseguro: Number(liquidation.collectedCashCents - liquidation.microinsuranceCents) / 100,
         totalIngresado: Number(liquidation.collectedCashCents) / 100,
         cobroDigitalCalculado: Number(liquidation.collectedYapeCents) / 100,
         capitalPrestadoCalculado: Number(liquidation.disbursedCents) / 100,
         microseguroCalculado: Number(liquidation.microinsuranceCents) / 100,
-        gastos: input.expenses,
+        gastosManuales: input.expenses,
+        gastosTotales: Number(liquidation.expensesCents) / 100,
         cajaDeclarada: input.closingCash,
         cajaEsperada: Number(liquidation.expectedClosingCents) / 100,
         diferencia: Number(liquidation.differenceCents) / 100,

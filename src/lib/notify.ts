@@ -41,6 +41,10 @@ export async function notifyMasters(params: {
       `user:${notification.recipientId}`,
     ]);
   }
-  emitRealtime("data:changed", { type: params.entityType, id: params.entityId });
+  emitRealtime(
+    "data:changed",
+    { type: params.entityType, id: params.entityId },
+    [...new Set(["masters", ...(params.actorId ? [`user:${params.actorId}`] : [])])],
+  );
   return created;
 }

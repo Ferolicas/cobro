@@ -11,6 +11,10 @@ export type FinancialDay = {
   microinsuranceCents: bigint;
   advancePaymentCents: bigint;
   renewalSettlementCents: bigint;
+  manualExpensesCents: bigint;
+  collectorSalaryCents: bigint;
+  chainWithdrawalCents: bigint;
+  surplusCents: bigint;
   expensesCents: bigint;
   collectorWithdrawalCents: bigint;
   expectedClosingCents: bigint;
@@ -32,13 +36,15 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
   const collectedBeforeMicroinsuranceCents = sum("ledgerCollectedCashCents") + sum("collectedDigitalCents");
   const collectedCents = sum("totalIncomeCents") + sum("collectedDigitalCents");
   const disbursedCents = sum("disbursedCents");
-  const expensesCents = sum("expensesCents");
+  const manualExpensesCents = sum("manualExpensesCents");
   const microinsuranceCents = sum("microinsuranceCents");
-  const collectorWithdrawalCents = sum("collectorWithdrawalCents");
-  const collectionCommissionCents = (collectedCents * BigInt(3)) / BigInt(100);
+  const chainWithdrawalCents = sum("chainWithdrawalCents");
+  const collectionCommissionCents = (collectedBeforeMicroinsuranceCents * BigInt(3)) / BigInt(100);
+  const collectorSalaryCents = collectionCommissionCents;
+  const expensesCents = manualExpensesCents + collectorSalaryCents + chainWithdrawalCents;
   const projectedInterestCents = (disbursedCents * BigInt(20)) / BigInt(100);
-  const profitCents = projectedInterestCents - expensesCents;
-  const netResultCents = projectedInterestCents + microinsuranceCents - expensesCents - collectionCommissionCents - collectorWithdrawalCents;
+  const profitCents = projectedInterestCents + microinsuranceCents - expensesCents;
+  const netResultCents = profitCents;
 
   return {
     collectedBeforeMicroinsuranceCents,
@@ -47,8 +53,11 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
     disbursedCents,
     projectedInterestCents,
     microinsuranceCents,
+    manualExpensesCents,
+    collectorSalaryCents,
+    chainWithdrawalCents,
     expensesCents,
-    collectorWithdrawalCents,
+    collectorWithdrawalCents: collectorSalaryCents,
     profitCents,
     netResultCents,
     newClientsCount: activeDays.reduce((total, day) => total + day.newClientsCount, 0),

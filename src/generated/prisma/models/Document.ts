@@ -38,9 +38,11 @@ export type DocumentMinAggregateOutputType = {
   id: string | null
   clientId: string | null
   creditId: string | null
+  paymentId: string | null
   liquidationId: string | null
   uploadedById: string | null
   category: string | null
+  label: string | null
   fileName: string | null
   mimeType: string | null
   sizeBytes: number | null
@@ -53,9 +55,11 @@ export type DocumentMaxAggregateOutputType = {
   id: string | null
   clientId: string | null
   creditId: string | null
+  paymentId: string | null
   liquidationId: string | null
   uploadedById: string | null
   category: string | null
+  label: string | null
   fileName: string | null
   mimeType: string | null
   sizeBytes: number | null
@@ -68,9 +72,11 @@ export type DocumentCountAggregateOutputType = {
   id: number
   clientId: number
   creditId: number
+  paymentId: number
   liquidationId: number
   uploadedById: number
   category: number
+  label: number
   fileName: number
   mimeType: number
   sizeBytes: number
@@ -93,9 +99,11 @@ export type DocumentMinAggregateInputType = {
   id?: true
   clientId?: true
   creditId?: true
+  paymentId?: true
   liquidationId?: true
   uploadedById?: true
   category?: true
+  label?: true
   fileName?: true
   mimeType?: true
   sizeBytes?: true
@@ -108,9 +116,11 @@ export type DocumentMaxAggregateInputType = {
   id?: true
   clientId?: true
   creditId?: true
+  paymentId?: true
   liquidationId?: true
   uploadedById?: true
   category?: true
+  label?: true
   fileName?: true
   mimeType?: true
   sizeBytes?: true
@@ -123,9 +133,11 @@ export type DocumentCountAggregateInputType = {
   id?: true
   clientId?: true
   creditId?: true
+  paymentId?: true
   liquidationId?: true
   uploadedById?: true
   category?: true
+  label?: true
   fileName?: true
   mimeType?: true
   sizeBytes?: true
@@ -225,9 +237,11 @@ export type DocumentGroupByOutputType = {
   id: string
   clientId: string | null
   creditId: string | null
+  paymentId: string | null
   liquidationId: string | null
   uploadedById: string
   category: string
+  label: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -263,9 +277,11 @@ export type DocumentWhereInput = {
   id?: Prisma.StringFilter<"Document"> | string
   clientId?: Prisma.StringNullableFilter<"Document"> | string | null
   creditId?: Prisma.StringNullableFilter<"Document"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"Document"> | string | null
   liquidationId?: Prisma.StringNullableFilter<"Document"> | string | null
   uploadedById?: Prisma.StringFilter<"Document"> | string
   category?: Prisma.StringFilter<"Document"> | string
+  label?: Prisma.StringNullableFilter<"Document"> | string | null
   fileName?: Prisma.StringFilter<"Document"> | string
   mimeType?: Prisma.StringFilter<"Document"> | string
   sizeBytes?: Prisma.IntFilter<"Document"> | number
@@ -274,6 +290,7 @@ export type DocumentWhereInput = {
   createdAt?: Prisma.DateTimeFilter<"Document"> | Date | string
   client?: Prisma.XOR<Prisma.ClientNullableScalarRelationFilter, Prisma.ClientWhereInput> | null
   credit?: Prisma.XOR<Prisma.CreditNullableScalarRelationFilter, Prisma.CreditWhereInput> | null
+  payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null
   liquidation?: Prisma.XOR<Prisma.LiquidationNullableScalarRelationFilter, Prisma.LiquidationWhereInput> | null
   uploadedBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }
@@ -282,9 +299,11 @@ export type DocumentOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   clientId?: Prisma.SortOrderInput | Prisma.SortOrder
   creditId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   liquidationId?: Prisma.SortOrderInput | Prisma.SortOrder
   uploadedById?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
   fileName?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -293,6 +312,7 @@ export type DocumentOrderByWithRelationInput = {
   createdAt?: Prisma.SortOrder
   client?: Prisma.ClientOrderByWithRelationInput
   credit?: Prisma.CreditOrderByWithRelationInput
+  payment?: Prisma.PaymentOrderByWithRelationInput
   liquidation?: Prisma.LiquidationOrderByWithRelationInput
   uploadedBy?: Prisma.UserOrderByWithRelationInput
 }
@@ -304,9 +324,11 @@ export type DocumentWhereUniqueInput = Prisma.AtLeast<{
   NOT?: Prisma.DocumentWhereInput | Prisma.DocumentWhereInput[]
   clientId?: Prisma.StringNullableFilter<"Document"> | string | null
   creditId?: Prisma.StringNullableFilter<"Document"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"Document"> | string | null
   liquidationId?: Prisma.StringNullableFilter<"Document"> | string | null
   uploadedById?: Prisma.StringFilter<"Document"> | string
   category?: Prisma.StringFilter<"Document"> | string
+  label?: Prisma.StringNullableFilter<"Document"> | string | null
   fileName?: Prisma.StringFilter<"Document"> | string
   mimeType?: Prisma.StringFilter<"Document"> | string
   sizeBytes?: Prisma.IntFilter<"Document"> | number
@@ -315,6 +337,7 @@ export type DocumentWhereUniqueInput = Prisma.AtLeast<{
   createdAt?: Prisma.DateTimeFilter<"Document"> | Date | string
   client?: Prisma.XOR<Prisma.ClientNullableScalarRelationFilter, Prisma.ClientWhereInput> | null
   credit?: Prisma.XOR<Prisma.CreditNullableScalarRelationFilter, Prisma.CreditWhereInput> | null
+  payment?: Prisma.XOR<Prisma.PaymentNullableScalarRelationFilter, Prisma.PaymentWhereInput> | null
   liquidation?: Prisma.XOR<Prisma.LiquidationNullableScalarRelationFilter, Prisma.LiquidationWhereInput> | null
   uploadedBy?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
 }, "id">
@@ -323,9 +346,11 @@ export type DocumentOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   clientId?: Prisma.SortOrderInput | Prisma.SortOrder
   creditId?: Prisma.SortOrderInput | Prisma.SortOrder
+  paymentId?: Prisma.SortOrderInput | Prisma.SortOrder
   liquidationId?: Prisma.SortOrderInput | Prisma.SortOrder
   uploadedById?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  label?: Prisma.SortOrderInput | Prisma.SortOrder
   fileName?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -346,9 +371,11 @@ export type DocumentScalarWhereWithAggregatesInput = {
   id?: Prisma.StringWithAggregatesFilter<"Document"> | string
   clientId?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
   creditId?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
+  paymentId?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
   liquidationId?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
   uploadedById?: Prisma.StringWithAggregatesFilter<"Document"> | string
   category?: Prisma.StringWithAggregatesFilter<"Document"> | string
+  label?: Prisma.StringNullableWithAggregatesFilter<"Document"> | string | null
   fileName?: Prisma.StringWithAggregatesFilter<"Document"> | string
   mimeType?: Prisma.StringWithAggregatesFilter<"Document"> | string
   sizeBytes?: Prisma.IntWithAggregatesFilter<"Document"> | number
@@ -360,6 +387,7 @@ export type DocumentScalarWhereWithAggregatesInput = {
 export type DocumentCreateInput = {
   id?: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -368,6 +396,7 @@ export type DocumentCreateInput = {
   createdAt?: Date | string
   client?: Prisma.ClientCreateNestedOneWithoutDocumentsInput
   credit?: Prisma.CreditCreateNestedOneWithoutDocumentsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutDocumentsInput
   liquidation?: Prisma.LiquidationCreateNestedOneWithoutDocumentsInput
   uploadedBy: Prisma.UserCreateNestedOneWithoutUploadedDocumentsInput
 }
@@ -376,9 +405,11 @@ export type DocumentUncheckedCreateInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -390,6 +421,7 @@ export type DocumentUncheckedCreateInput = {
 export type DocumentUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -398,6 +430,7 @@ export type DocumentUpdateInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneWithoutDocumentsNestedInput
   credit?: Prisma.CreditUpdateOneWithoutDocumentsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutDocumentsNestedInput
   liquidation?: Prisma.LiquidationUpdateOneWithoutDocumentsNestedInput
   uploadedBy?: Prisma.UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput
 }
@@ -406,9 +439,11 @@ export type DocumentUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -421,9 +456,11 @@ export type DocumentCreateManyInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -435,6 +472,7 @@ export type DocumentCreateManyInput = {
 export type DocumentUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -447,9 +485,11 @@ export type DocumentUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -472,9 +512,11 @@ export type DocumentCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   creditId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   liquidationId?: Prisma.SortOrder
   uploadedById?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  label?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -491,9 +533,11 @@ export type DocumentMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   creditId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   liquidationId?: Prisma.SortOrder
   uploadedById?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  label?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -506,9 +550,11 @@ export type DocumentMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   clientId?: Prisma.SortOrder
   creditId?: Prisma.SortOrder
+  paymentId?: Prisma.SortOrder
   liquidationId?: Prisma.SortOrder
   uploadedById?: Prisma.SortOrder
   category?: Prisma.SortOrder
+  label?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   sizeBytes?: Prisma.SortOrder
@@ -647,6 +693,48 @@ export type DocumentUncheckedUpdateManyWithoutCreditNestedInput = {
   deleteMany?: Prisma.DocumentScalarWhereInput | Prisma.DocumentScalarWhereInput[]
 }
 
+export type DocumentCreateNestedManyWithoutPaymentInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput> | Prisma.DocumentCreateWithoutPaymentInput[] | Prisma.DocumentUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutPaymentInput | Prisma.DocumentCreateOrConnectWithoutPaymentInput[]
+  createMany?: Prisma.DocumentCreateManyPaymentInputEnvelope
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+}
+
+export type DocumentUncheckedCreateNestedManyWithoutPaymentInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput> | Prisma.DocumentCreateWithoutPaymentInput[] | Prisma.DocumentUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutPaymentInput | Prisma.DocumentCreateOrConnectWithoutPaymentInput[]
+  createMany?: Prisma.DocumentCreateManyPaymentInputEnvelope
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+}
+
+export type DocumentUpdateManyWithoutPaymentNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput> | Prisma.DocumentCreateWithoutPaymentInput[] | Prisma.DocumentUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutPaymentInput | Prisma.DocumentCreateOrConnectWithoutPaymentInput[]
+  upsert?: Prisma.DocumentUpsertWithWhereUniqueWithoutPaymentInput | Prisma.DocumentUpsertWithWhereUniqueWithoutPaymentInput[]
+  createMany?: Prisma.DocumentCreateManyPaymentInputEnvelope
+  set?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  disconnect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  delete?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  update?: Prisma.DocumentUpdateWithWhereUniqueWithoutPaymentInput | Prisma.DocumentUpdateWithWhereUniqueWithoutPaymentInput[]
+  updateMany?: Prisma.DocumentUpdateManyWithWhereWithoutPaymentInput | Prisma.DocumentUpdateManyWithWhereWithoutPaymentInput[]
+  deleteMany?: Prisma.DocumentScalarWhereInput | Prisma.DocumentScalarWhereInput[]
+}
+
+export type DocumentUncheckedUpdateManyWithoutPaymentNestedInput = {
+  create?: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput> | Prisma.DocumentCreateWithoutPaymentInput[] | Prisma.DocumentUncheckedCreateWithoutPaymentInput[]
+  connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutPaymentInput | Prisma.DocumentCreateOrConnectWithoutPaymentInput[]
+  upsert?: Prisma.DocumentUpsertWithWhereUniqueWithoutPaymentInput | Prisma.DocumentUpsertWithWhereUniqueWithoutPaymentInput[]
+  createMany?: Prisma.DocumentCreateManyPaymentInputEnvelope
+  set?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  disconnect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  delete?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  connect?: Prisma.DocumentWhereUniqueInput | Prisma.DocumentWhereUniqueInput[]
+  update?: Prisma.DocumentUpdateWithWhereUniqueWithoutPaymentInput | Prisma.DocumentUpdateWithWhereUniqueWithoutPaymentInput[]
+  updateMany?: Prisma.DocumentUpdateManyWithWhereWithoutPaymentInput | Prisma.DocumentUpdateManyWithWhereWithoutPaymentInput[]
+  deleteMany?: Prisma.DocumentScalarWhereInput | Prisma.DocumentScalarWhereInput[]
+}
+
 export type DocumentCreateNestedManyWithoutLiquidationInput = {
   create?: Prisma.XOR<Prisma.DocumentCreateWithoutLiquidationInput, Prisma.DocumentUncheckedCreateWithoutLiquidationInput> | Prisma.DocumentCreateWithoutLiquidationInput[] | Prisma.DocumentUncheckedCreateWithoutLiquidationInput[]
   connectOrCreate?: Prisma.DocumentCreateOrConnectWithoutLiquidationInput | Prisma.DocumentCreateOrConnectWithoutLiquidationInput[]
@@ -692,6 +780,7 @@ export type DocumentUncheckedUpdateManyWithoutLiquidationNestedInput = {
 export type DocumentCreateWithoutUploadedByInput = {
   id?: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -700,6 +789,7 @@ export type DocumentCreateWithoutUploadedByInput = {
   createdAt?: Date | string
   client?: Prisma.ClientCreateNestedOneWithoutDocumentsInput
   credit?: Prisma.CreditCreateNestedOneWithoutDocumentsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutDocumentsInput
   liquidation?: Prisma.LiquidationCreateNestedOneWithoutDocumentsInput
 }
 
@@ -707,8 +797,10 @@ export type DocumentUncheckedCreateWithoutUploadedByInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -750,9 +842,11 @@ export type DocumentScalarWhereInput = {
   id?: Prisma.StringFilter<"Document"> | string
   clientId?: Prisma.StringNullableFilter<"Document"> | string | null
   creditId?: Prisma.StringNullableFilter<"Document"> | string | null
+  paymentId?: Prisma.StringNullableFilter<"Document"> | string | null
   liquidationId?: Prisma.StringNullableFilter<"Document"> | string | null
   uploadedById?: Prisma.StringFilter<"Document"> | string
   category?: Prisma.StringFilter<"Document"> | string
+  label?: Prisma.StringNullableFilter<"Document"> | string | null
   fileName?: Prisma.StringFilter<"Document"> | string
   mimeType?: Prisma.StringFilter<"Document"> | string
   sizeBytes?: Prisma.IntFilter<"Document"> | number
@@ -764,6 +858,7 @@ export type DocumentScalarWhereInput = {
 export type DocumentCreateWithoutClientInput = {
   id?: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -771,6 +866,7 @@ export type DocumentCreateWithoutClientInput = {
   sanityUrl: string
   createdAt?: Date | string
   credit?: Prisma.CreditCreateNestedOneWithoutDocumentsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutDocumentsInput
   liquidation?: Prisma.LiquidationCreateNestedOneWithoutDocumentsInput
   uploadedBy: Prisma.UserCreateNestedOneWithoutUploadedDocumentsInput
 }
@@ -778,9 +874,11 @@ export type DocumentCreateWithoutClientInput = {
 export type DocumentUncheckedCreateWithoutClientInput = {
   id?: string
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -818,6 +916,7 @@ export type DocumentUpdateManyWithWhereWithoutClientInput = {
 export type DocumentCreateWithoutCreditInput = {
   id?: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -825,6 +924,7 @@ export type DocumentCreateWithoutCreditInput = {
   sanityUrl: string
   createdAt?: Date | string
   client?: Prisma.ClientCreateNestedOneWithoutDocumentsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutDocumentsInput
   liquidation?: Prisma.LiquidationCreateNestedOneWithoutDocumentsInput
   uploadedBy: Prisma.UserCreateNestedOneWithoutUploadedDocumentsInput
 }
@@ -832,9 +932,11 @@ export type DocumentCreateWithoutCreditInput = {
 export type DocumentUncheckedCreateWithoutCreditInput = {
   id?: string
   clientId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -869,9 +971,10 @@ export type DocumentUpdateManyWithWhereWithoutCreditInput = {
   data: Prisma.XOR<Prisma.DocumentUpdateManyMutationInput, Prisma.DocumentUncheckedUpdateManyWithoutCreditInput>
 }
 
-export type DocumentCreateWithoutLiquidationInput = {
+export type DocumentCreateWithoutPaymentInput = {
   id?: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -880,6 +983,65 @@ export type DocumentCreateWithoutLiquidationInput = {
   createdAt?: Date | string
   client?: Prisma.ClientCreateNestedOneWithoutDocumentsInput
   credit?: Prisma.CreditCreateNestedOneWithoutDocumentsInput
+  liquidation?: Prisma.LiquidationCreateNestedOneWithoutDocumentsInput
+  uploadedBy: Prisma.UserCreateNestedOneWithoutUploadedDocumentsInput
+}
+
+export type DocumentUncheckedCreateWithoutPaymentInput = {
+  id?: string
+  clientId?: string | null
+  creditId?: string | null
+  liquidationId?: string | null
+  uploadedById: string
+  category: string
+  label?: string | null
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  sanityAssetId: string
+  sanityUrl: string
+  createdAt?: Date | string
+}
+
+export type DocumentCreateOrConnectWithoutPaymentInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput>
+}
+
+export type DocumentCreateManyPaymentInputEnvelope = {
+  data: Prisma.DocumentCreateManyPaymentInput | Prisma.DocumentCreateManyPaymentInput[]
+  skipDuplicates?: boolean
+}
+
+export type DocumentUpsertWithWhereUniqueWithoutPaymentInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  update: Prisma.XOR<Prisma.DocumentUpdateWithoutPaymentInput, Prisma.DocumentUncheckedUpdateWithoutPaymentInput>
+  create: Prisma.XOR<Prisma.DocumentCreateWithoutPaymentInput, Prisma.DocumentUncheckedCreateWithoutPaymentInput>
+}
+
+export type DocumentUpdateWithWhereUniqueWithoutPaymentInput = {
+  where: Prisma.DocumentWhereUniqueInput
+  data: Prisma.XOR<Prisma.DocumentUpdateWithoutPaymentInput, Prisma.DocumentUncheckedUpdateWithoutPaymentInput>
+}
+
+export type DocumentUpdateManyWithWhereWithoutPaymentInput = {
+  where: Prisma.DocumentScalarWhereInput
+  data: Prisma.XOR<Prisma.DocumentUpdateManyMutationInput, Prisma.DocumentUncheckedUpdateManyWithoutPaymentInput>
+}
+
+export type DocumentCreateWithoutLiquidationInput = {
+  id?: string
+  category: string
+  label?: string | null
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  sanityAssetId: string
+  sanityUrl: string
+  createdAt?: Date | string
+  client?: Prisma.ClientCreateNestedOneWithoutDocumentsInput
+  credit?: Prisma.CreditCreateNestedOneWithoutDocumentsInput
+  payment?: Prisma.PaymentCreateNestedOneWithoutDocumentsInput
   uploadedBy: Prisma.UserCreateNestedOneWithoutUploadedDocumentsInput
 }
 
@@ -887,8 +1049,10 @@ export type DocumentUncheckedCreateWithoutLiquidationInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -927,8 +1091,10 @@ export type DocumentCreateManyUploadedByInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -940,6 +1106,7 @@ export type DocumentCreateManyUploadedByInput = {
 export type DocumentUpdateWithoutUploadedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -948,6 +1115,7 @@ export type DocumentUpdateWithoutUploadedByInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneWithoutDocumentsNestedInput
   credit?: Prisma.CreditUpdateOneWithoutDocumentsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutDocumentsNestedInput
   liquidation?: Prisma.LiquidationUpdateOneWithoutDocumentsNestedInput
 }
 
@@ -955,8 +1123,10 @@ export type DocumentUncheckedUpdateWithoutUploadedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -969,8 +1139,10 @@ export type DocumentUncheckedUpdateManyWithoutUploadedByInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -982,9 +1154,11 @@ export type DocumentUncheckedUpdateManyWithoutUploadedByInput = {
 export type DocumentCreateManyClientInput = {
   id?: string
   creditId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -996,6 +1170,7 @@ export type DocumentCreateManyClientInput = {
 export type DocumentUpdateWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1003,6 +1178,7 @@ export type DocumentUpdateWithoutClientInput = {
   sanityUrl?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   credit?: Prisma.CreditUpdateOneWithoutDocumentsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutDocumentsNestedInput
   liquidation?: Prisma.LiquidationUpdateOneWithoutDocumentsNestedInput
   uploadedBy?: Prisma.UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput
 }
@@ -1010,9 +1186,11 @@ export type DocumentUpdateWithoutClientInput = {
 export type DocumentUncheckedUpdateWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1024,9 +1202,11 @@ export type DocumentUncheckedUpdateWithoutClientInput = {
 export type DocumentUncheckedUpdateManyWithoutClientInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1038,9 +1218,11 @@ export type DocumentUncheckedUpdateManyWithoutClientInput = {
 export type DocumentCreateManyCreditInput = {
   id?: string
   clientId?: string | null
+  paymentId?: string | null
   liquidationId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -1052,6 +1234,7 @@ export type DocumentCreateManyCreditInput = {
 export type DocumentUpdateWithoutCreditInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1059,6 +1242,7 @@ export type DocumentUpdateWithoutCreditInput = {
   sanityUrl?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneWithoutDocumentsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutDocumentsNestedInput
   liquidation?: Prisma.LiquidationUpdateOneWithoutDocumentsNestedInput
   uploadedBy?: Prisma.UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput
 }
@@ -1066,9 +1250,11 @@ export type DocumentUpdateWithoutCreditInput = {
 export type DocumentUncheckedUpdateWithoutCreditInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1080,9 +1266,75 @@ export type DocumentUncheckedUpdateWithoutCreditInput = {
 export type DocumentUncheckedUpdateManyWithoutCreditInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  sanityAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  sanityUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DocumentCreateManyPaymentInput = {
+  id?: string
+  clientId?: string | null
+  creditId?: string | null
+  liquidationId?: string | null
+  uploadedById: string
+  category: string
+  label?: string | null
+  fileName: string
+  mimeType: string
+  sizeBytes: number
+  sanityAssetId: string
+  sanityUrl: string
+  createdAt?: Date | string
+}
+
+export type DocumentUpdateWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  sanityAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  sanityUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  client?: Prisma.ClientUpdateOneWithoutDocumentsNestedInput
+  credit?: Prisma.CreditUpdateOneWithoutDocumentsNestedInput
+  liquidation?: Prisma.LiquidationUpdateOneWithoutDocumentsNestedInput
+  uploadedBy?: Prisma.UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput
+}
+
+export type DocumentUncheckedUpdateWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  mimeType?: Prisma.StringFieldUpdateOperationsInput | string
+  sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
+  sanityAssetId?: Prisma.StringFieldUpdateOperationsInput | string
+  sanityUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+}
+
+export type DocumentUncheckedUpdateManyWithoutPaymentInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  liquidationId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
+  category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1095,8 +1347,10 @@ export type DocumentCreateManyLiquidationInput = {
   id?: string
   clientId?: string | null
   creditId?: string | null
+  paymentId?: string | null
   uploadedById: string
   category: string
+  label?: string | null
   fileName: string
   mimeType: string
   sizeBytes: number
@@ -1108,6 +1362,7 @@ export type DocumentCreateManyLiquidationInput = {
 export type DocumentUpdateWithoutLiquidationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1116,6 +1371,7 @@ export type DocumentUpdateWithoutLiquidationInput = {
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   client?: Prisma.ClientUpdateOneWithoutDocumentsNestedInput
   credit?: Prisma.CreditUpdateOneWithoutDocumentsNestedInput
+  payment?: Prisma.PaymentUpdateOneWithoutDocumentsNestedInput
   uploadedBy?: Prisma.UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput
 }
 
@@ -1123,8 +1379,10 @@ export type DocumentUncheckedUpdateWithoutLiquidationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1137,8 +1395,10 @@ export type DocumentUncheckedUpdateManyWithoutLiquidationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   clientId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   creditId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  paymentId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   uploadedById?: Prisma.StringFieldUpdateOperationsInput | string
   category?: Prisma.StringFieldUpdateOperationsInput | string
+  label?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   sizeBytes?: Prisma.IntFieldUpdateOperationsInput | number
@@ -1153,9 +1413,11 @@ export type DocumentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   id?: boolean
   clientId?: boolean
   creditId?: boolean
+  paymentId?: boolean
   liquidationId?: boolean
   uploadedById?: boolean
   category?: boolean
+  label?: boolean
   fileName?: boolean
   mimeType?: boolean
   sizeBytes?: boolean
@@ -1164,6 +1426,7 @@ export type DocumentSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs
   createdAt?: boolean
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
@@ -1172,9 +1435,11 @@ export type DocumentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   clientId?: boolean
   creditId?: boolean
+  paymentId?: boolean
   liquidationId?: boolean
   uploadedById?: boolean
   category?: boolean
+  label?: boolean
   fileName?: boolean
   mimeType?: boolean
   sizeBytes?: boolean
@@ -1183,6 +1448,7 @@ export type DocumentSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Exte
   createdAt?: boolean
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
@@ -1191,9 +1457,11 @@ export type DocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   id?: boolean
   clientId?: boolean
   creditId?: boolean
+  paymentId?: boolean
   liquidationId?: boolean
   uploadedById?: boolean
   category?: boolean
+  label?: boolean
   fileName?: boolean
   mimeType?: boolean
   sizeBytes?: boolean
@@ -1202,6 +1470,7 @@ export type DocumentSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Exte
   createdAt?: boolean
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["document"]>
@@ -1210,9 +1479,11 @@ export type DocumentSelectScalar = {
   id?: boolean
   clientId?: boolean
   creditId?: boolean
+  paymentId?: boolean
   liquidationId?: boolean
   uploadedById?: boolean
   category?: boolean
+  label?: boolean
   fileName?: boolean
   mimeType?: boolean
   sizeBytes?: boolean
@@ -1221,22 +1492,25 @@ export type DocumentSelectScalar = {
   createdAt?: boolean
 }
 
-export type DocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "creditId" | "liquidationId" | "uploadedById" | "category" | "fileName" | "mimeType" | "sizeBytes" | "sanityAssetId" | "sanityUrl" | "createdAt", ExtArgs["result"]["document"]>
+export type DocumentOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "clientId" | "creditId" | "paymentId" | "liquidationId" | "uploadedById" | "category" | "label" | "fileName" | "mimeType" | "sizeBytes" | "sanityAssetId" | "sanityUrl" | "createdAt", ExtArgs["result"]["document"]>
 export type DocumentInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type DocumentIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
 export type DocumentIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   client?: boolean | Prisma.Document$clientArgs<ExtArgs>
   credit?: boolean | Prisma.Document$creditArgs<ExtArgs>
+  payment?: boolean | Prisma.Document$paymentArgs<ExtArgs>
   liquidation?: boolean | Prisma.Document$liquidationArgs<ExtArgs>
   uploadedBy?: boolean | Prisma.UserDefaultArgs<ExtArgs>
 }
@@ -1246,6 +1520,7 @@ export type $DocumentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
   objects: {
     client: Prisma.$ClientPayload<ExtArgs> | null
     credit: Prisma.$CreditPayload<ExtArgs> | null
+    payment: Prisma.$PaymentPayload<ExtArgs> | null
     liquidation: Prisma.$LiquidationPayload<ExtArgs> | null
     uploadedBy: Prisma.$UserPayload<ExtArgs>
   }
@@ -1253,9 +1528,11 @@ export type $DocumentPayload<ExtArgs extends runtime.Types.Extensions.InternalAr
     id: string
     clientId: string | null
     creditId: string | null
+    paymentId: string | null
     liquidationId: string | null
     uploadedById: string
     category: string
+    label: string | null
     fileName: string
     mimeType: string
     sizeBytes: number
@@ -1658,6 +1935,7 @@ export interface Prisma__DocumentClient<T, Null = never, ExtArgs extends runtime
   readonly [Symbol.toStringTag]: "PrismaPromise"
   client<T extends Prisma.Document$clientArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$clientArgs<ExtArgs>>): Prisma.Prisma__ClientClient<runtime.Types.Result.GetResult<Prisma.$ClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   credit<T extends Prisma.Document$creditArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$creditArgs<ExtArgs>>): Prisma.Prisma__CreditClient<runtime.Types.Result.GetResult<Prisma.$CreditPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+  payment<T extends Prisma.Document$paymentArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$paymentArgs<ExtArgs>>): Prisma.Prisma__PaymentClient<runtime.Types.Result.GetResult<Prisma.$PaymentPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   liquidation<T extends Prisma.Document$liquidationArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Document$liquidationArgs<ExtArgs>>): Prisma.Prisma__LiquidationClient<runtime.Types.Result.GetResult<Prisma.$LiquidationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   uploadedBy<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
   /**
@@ -1692,9 +1970,11 @@ export interface DocumentFieldRefs {
   readonly id: Prisma.FieldRef<"Document", 'String'>
   readonly clientId: Prisma.FieldRef<"Document", 'String'>
   readonly creditId: Prisma.FieldRef<"Document", 'String'>
+  readonly paymentId: Prisma.FieldRef<"Document", 'String'>
   readonly liquidationId: Prisma.FieldRef<"Document", 'String'>
   readonly uploadedById: Prisma.FieldRef<"Document", 'String'>
   readonly category: Prisma.FieldRef<"Document", 'String'>
+  readonly label: Prisma.FieldRef<"Document", 'String'>
   readonly fileName: Prisma.FieldRef<"Document", 'String'>
   readonly mimeType: Prisma.FieldRef<"Document", 'String'>
   readonly sizeBytes: Prisma.FieldRef<"Document", 'Int'>
@@ -2137,6 +2417,25 @@ export type Document$creditArgs<ExtArgs extends runtime.Types.Extensions.Interna
    */
   include?: Prisma.CreditInclude<ExtArgs> | null
   where?: Prisma.CreditWhereInput
+}
+
+/**
+ * Document.payment
+ */
+export type Document$paymentArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the Payment
+   */
+  select?: Prisma.PaymentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the Payment
+   */
+  omit?: Prisma.PaymentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.PaymentInclude<ExtArgs> | null
+  where?: Prisma.PaymentWhereInput
 }
 
 /**

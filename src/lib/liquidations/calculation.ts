@@ -13,8 +13,9 @@ function sumType(movements: DailyCashMovement[], type: string) {
 export function calculateAutomaticLiquidation(input: {
   movements: DailyCashMovement[];
   openingBaseCents: bigint;
-  expensesCents: bigint;
-  collectorWithdrawalCents: bigint;
+  manualExpensesCents: bigint;
+  collectorSalaryCents: bigint;
+  chainWithdrawalCents: bigint;
 }) {
   const collectedCashCents = sumType(input.movements, "PAYMENT_CASH");
   const collectedYapeCents = sumType(input.movements, "PAYMENT_YAPE");
@@ -33,7 +34,21 @@ export function calculateAutomaticLiquidation(input: {
   const ledgerCollectedCashCents = collectedCashCents + retainedBeforeMicroinsuranceCents;
   const totalIncomeCents = ledgerCollectedCashCents + microinsuranceCents;
   const ledgerCollectedTotalCents = totalIncomeCents + collectedDigitalCents;
-  const expectedClosingCents = input.openingBaseCents + totalIncomeCents - disbursedCents - input.expensesCents - input.collectorWithdrawalCents;
+  const beforeChainCents =
+    input.openingBaseCents +
+    totalIncomeCents -
+    disbursedCents -
+    input.manualExpensesCents -
+    input.collectorSalaryCents;
+  const surplusCents = beforeChainCents > input.openingBaseCents
+    ? beforeChainCents - input.openingBaseCents
+    : BigInt(0);
+  if (input.chainWithdrawalCents < BigInt(0) || input.chainWithdrawalCents > surplusCents) {
+    throw new Error("El retiro de cadena no puede superar el sobrante disponible");
+  }
+  const expensesCents =
+    input.manualExpensesCents + input.collectorSalaryCents + input.chainWithdrawalCents;
+  const expectedClosingCents = beforeChainCents - input.chainWithdrawalCents;
 
   return {
     collectedCashCents,
@@ -49,6 +64,11 @@ export function calculateAutomaticLiquidation(input: {
     microinsuranceCents,
     renewalSettlementCents,
     cashOutCents,
+    manualExpensesCents: input.manualExpensesCents,
+    collectorSalaryCents: input.collectorSalaryCents,
+    chainWithdrawalCents: input.chainWithdrawalCents,
+    expensesCents,
+    surplusCents,
     expectedClosingCents,
   };
 }

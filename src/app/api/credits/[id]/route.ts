@@ -9,7 +9,7 @@ import { notifyMasters } from "@/lib/notify";
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await requireUser(request); const { id } = await params;
-    const credit = await prisma.credit.findUnique({ where: { id }, include: { client: true, collector: { select: { id: true, name: true } }, previousCredit: { select: { id: true, code: true } }, installments: { orderBy: { number: "asc" } }, payments: { include: { collector: { select: { name: true } } }, orderBy: { paidAt: "desc" } }, documents: { orderBy: { createdAt: "desc" } } } });
+    const credit = await prisma.credit.findUnique({ where: { id }, include: { client: true, collector: { select: { id: true, name: true } }, previousCredit: { select: { id: true, code: true } }, installments: { orderBy: { number: "asc" } }, payments: { include: { collector: { select: { name: true } }, allocations: { include: { installment: { select: { number: true } } } }, documents: { orderBy: { createdAt: "asc" } } }, orderBy: { paidAt: "desc" } }, activities: { where: { type: "NO_PAYMENT" }, include: { actor: { select: { name: true } } }, orderBy: { createdAt: "desc" }, take: 50 }, documents: { orderBy: { createdAt: "desc" } } } });
     if (!credit || (user.role === "COLLECTOR" && credit.collectorId !== user.id)) return Response.json({ error: "Crédito no encontrado" }, { status: 404 });
     return jsonResponse({ credit: { ...credit, ...creditProgress(credit) } });
   } catch (error) { return apiError(error); }

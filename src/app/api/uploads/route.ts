@@ -4,7 +4,16 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { notifyMasters } from "@/lib/notify";
 
-const allowedCategories = new Set(["LOCATION", "YAPE", "OTHER"]);
+const allowedCategories = new Set([
+  "LOCATION",
+  "YAPE",
+  "OTHER",
+  "CLIENT_ID",
+  "BUSINESS",
+  "CREDIT_UPDATE",
+  "PAYMENT_YAPE",
+  "PAYMENT_TRANSFER",
+]);
 const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif", "video/mp4", "video/quicktime", "video/webm", "application/pdf"]);
 
 export async function POST(request: Request) {
@@ -27,14 +36,31 @@ export async function POST(request: Request) {
     if (files.some((file) => !allowedTypes.has(file.type))) return Response.json({ error: "Hay un formato de archivo no permitido" }, { status: 415 });
     if (clientId && !(await prisma.client.count({ where: { id: clientId, collectorId: user.id } }))) return Response.json({ error: "Cliente no asignado" }, { status: 403 });
     if (creditId && !(await prisma.credit.count({ where: { id: creditId, collectorId: user.id } }))) return Response.json({ error: "Crédito no asignado" }, { status: 403 });
+    if (clientId && creditId && !(await prisma.credit.count({ where: { id: creditId, clientId, collectorId: user.id } }))) return Response.json({ error: "El crédito no pertenece al cliente indicado" }, { status: 400 });
     if (liquidationId && !(await prisma.liquidation.count({ where: { id: liquidationId, collectorId: user.id } }))) return Response.json({ error: "Liquidación no asignada" }, { status: 403 });
     const sanity = createClient({ projectId, dataset: process.env.SANITY_DATASET ?? "production", apiVersion: process.env.SANITY_API_VERSION ?? "2026-09-01", token, useCdn: false });
+    const labelPrefix: Record<string, string> = {
+      LOCATION: "Ubicación",
+      YAPE: "Yape",
+      CLIENT_ID: "DNI",
+      BUSINESS: "Negocio",
+      CREDIT_UPDATE: "Actualización",
+      PAYMENT_YAPE: "Yape",
+      PAYMENT_TRANSFER: "Transferencia",
+      OTHER: "Documento",
+    };
+    const existingCount = await prisma.document.count({
+      where: {
+        category,
+        ...(creditId ? { creditId } : clientId ? { clientId } : liquidationId ? { liquidationId } : { uploadedById: user.id }),
+      },
+    });
     const documents = [];
     for (const file of files) {
       const asset = await sanity.assets.upload(file.type.startsWith("image/") ? "image" : "file", Buffer.from(await file.arrayBuffer()), { filename: file.name, contentType: file.type });
-      documents.push(await prisma.document.create({ data: { clientId, creditId, liquidationId, uploadedById: user.id, category, fileName: file.name, mimeType: file.type, sizeBytes: file.size, sanityAssetId: asset._id, sanityUrl: asset.url } }));
+      documents.push(await prisma.document.create({ data: { clientId, creditId, liquidationId, uploadedById: user.id, category, label: `${labelPrefix[category]} ${existingCount + documents.length + 1}`, fileName: file.name, mimeType: file.type, sizeBytes: file.size, sanityAssetId: asset._id, sanityUrl: asset.url } }));
     }
-    await notifyMasters({ actorId: user.id, type: "DOCUMENTS_UPLOADED", title: "Documentos cargados", message: `${user.name} subió ${documents.length} archivo${documents.length === 1 ? "" : "s"}`, entityType: creditId ? "credit" : clientId ? "client" : "liquidation", entityId: creditId ?? clientId ?? liquidationId, actionUrl: creditId ? `/app/creditos/${creditId}` : clientId ? `/app/clientes/${clientId}` : "/app/liquidaciones", details: { categoría: category, archivos: documents.map((item) => ({ nombre: item.fileName, tipo: item.mimeType, tamaño: item.sizeBytes })) } });
+    await notifyMasters({ actorId: user.id, type: "DOCUMENTS_UPLOADED", title: "Documentos cargados", message: `${user.name} subió ${documents.length} archivo${documents.length === 1 ? "" : "s"}`, entityType: creditId ? "credit" : clientId ? "client" : "liquidation", entityId: creditId ?? clientId ?? liquidationId, actionUrl: creditId ? `/app/creditos/${creditId}` : clientId ? `/app/clientes/${clientId}` : "/app/liquidaciones", details: { categoría: category, archivos: documents.map((item) => ({ etiqueta: item.label, nombre: item.fileName, tipo: item.mimeType, tamaño: item.sizeBytes })) } });
     return jsonResponse({ documents }, { status: 201 });
   } catch (error) { return apiError(error); }
 }

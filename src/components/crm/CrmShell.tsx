@@ -55,7 +55,7 @@ export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
         {view==="creditos"&&<CreditsView user={user} currency={currencyContext} initialId={entityId} refreshKey={refreshKey}/>}
         {view==="cobro-hoy"&&user.role==="COLLECTOR"&&<TodayView currency={currencyContext} refreshKey={refreshKey}/>}
         {view==="liquidaciones"&&<LiquidationsView user={user} currency={currencyContext} refreshKey={refreshKey}/>}
-        {view==="cobradores"&&user.role==="MASTER"&&<CollectorsView refreshKey={refreshKey}/>}
+        {view==="cobradores"&&user.role==="MASTER"&&<CollectorsView currency={currencyContext} refreshKey={refreshKey}/>}
         {view==="reportes"&&user.role==="MASTER"&&<ReportsView user={user} currency={currencyContext} refreshKey={refreshKey}/>}
         {view==="auditoria"&&user.role==="MASTER"&&<AuditView refreshKey={refreshKey}/>}
       </main>

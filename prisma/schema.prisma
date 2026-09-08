@@ -108,29 +108,33 @@ model Zone {
 }
 
 model Client {
-  id             String           @id @default(cuid())
-  code           String           @unique
-  name           String
-  documentNumber String?
-  phone          String?
-  alternatePhone String?
-  businessName   String?
-  businessType   String?
-  address        String?
-  locationNotes  String?
-  reference      String?
-  notes          String?
-  zoneId         String?
-  collectorId    String?
-  active         Boolean          @default(true)
-  riskStatus     String           @default("NORMAL")
-  createdAt      DateTime         @default(now()) @db.Timestamptz(3)
-  updatedAt      DateTime         @updatedAt @db.Timestamptz(3)
-  zone           Zone?            @relation(fields: [zoneId], references: [id], onDelete: SetNull)
-  collector      User?            @relation("ClientCollector", fields: [collectorId], references: [id], onDelete: SetNull)
-  credits        Credit[]
-  documents      Document[]
-  activities     ClientActivity[]
+  id                     String           @id @default(cuid())
+  code                   String           @unique
+  name                   String
+  documentNumber         String?
+  phone                  String?
+  alternatePhone         String?
+  businessName           String?
+  businessType           String?
+  address                String?
+  locationNotes          String?
+  latitude               Float?
+  longitude              Float?
+  locationAccuracyMeters Float?
+  locationCapturedAt     DateTime?        @db.Timestamptz(3)
+  reference              String?
+  notes                  String?
+  zoneId                 String?
+  collectorId            String?
+  active                 Boolean          @default(true)
+  riskStatus             String           @default("NORMAL")
+  createdAt              DateTime         @default(now()) @db.Timestamptz(3)
+  updatedAt              DateTime         @updatedAt @db.Timestamptz(3)
+  zone                   Zone?            @relation(fields: [zoneId], references: [id], onDelete: SetNull)
+  collector              User?            @relation("ClientCollector", fields: [collectorId], references: [id], onDelete: SetNull)
+  credits                Credit[]
+  documents              Document[]
+  activities             ClientActivity[]
 
   @@index([collectorId, active])
   @@index([zoneId])
@@ -210,6 +214,7 @@ model Payment {
   credit       Credit              @relation(fields: [creditId], references: [id], onDelete: Restrict)
   collector    User?               @relation("PaymentCollector", fields: [collectorId], references: [id], onDelete: SetNull)
   allocations  PaymentAllocation[]
+  documents    Document[]
   cashMovement CashMovement?
 
   @@index([creditId, paidAt])
@@ -240,6 +245,10 @@ model Liquidation {
   expensesCents            BigInt         @default(0)
   collectorWithdrawalCents BigInt         @default(0)
   microinsuranceCents      BigInt         @default(0)
+  manualExpensesCents      BigInt         @default(0)
+  collectorSalaryCents     BigInt         @default(0)
+  chainWithdrawalCents     BigInt         @default(0)
+  surplusCents             BigInt         @default(0)
   closingCashCents         BigInt
   expectedClosingCents     BigInt
   differenceCents          BigInt
@@ -264,9 +273,11 @@ model Document {
   id            String       @id @default(cuid())
   clientId      String?
   creditId      String?
+  paymentId     String?
   liquidationId String?
   uploadedById  String
   category      String
+  label         String?
   fileName      String
   mimeType      String
   sizeBytes     Int
@@ -275,11 +286,13 @@ model Document {
   createdAt     DateTime     @default(now()) @db.Timestamptz(3)
   client        Client?      @relation(fields: [clientId], references: [id], onDelete: Cascade)
   credit        Credit?      @relation(fields: [creditId], references: [id], onDelete: Cascade)
+  payment       Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   liquidation   Liquidation? @relation(fields: [liquidationId], references: [id], onDelete: Cascade)
   uploadedBy    User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
 
   @@index([clientId, category])
   @@index([creditId, category])
+  @@index([paymentId])
   @@index([liquidationId])
 }
 

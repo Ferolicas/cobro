@@ -5,8 +5,9 @@ describe("calculateAutomaticLiquidation", () => {
   it("separa el M.S del cobrado sin cambiar la caja esperada del Excel", () => {
     const result = calculateAutomaticLiquidation({
       openingBaseCents: BigInt(156_000),
-      expensesCents: BigInt(3_500),
-      collectorWithdrawalCents: BigInt(0),
+      manualExpensesCents: BigInt(3_500),
+      collectorSalaryCents: BigInt(0),
+      chainWithdrawalCents: BigInt(0),
       movements: [
         { type: "PAYMENT_CASH", direction: "IN", amountCents: BigInt(139_000) },
         { type: "ADVANCE_INSTALLMENT", direction: "IN", amountCents: BigInt(19_000) },
@@ -25,8 +26,9 @@ describe("calculateAutomaticLiquidation", () => {
   it("calcula la caja usando solo los movimientos registrados", () => {
     const result = calculateAutomaticLiquidation({
       openingBaseCents: BigInt(50_000),
-      expensesCents: BigInt(3_000),
-      collectorWithdrawalCents: BigInt(2_000),
+      manualExpensesCents: BigInt(3_000),
+      collectorSalaryCents: BigInt(2_000),
+      chainWithdrawalCents: BigInt(0),
       movements: [
         { type: "PAYMENT_CASH", direction: "IN", amountCents: BigInt(20_000) },
         { type: "PAYMENT_YAPE", direction: "IN", amountCents: BigInt(5_000) },
@@ -46,8 +48,9 @@ describe("calculateAutomaticLiquidation", () => {
   it("descuenta la liquidacion anterior de una renovacion del efectivo entregado", () => {
     const result = calculateAutomaticLiquidation({
       openingBaseCents: BigInt(0),
-      expensesCents: BigInt(0),
-      collectorWithdrawalCents: BigInt(0),
+      manualExpensesCents: BigInt(0),
+      collectorSalaryCents: BigInt(0),
+      chainWithdrawalCents: BigInt(0),
       movements: [
         { type: "DISBURSEMENT", direction: "OUT", amountCents: BigInt(30_000) },
         { type: "ADVANCE_INSTALLMENT", direction: "IN", amountCents: BigInt(1_500) },
@@ -59,5 +62,19 @@ describe("calculateAutomaticLiquidation", () => {
     expect(result.ledgerCollectedCashCents).toBe(BigInt(11_500));
     expect(result.totalIncomeCents).toBe(BigInt(11_500));
     expect(result.expectedClosingCents).toBe(BigInt(-18_500));
+  });
+
+  it("limita la cadena al sobrante y deja la base fija", () => {
+    const result = calculateAutomaticLiquidation({
+      openingBaseCents: BigInt(3_000_000),
+      manualExpensesCents: BigInt(10_000),
+      collectorSalaryCents: BigInt(3_000),
+      chainWithdrawalCents: BigInt(87_000),
+      movements: [{ type: "PAYMENT_CASH", direction: "IN", amountCents: BigInt(100_000) }],
+    });
+
+    expect(result.surplusCents).toBe(BigInt(87_000));
+    expect(result.expensesCents).toBe(BigInt(100_000));
+    expect(result.expectedClosingCents).toBe(BigInt(3_000_000));
   });
 });

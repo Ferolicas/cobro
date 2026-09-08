@@ -15,6 +15,10 @@ function day(values: Partial<FinancialDay>): FinancialDay {
     microinsuranceCents: BigInt(0),
     advancePaymentCents: BigInt(0),
     renewalSettlementCents: BigInt(0),
+    manualExpensesCents: BigInt(0),
+    collectorSalaryCents: BigInt(0),
+    chainWithdrawalCents: BigInt(0),
+    surplusCents: BigInt(0),
     expensesCents: BigInt(0),
     collectorWithdrawalCents: BigInt(0),
     expectedClosingCents: BigInt(0),
@@ -34,18 +38,18 @@ function day(values: Partial<FinancialDay>): FinancialDay {
 describe("calculateWeeklyBalance", () => {
   it("reproduce el balance semanal del Excel de Beatriz", () => {
     const result = calculateWeeklyBalance([
-      day({ ledgerCollectedCashCents: BigInt(297_500), totalIncomeCents: BigInt(315_500), disbursedCents: BigInt(380_000), expensesCents: BigInt(3_500), microinsuranceCents: BigInt(18_000), newClientsCount: 6 }),
-      day({ date: "2026-09-01", dayName: "MARTES", ledgerCollectedCashCents: BigInt(208_200), totalIncomeCents: BigInt(213_700), disbursedCents: BigInt(110_000), expensesCents: BigInt(30_000), microinsuranceCents: BigInt(5_500), newClientsCount: 3 }),
+      day({ ledgerCollectedCashCents: BigInt(297_500), totalIncomeCents: BigInt(315_500), disbursedCents: BigInt(380_000), manualExpensesCents: BigInt(3_500), expensesCents: BigInt(3_500), microinsuranceCents: BigInt(18_000), newClientsCount: 6 }),
+      day({ date: "2026-09-01", dayName: "MARTES", ledgerCollectedCashCents: BigInt(208_200), totalIncomeCents: BigInt(213_700), disbursedCents: BigInt(110_000), manualExpensesCents: BigInt(30_000), expensesCents: BigInt(30_000), microinsuranceCents: BigInt(5_500), newClientsCount: 3 }),
     ]);
 
     expect(result.collectedBeforeMicroinsuranceCents).toBe(BigInt(505_700));
     expect(result.collectedCents).toBe(BigInt(529_200));
-    expect(result.collectionCommissionCents).toBe(BigInt(15_876));
+    expect(result.collectionCommissionCents).toBe(BigInt(15_171));
     expect(result.disbursedCents).toBe(BigInt(490_000));
     expect(result.projectedInterestCents).toBe(BigInt(98_000));
     expect(result.microinsuranceCents).toBe(BigInt(23_500));
-    expect(result.expensesCents).toBe(BigInt(33_500));
-    expect(result.profitCents).toBe(BigInt(64_500));
+    expect(result.expensesCents).toBe(BigInt(48_671));
+    expect(result.profitCents).toBe(BigInt(72_829));
     expect(result.newClientsCount).toBe(9);
   });
 });

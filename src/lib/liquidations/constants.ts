@@ -1,0 +1,3 @@
+export const COLLECTOR_BASE_CENTS = BigInt(3_000_000);
+export const COLLECTOR_SALARY_PERCENT = 3;
+

@@ -10,6 +10,7 @@ import { notifyMasters } from "@/lib/notify";
 const schema = z.object({
   principal: z.coerce.number().positive().max(1_000_000),
   microinsurance: z.coerce.number().min(0).default(0),
+  advancePayment: z.coerce.number().positive().max(1_000_000).optional(),
   disbursedAt: z.string().min(10),
   notes: z.string().max(2000).optional().nullable(),
 });
@@ -24,6 +25,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const credit = await createCredit({
       clientId: previous.clientId, collectorId: user.id,
       principalCents: toCents(input.principal), microinsuranceCents: toCents(input.microinsurance),
+      advancePaymentCents: input.advancePayment == null ? undefined : toCents(input.advancePayment),
       disbursedAt: dateOnly(input.disbursedAt), notes: input.notes, previousCreditId: previous.id,
     });
     await audit({ actorId: user.id, action: "CREDIT_RENEWED", entityType: "credit", entityId: credit.id, before: previous, after: credit });
@@ -31,7 +33,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       actorId: user.id, type: "CREDIT_RENEWED", title: "Crédito renovado",
       message: `${user.name} renovó el crédito de ${previous.client.name} por S/ ${input.principal.toFixed(2)}`,
       entityType: "credit", entityId: credit.id, actionUrl: `/app/creditos/${credit.id}`,
-      details: { cliente: previous.client.name, créditoAnterior: previous.code, saldoLiquidado: Number(previous.balanceCents) / 100, créditoNuevo: credit.code, capitalNuevo: input.principal, microseguro: input.microinsurance, efectivoEntregado: Number(credit.cashDeliveredCents) / 100 },
+      details: { cliente: previous.client.name, créditoAnterior: previous.code, saldoLiquidado: Number(previous.balanceCents) / 100, créditoNuevo: credit.code, capitalNuevo: input.principal, microseguro: input.microinsurance, primeraCuota: Number(credit.advancePaymentCents) / 100, efectivoEntregado: Number(credit.cashDeliveredCents) / 100 },
     });
     return jsonResponse({ credit }, { status: 201 });
   } catch (error) { return apiError(error); }

@@ -5,13 +5,14 @@ import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
 import { businessToday, CREDIT_DAYS, creditNumbers, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
-export { CREDIT_DAYS, creditNumbers, dateOnly, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
+export { CREDIT_DAYS, creditNumbers, dateOnly, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
 export type NewCreditInput = {
   clientId: string;
   collectorId?: string | null;
   principalCents: bigint;
   microinsuranceCents?: bigint;
+  advancePaymentCents?: bigint;
   disbursedAt: Date;
   notes?: string | null;
   previousCreditId?: string | null;
@@ -28,6 +29,7 @@ async function allocatePayment(
     source: string;
     note?: string | null;
     cashMovement?: boolean;
+    proofDocumentIds?: string[];
   },
 ) {
   const credit = await tx.credit.findUniqueOrThrow({ where: { id: params.creditId } });
@@ -36,6 +38,29 @@ async function allocatePayment(
   }
   if (params.amountCents <= BigInt(0)) throw new Error("El pago debe ser mayor que cero");
   if (params.amountCents > credit.balanceCents) throw new Error("El pago supera el saldo pendiente");
+
+  const digitalMethod = params.method === "YAPE" || params.method === "TRANSFER";
+  const proofDocumentIds = [...new Set(params.proofDocumentIds ?? [])];
+  if (digitalMethod) {
+    if (!params.collectorId || !proofDocumentIds.length) {
+      throw new Error("Yape y transferencia requieren al menos un justificante");
+    }
+    const expectedCategory = params.method === "YAPE" ? "PAYMENT_YAPE" : "PAYMENT_TRANSFER";
+    const proofCount = await tx.document.count({
+      where: {
+        id: { in: proofDocumentIds },
+        creditId: params.creditId,
+        uploadedById: params.collectorId,
+        category: expectedCategory,
+        paymentId: null,
+      },
+    });
+    if (proofCount !== proofDocumentIds.length) {
+      throw new Error("El justificante no corresponde a este cobro o ya fue utilizado");
+    }
+  } else if (proofDocumentIds.length) {
+    throw new Error("Los justificantes digitales solo corresponden a Yape o transferencia");
+  }
 
   const payment = await tx.payment.create({
     data: {
@@ -48,6 +73,15 @@ async function allocatePayment(
       note: params.note,
     },
   });
+  if (proofDocumentIds.length) {
+    const linked = await tx.document.updateMany({
+      where: { id: { in: proofDocumentIds }, paymentId: null },
+      data: { paymentId: payment.id },
+    });
+    if (linked.count !== proofDocumentIds.length) {
+      throw new Error("No se pudieron vincular todos los justificantes al pago");
+    }
+  }
   const pending = await tx.installment.findMany({
     where: { creditId: params.creditId, status: { not: "PAID" } },
     orderBy: { number: "asc" },
@@ -112,6 +146,7 @@ export async function registerPayment(params: {
   method: string;
   source?: string;
   note?: string | null;
+  proofDocumentIds?: string[];
 }) {
   return prisma.$transaction((tx) =>
     allocatePayment(tx, {
@@ -139,8 +174,12 @@ export async function createCredit(input: NewCreditInput) {
     }
     const schedule = installmentPlan(input.principalCents, input.disbursedAt);
     const { interestCents, totalDueCents, installmentCents } = creditNumbers(input.principalCents);
-    const advancePaymentCents = schedule[0].expectedCents;
+    const minimumAdvancePaymentCents = schedule[0].expectedCents;
+    const advancePaymentCents = input.advancePaymentCents ?? minimumAdvancePaymentCents;
     const microinsuranceCents = input.microinsuranceCents ?? BigInt(0);
+    if (advancePaymentCents < minimumAdvancePaymentCents) {
+      throw new Error("El pago inicial debe cubrir como mínimo la primera cuota");
+    }
     let priorSettlementCents = BigInt(0);
     if (input.previousCreditId) {
       const previous = await tx.credit.findUniqueOrThrow({ where: { id: input.previousCreditId } });
@@ -269,19 +308,27 @@ export function creditProgress(credit: {
   totalDueCents: bigint;
   disbursedAt: Date;
   maturityDate: Date;
-  installments: { dueDate: Date; expectedCents: bigint; paidCents: bigint }[];
+  installments: { number: number; dueDate: Date; expectedCents: bigint; paidCents: bigint; status?: string }[];
 }) {
   const today = businessToday();
   const daysElapsed = Math.max(0, differenceInCalendarDays(today, credit.disbursedAt));
   const dueTodayCents = credit.installments
     .filter((item) => item.dueDate <= today)
     .reduce((sum, item) => sum + (item.expectedCents - item.paidCents), BigInt(0));
+  const paidInstallmentsCount = credit.installments.filter(
+    (item) => item.paidCents >= item.expectedCents,
+  ).length;
+  const currentInstallmentNumber =
+    credit.installments.find((item) => item.paidCents < item.expectedCents)?.number ??
+    credit.installments.length;
   return {
     daysRemaining: differenceInCalendarDays(credit.maturityDate, today),
     daysElapsed,
     excelStatus: daysElapsed <= CREDIT_DAYS ? "B" : "Q",
     zeroPaymentDays: credit.installments.filter((item) => item.dueDate <= today && item.paidCents === BigInt(0)).length,
     dueTodayCents: dueTodayCents > credit.balanceCents ? credit.balanceCents : dueTodayCents,
+    paidInstallmentsCount,
+    currentInstallmentNumber,
     progress: credit.totalDueCents === BigInt(0) ? 100 : Number(((credit.totalDueCents - credit.balanceCents) * BigInt(10_000)) / credit.totalDueCents) / 100,
   };
 }

@@ -3,6 +3,7 @@ import { audit } from "@/lib/audit";
 import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
+import { notifyMasters } from "@/lib/notify";
 
 const updateSchema = z.object({
   name: z.string().trim().min(3).max(160).optional(),
@@ -13,6 +14,10 @@ const updateSchema = z.object({
   businessType: z.string().trim().max(100).nullable().optional(),
   address: z.string().trim().max(240).nullable().optional(),
   locationNotes: z.string().trim().max(500).nullable().optional(),
+  latitude: z.coerce.number().min(-90).max(90).nullable().optional(),
+  longitude: z.coerce.number().min(-180).max(180).nullable().optional(),
+  locationAccuracyMeters: z.coerce.number().min(0).max(100_000).nullable().optional(),
+  locationCapturedAt: z.coerce.date().nullable().optional(),
   reference: z.string().trim().max(240).nullable().optional(),
   notes: z.string().trim().max(2000).nullable().optional(),
   zoneId: z.string().nullable().optional(),
@@ -49,6 +54,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (user.role === "COLLECTOR") { delete input.collectorId; delete input.active; }
     const client = await prisma.client.update({ where: { id }, data: input });
     await audit({ actorId: user.id, action: "CLIENT_UPDATED", entityType: "client", entityId: id, before, after: client });
+    if (input.latitude != null && input.longitude != null) {
+      await notifyMasters({
+        actorId: user.id,
+        type: "CLIENT_LOCATION_UPDATED",
+        title: "Ubicación actualizada",
+        message: `${user.name} guardó la ubicación en tiempo real de ${client.name}`,
+        entityType: "client",
+        entityId: id,
+        actionUrl: `/app/clientes/${id}`,
+        details: { cliente: client.name, latitud: client.latitude, longitud: client.longitude, precisiónMetros: client.locationAccuracyMeters, capturada: client.locationCapturedAt },
+      });
+    }
     return jsonResponse({ client });
   } catch (error) { return apiError(error); }
 }
