@@ -13,13 +13,25 @@ export function dateTime(value: string | Date) {
   return new Intl.DateTimeFormat("es-PE", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-export function todayInput() {
+function dateKeyInTimeZone(value: string | Date, timeZone: string) {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Lima",
+    timeZone,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
-  }).formatToParts(new Date());
-  const value = (type: Intl.DateTimeFormatPartTypes) => parts.find((part) => part.type === type)?.value;
-  return `${value("year")}-${value("month")}-${value("day")}`;
+  }).formatToParts(new Date(value));
+  const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((item) => item.type === type)?.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+export function installmentVisualStatus(installment: { status: string; dueDate: string | Date; paidAt?: string | Date | null }) {
+  if (installment.status === "PAID" && installment.paidAt) {
+    const dueDate = new Date(installment.dueDate).toISOString().slice(0, 10);
+    if (dateKeyInTimeZone(installment.paidAt, "America/Lima") > dueDate) return "paid-late";
+  }
+  return installment.status.toLowerCase();
+}
+
+export function todayInput() {
+  return dateKeyInTimeZone(new Date(), "America/Lima");
 }

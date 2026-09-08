@@ -82,7 +82,7 @@ export type FinancialDay = {
 
 export type FinancialOverview = {
   days: FinancialDay[];
-  weekly: { collectedBeforeMicroinsuranceCents: number; collectedCents: number; collectionCommissionCents: number; collectorSalaryCents: number; disbursedCents: number; projectedInterestCents: number; microinsuranceCents: number; manualExpensesCents: number; chainWithdrawalCents: number; expensesCents: number; collectorWithdrawalCents: number; profitCents: number; netResultCents: number; newClientsCount: number };
+  weekly: { collectedBeforeMicroinsuranceCents: number; collectedCents: number; collectionCommissionCents: number; collectorSalaryCents: number; disbursedCents: number; projectedInterestCents: number; microinsuranceCents: number; manualExpensesCents: number; chainWithdrawalCents: number; expensesCents: number; collectorWithdrawalCents: number; resultBeforeExpensesCents: number; resultBeforeMicroinsuranceCents: number; profitCents: number; netResultCents: number; newClientsCount: number };
   chain: { initialCapitalCents: number; totalProfitCents: number; rows: { week: number; chain: string; date: string | null; profitCents: number | null; source: string }[] };
   undatedSnapshots: { label: string; baseCents: string; collectedCents: string; disbursedCents: string; expensesCents: string; collectorCents: string; closingCashCents: string; differenceCents: string }[];
 };

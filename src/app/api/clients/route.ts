@@ -40,7 +40,11 @@ export async function GET(request: Request) {
       include: {
         collector: { select: { id: true, name: true } },
         zone: true,
-        credits: { where: { status: { in: ["ACTIVE", "OVERDUE"] } }, select: { id: true, code: true, balanceCents: true, maturityDate: true } },
+        credits: {
+          where: { status: { in: ["ACTIVE", "OVERDUE"] } },
+          select: { id: true, code: true, status: true, balanceCents: true, maturityDate: true },
+          orderBy: { disbursedAt: "desc" },
+        },
       },
       orderBy: { updatedAt: "desc" },
       take: 250,

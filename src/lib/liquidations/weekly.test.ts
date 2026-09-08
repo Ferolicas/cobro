@@ -36,7 +36,7 @@ function day(values: Partial<FinancialDay>): FinancialDay {
 }
 
 describe("calculateWeeklyBalance", () => {
-  it("reproduce el balance semanal del Excel de Beatriz", () => {
+  it("calcula cobrado menos préstamos, menos gastos y suma el microseguro al final", () => {
     const result = calculateWeeklyBalance([
       day({ ledgerCollectedCashCents: BigInt(297_500), totalIncomeCents: BigInt(315_500), disbursedCents: BigInt(380_000), manualExpensesCents: BigInt(3_500), expensesCents: BigInt(3_500), microinsuranceCents: BigInt(18_000), newClientsCount: 6 }),
       day({ date: "2026-09-01", dayName: "MARTES", ledgerCollectedCashCents: BigInt(208_200), totalIncomeCents: BigInt(213_700), disbursedCents: BigInt(110_000), manualExpensesCents: BigInt(30_000), expensesCents: BigInt(30_000), microinsuranceCents: BigInt(5_500), newClientsCount: 3 }),
@@ -49,7 +49,27 @@ describe("calculateWeeklyBalance", () => {
     expect(result.projectedInterestCents).toBe(BigInt(98_000));
     expect(result.microinsuranceCents).toBe(BigInt(23_500));
     expect(result.expensesCents).toBe(BigInt(48_671));
-    expect(result.profitCents).toBe(BigInt(72_829));
+    expect(result.resultBeforeExpensesCents).toBe(BigInt(15_700));
+    expect(result.resultBeforeMicroinsuranceCents).toBe(BigInt(-32_971));
+    expect(result.netResultCents).toBe(BigInt(-9_471));
+    expect(result.profitCents).toBe(BigInt(-9_471));
     expect(result.newClientsCount).toBe(9);
+  });
+
+  it("calcula el sueldo sobre COBRADO sin incluir el microseguro", () => {
+    const result = calculateWeeklyBalance([
+      day({
+        ledgerCollectedCashCents: BigInt(100_000),
+        totalIncomeCents: BigInt(110_000),
+        disbursedCents: BigInt(40_000),
+        manualExpensesCents: BigInt(5_000),
+        microinsuranceCents: BigInt(10_000),
+      }),
+    ]);
+
+    expect(result.collectorSalaryCents).toBe(BigInt(3_000));
+    expect(result.expensesCents).toBe(BigInt(8_000));
+    expect(result.resultBeforeMicroinsuranceCents).toBe(BigInt(52_000));
+    expect(result.netResultCents).toBe(BigInt(62_000));
   });
 });

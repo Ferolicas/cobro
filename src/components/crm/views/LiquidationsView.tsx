@@ -57,18 +57,19 @@ function FullBalance({ overview, currency }: { overview: FinancialOverview; curr
     </section>
 
     <section className="weekly-summary-card">
-      <header><div><p>BALANCE SEMANAL</p><h2>Resultado de la semana</h2></div><span className="weekly-profit"><small>GANANCIA</small><strong>{currency.money(overview.weekly.profitCents)}</strong></span></header>
+      <header><div><p>BALANCE SEMANAL</p><h2>Resultado de la semana</h2></div><span className="weekly-profit"><small>RESULTADO NETO</small><strong>{currency.money(overview.weekly.netResultCents)}</strong></span></header>
       <div className="weekly-summary-grid">
         <div><span>COBRADO</span><strong>{currency.money(overview.weekly.collectedBeforeMicroinsuranceCents)}</strong><small>Sin sumar el M.S</small></div>
         <div className="micro-highlight"><span>M.S</span><strong>{currency.money(overview.weekly.microinsuranceCents)}</strong><small>Microseguro acumulado</small></div>
         <div><span>TOTAL INGRESADO</span><strong>{currency.money(overview.weekly.collectedCents)}</strong><small>Cobrado + M.S</small></div>
-        <div><span>PORCENTAJE COBRADOR</span><strong>3%</strong><small>Sueldo: {currency.money(overview.weekly.collectorSalaryCents)}</small></div>
+        <div><span>PORCENTAJE COBRADOR</span><strong>3%</strong><small>Sueldo: {currency.money(overview.weekly.collectorSalaryCents)} · M.S no entra</small></div>
         <div><span>PRÉSTAMOS</span><strong>{currency.money(overview.weekly.disbursedCents)}</strong><small>Capital colocado</small></div>
-        <div><span>INTERÉS</span><strong>{currency.money(overview.weekly.projectedInterestCents)}</strong><small>20% del capital</small></div>
+        <div><span>COBRADO − PRÉSTAMOS</span><strong>{currency.money(overview.weekly.resultBeforeExpensesCents)}</strong><small>Resultado antes de gastos</small></div>
         <div><span>GASTOS MANUALES</span><strong>{currency.money(overview.weekly.manualExpensesCents)}</strong><small>Declarados por el cobrador</small></div>
         <div><span>RETIRO CADENA</span><strong>{currency.money(overview.weekly.chainWithdrawalCents)}</strong><small>Miércoles · máximo el sobrante</small></div>
         <div><span>GASTOS TOTALES</span><strong>{currency.money(overview.weekly.expensesCents)}</strong><small>Manual + sueldo + cadena</small></div>
-        <div><span>RESULTADO NETO</span><strong>{currency.money(overview.weekly.netResultCents)}</strong><small>Interés + M.S − todos los gastos</small></div>
+        <div><span>RESULTADO SIN M.S</span><strong>{currency.money(overview.weekly.resultBeforeMicroinsuranceCents)}</strong><small>Cobrado − préstamos − gastos totales</small></div>
+        <div><span>RESULTADO NETO</span><strong>{currency.money(overview.weekly.netResultCents)}</strong><small>Resultado sin M.S + microseguro</small></div>
       </div>
       <div className="new-clients-week"><div><UsersRound /><span><strong>CLIENTES NUEVOS SEMANALES</strong><small>Altas registradas por cada día</small></span></div><div>{overview.days.map((day) => <span key={day.date}><small>{day.dayName.slice(0, 3)}</small><strong>{day.isFuture ? "—" : day.newClientsCount}</strong></span>)}<span className="total"><small>TOTAL</small><strong>{overview.weekly.newClientsCount}</strong></span></div></div>
     </section>

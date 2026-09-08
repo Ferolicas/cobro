@@ -7,7 +7,7 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { calculateAutomaticLiquidation } from "@/lib/liquidations/calculation";
 import { COLLECTOR_BASE_CENTS, COLLECTOR_SALARY_PERCENT } from "@/lib/liquidations/constants";
-import { calculateWeeklyBalance, type FinancialDay } from "@/lib/liquidations/weekly";
+import { calculateWeeklyBalance, calculateWeeklyResult, type FinancialDay } from "@/lib/liquidations/weekly";
 import { businessDateKey, dateOnly } from "@/lib/loans/calculation";
 import { toCents } from "@/lib/money";
 import { notifyMasters } from "@/lib/notify";
@@ -254,7 +254,16 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
     const legacy = legacyRows[index];
     const dynamic = dynamicByWeek.get(dateKey);
     const dynamicSalary = dynamic ? (dynamic.collected * BigInt(COLLECTOR_SALARY_PERCENT)) / BigInt(100) : BigInt(0);
-    const dynamicProfit = dynamic ? (dynamic.disbursed * BigInt(20)) / BigInt(100) + dynamic.microinsurance - dynamic.manualExpenses - dynamicSalary - dynamic.chainWithdrawal : BigInt(0);
+    const dynamicProfit = dynamic
+      ? calculateWeeklyResult({
+          collectedCents: dynamic.collected,
+          disbursedCents: dynamic.disbursed,
+          microinsuranceCents: dynamic.microinsurance,
+          manualExpensesCents: dynamic.manualExpenses,
+          collectorSalaryCents: dynamicSalary,
+          chainWithdrawalCents: dynamic.chainWithdrawal,
+        }).netResultCents
+      : BigInt(0);
     const hasLegacyValue = Boolean(legacy?.date);
     const hasDynamicValue = Boolean(dynamic) && dateKey <= todayKey && date <= selectedWeekEnd;
     return {

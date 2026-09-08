@@ -29,6 +29,21 @@ export type FinancialDay = {
   detailNotes: string[];
 };
 
+export function calculateWeeklyResult(input: {
+  collectedCents: bigint;
+  disbursedCents: bigint;
+  microinsuranceCents: bigint;
+  manualExpensesCents: bigint;
+  collectorSalaryCents: bigint;
+  chainWithdrawalCents: bigint;
+}) {
+  const expensesCents = input.manualExpensesCents + input.collectorSalaryCents + input.chainWithdrawalCents;
+  const resultBeforeExpensesCents = input.collectedCents - input.disbursedCents;
+  const resultBeforeMicroinsuranceCents = resultBeforeExpensesCents - expensesCents;
+  const netResultCents = resultBeforeMicroinsuranceCents + input.microinsuranceCents;
+  return { expensesCents, resultBeforeExpensesCents, resultBeforeMicroinsuranceCents, netResultCents };
+}
+
 export function calculateWeeklyBalance(days: FinancialDay[]) {
   const activeDays = days.filter((day) => !day.isFuture);
   const sum = (field: keyof FinancialDay) =>
@@ -41,10 +56,16 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
   const chainWithdrawalCents = sum("chainWithdrawalCents");
   const collectionCommissionCents = (collectedBeforeMicroinsuranceCents * BigInt(3)) / BigInt(100);
   const collectorSalaryCents = collectionCommissionCents;
-  const expensesCents = manualExpensesCents + collectorSalaryCents + chainWithdrawalCents;
   const projectedInterestCents = (disbursedCents * BigInt(20)) / BigInt(100);
-  const profitCents = projectedInterestCents + microinsuranceCents - expensesCents;
-  const netResultCents = profitCents;
+  const { expensesCents, resultBeforeExpensesCents, resultBeforeMicroinsuranceCents, netResultCents } = calculateWeeklyResult({
+    collectedCents: collectedBeforeMicroinsuranceCents,
+    disbursedCents,
+    microinsuranceCents,
+    manualExpensesCents,
+    collectorSalaryCents,
+    chainWithdrawalCents,
+  });
+  const profitCents = netResultCents;
 
   return {
     collectedBeforeMicroinsuranceCents,
@@ -58,6 +79,8 @@ export function calculateWeeklyBalance(days: FinancialDay[]) {
     chainWithdrawalCents,
     expensesCents,
     collectorWithdrawalCents: collectorSalaryCents,
+    resultBeforeExpensesCents,
+    resultBeforeMicroinsuranceCents,
     profitCents,
     netResultCents,
     newClientsCount: activeDays.reduce((total, day) => total + day.newClientsCount, 0),
