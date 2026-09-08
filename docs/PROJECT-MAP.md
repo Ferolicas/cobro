@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-04
+Actualizado: 2026-09-08 · Commit: 6edebab
 
 ## Producto
 
