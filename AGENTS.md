@@ -30,15 +30,16 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 ## Reglas críticas
 
 - Todo importe persistido está en céntimos como `BigInt`; las respuestas JSON lo convierten a número.
-- Un crédito nuevo siempre usa 20%, 24 cuotas, cobra la primera al desembolsar y no aplica mora.
+- Un crédito nuevo siempre usa 20%, 24 cuotas, cobra al desembolsar como mínimo la primera cuota (puede registrar un pago inicial mayor) y no aplica mora.
 - El microseguro es ingreso de caja separado y nunca aumenta la deuda.
 - Una renovación liquida y cierra el crédito anterior antes de crear el nuevo.
 - Todo cambio financiero debe ser transaccional, auditable y notificar al maestro.
 - El cobrador solo accede a su cartera. La autorización siempre se verifica en servidor.
 - El maestro es supervisor: puede ver toda la información y ejecutar acciones administrativas, pero no puede registrar clientes, desembolsos, renovaciones, pagos, documentos ni cierres diarios.
-- Solo el cobrador realiza operaciones de ruta. La liquidación toma cobros, desembolsos, primera cuota, microseguro, renovaciones y conteos desde PostgreSQL; nunca acepta que el formulario reescriba esos totales.
-- La vista financiera conserva todo el control del Excel con una lectura inequívoca: BASE/E. COBRADOR/COBRADO/M.S/TOTAL INGRESADO/PRÉSTAMOS/GASTOS/ENTREGA ESPERADA/CAJA/DIFERENCIA, balance semanal, clientes nuevos y cadena de 11 semanas.
-- La primera base de cada cobrador es S/30.000; después, la CAJA confirmada de su último cierre se convierte automáticamente en la BASE siguiente. El cobrador nunca reescribe la base.
+- Solo el cobrador realiza operaciones de ruta. La liquidación toma cobros, desembolsos, pago inicial, microseguro, renovaciones, sueldo y cadena desde PostgreSQL; el formulario solo declara gastos manuales, caja real y notas.
+- La vista financiera conserva el control del Excel con una lectura inequívoca: BASE/SALIDA/COBRADO/M.S/TOTAL INGRESADO/PRÉSTAMOS/GASTOS MANUALES/SUELDO 3%/RETIRO CADENA/SOBRANTE/ENTREGA ESPERADA/CAJA/DIFERENCIA, balance semanal, clientes nuevos y cadena neta de 11 semanas.
+- BASE y SALIDA son siempre S/30.000 por cobrador. El sueldo es 3% de lo cobrado sin M.S y se carga el sábado; el miércoles la cadena retira automáticamente como máximo el sobrante sobre la base. Un déficit se muestra como apoyo requerido de otro cobrador, sin inventar transferencias.
+- El alta de cliente exige zona activa, DNI, ubicación GPS actual, evidencias y crédito inicial. Yape/transferencia exige justificante ligado al pago; sus archivos se numeran de forma persistente.
 - Los cierres con `status=LEGACY_IMPORTED` son históricos inmutables del Excel; no se pueden sobrescribir desde el panel del cobrador.
 - Las notificaciones se guardan antes de emitir el evento WebSocket y deben conservar `details` completos y `actionUrl`.
 - No subir `.env`, secretos, Excel ni datos personales al repositorio.

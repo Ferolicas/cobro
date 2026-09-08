@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-08 · Commit: 6edebab
+Actualizado: 2026-09-08 · Commit: 73c4aa4
 
 ## Producto
 
@@ -23,25 +23,27 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 1. Maestro o cobrador inicia sesión con correo y contraseña.
 2. Una cuenta nueva/restablecida cambia obligatoriamente `cobro1234*`.
 3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
-4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos, sube documentos y confirma el cierre diario.
-5. Un crédito nace con capital, 20% de interés, 24 cuotas y primera cuota retenida.
-6. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente; al día siguiente se suma a lo vencido, sin penalidad.
-7. La renovación paga el saldo anterior desde el capital nuevo, descuenta la primera cuota y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo.
-8. La liquidación se arma desde los movimientos del día; el cobrador solo declara gastos, E. COBRADOR y caja física contada antes de confirmar. El cuadro expone BASE, E. COBRADOR, COBRADO, M.S, TOTAL INGRESADO, PRÉSTAMOS, GASTOS, ENTREGA ESPERADA, CAJA y DIFERENCIA. Yape/transferencias se informa aparte.
-9. Todo cobrador inicia con una BASE fija de S/30.000. Tras el primer cierre, la CAJA confirmada se hereda automáticamente como BASE de la siguiente jornada; SALIÓ se eliminó porque duplicaba BASE.
-10. Cada cobrador tiene un control financiero completo accesible desde su tarjeta: seis días, balance semanal, clientes nuevos diarios y cadena de 11 semanas.
-11. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida las vistas en tiempo real.
-12. Al pulsar una notificación, el maestro ve un modal con mensaje, actor, hora, todos los detalles y enlace al registro relacionado.
+4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. El maestro ve estas acciones, ubicaciones y evidencias en tiempo real.
+5. El alta guiada del cliente pasa por datos y zona, DNI/fotos/vídeo/ubicación GPS actual y crédito inicial. La ubicación conserva coordenadas, precisión y fecha de captura.
+6. Un crédito nace con capital, 20% de interés, 24 cuotas y un pago inicial que cubre como mínimo la primera cuota; `/api/credits/preview` calcula el contrato y efectivo antes de confirmar.
+7. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente. Yape/transferencia requiere uno o más justificantes pre-subidos y ligados transaccionalmente al pago; efectivo no los acepta. Cada cobro muestra cuota actual, total y cuotas pagadas.
+8. “No pagó” crea una actividad diaria idempotente, auditoría y notificación sin alterar deuda ni caja.
+9. La renovación paga el saldo anterior desde el capital nuevo, descuenta el pago inicial y el microseguro opcional, y abre una deuda calculada sobre el capital nuevo completo. También se lanza desde la ficha del cliente.
+10. La liquidación toma movimientos del día; el cobrador solo declara gastos manuales, caja real y notas. BASE/SALIDA son S/30.000, el sueldo del 3% se carga el sábado y la cadena automática del miércoles no supera el sobrante.
+11. Un saldo operativo negativo se expone al cobrador y al maestro como apoyo requerido de otro cobrador. No se crea una transferencia ficticia.
+12. Cada cobrador tiene control de seis días, cierre diario visible, M.S, sueldo, gastos, clientes nuevos y resultado neto de 11 semanas.
+13. Cada acción genera auditoría, actividad y/o notificación persistida; Socket.IO invalida tanto al maestro como al cobrador actor.
+14. Al pulsar una notificación, el maestro ve mensaje, actor, hora, detalles y enlace al cliente, crédito o liquidación.
 
 ## Módulos de interfaz
 
 - `src/components/crm/CrmShell.tsx`: navegación, cambio PEN/COP, tiempo real, notificaciones y modal exacto.
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
-- `views/TodayView.tsx`: ruta diaria y registro rápido de pagos, exclusivo del cobrador.
-- `views/ClientsView.tsx`: alta y documentos para el cobrador; consulta global para el maestro.
-- `views/CreditsView.tsx`: operación completa para el cobrador; cronograma y movimientos en solo lectura para el maestro.
-- `views/LiquidationsView.tsx`: cuadre diario íntegro, M.S, semana de lunes a sábado, ganancia, clientes nuevos, cadena de 11 semanas y cierres.
-- `views/CollectorsView.tsx`: altas, activación, restauración de contraseña y acceso al control financiero completo de cada cobrador.
+- `views/TodayView.tsx`: ruta diaria, cuota actual, pago con prueba digital y “No pagó”, exclusivo del cobrador.
+- `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa para el maestro.
+- `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; solo lectura operativa para el maestro.
+- `views/LiquidationsView.tsx`: BASE/SALIDA fija, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
+- `views/CollectorsView.tsx`: zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
 
 ## Backend
@@ -49,6 +51,8 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `src/app/api/auth/[...all]`: Better Auth.
 - `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
+- `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
+- `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
 - `api/liquidations`: resumen diario automático, conciliación del cobrador e historial de cierres.
 - `api/uploads`, `api/documents/[id]`: subida múltiple a Sanity y descarga autorizada.
 - `api/notifications`: bandeja, lectura individual y masiva.
@@ -61,13 +65,14 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - Fechas de cuota: días 0 a 23 desde el desembolso; vencimiento en el día 24 del ciclo.
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
-- Caja neta de desembolso = capital − primera cuota − microseguro − liquidación anterior.
-- Caja esperada del cobrador = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS − E. COBRADOR. Yape y transferencias se informan, pero no aumentan la caja física.
+- Caja neta de desembolso = capital − pago inicial − microseguro − liquidación anterior. El pago inicial nunca es menor que la primera cuota contractual.
+- Caja esperada = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS MANUALES − SUELDO − RETIRO CADENA. Yape/transferencias se informan, pero no aumentan caja física.
 - TOTAL INGRESADO = COBRADO + M.S. COBRADO incluye efectivo, primera cuota y saldo anterior retenido en una renovación, pero excluye el microseguro para que este se vea y se sume exactamente una vez.
-- La BASE inicial es S/30.000 y, desde el segundo cierre, siempre proviene de la última CAJA confirmada del cobrador.
+- BASE y SALIDA son referencias operativas fijas de S/30.000 por cobrador; la caja puede ser negativa y entonces se muestra el apoyo necesario.
 - Los campos derivados de liquidación se recalculan en el servidor desde `CashMovement`; el cliente no puede enviarlos ni alterarlos.
 - En el formato tipo Excel, PRÉSTAMOS usa el capital bruto. La primera cuota y el saldo de renovación retenido forman parte de COBRADO; M.S permanece separado y ambos forman TOTAL INGRESADO. Yape/transferencia permanece separado de la caja física.
-- Balance semanal: 3% informativo del cobro, interés proyectado del 20%, M.S real, gastos, retiro, ganancia compatible con el Excel y resultado neto ampliado.
+- Balance semanal: sueldo = 3% de COBRADO sin M.S; gasto total = manual + sueldo + cadena; resultado neto = interés proyectado + M.S − gasto total.
+- Cadena: retiro automático el miércoles limitado al sobrante sobre S/30.000; la tabla de 11 semanas suma resultados netos con interés, M.S, gastos, sueldo y retiro.
 - Pérdida = saldo castigado; no se confunde con interés que dejó de ganarse.
 - Estados principales: `ACTIVE`, `OVERDUE`, `PAID`, `RENEWED`, `WRITTEN_OFF`.
 
@@ -81,5 +86,6 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
 - Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido.
+- Los justificantes digitales se suben primero y el servicio financiero verifica propiedad, crédito, categoría y que no hayan sido usados antes de ligarlos al pago dentro de la transacción.
 - Las notificaciones de documentos fueron verificadas de extremo a extremo: carga a Sanity, evento WebSocket sin recarga y modal detallado clicable.
 - Antes de cada despliegue: `pnpm typecheck && pnpm lint && pnpm build`.
