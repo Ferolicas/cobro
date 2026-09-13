@@ -6,8 +6,9 @@ import { prisma } from "@/lib/db/prisma";
 import { jsonResponse, jsonValue } from "@/lib/json";
 import { notifyMasters } from "@/lib/notify";
 import { COLLECTOR_BASE_CENTS } from "@/lib/liquidations/constants";
+import { financialEventsForDate } from "@/lib/liquidations/calculation";
 import { addDays } from "date-fns";
-import { businessDateKey, businessDayStartUtc } from "@/lib/loans/calculation";
+import { businessDateKey, businessDayStartUtc, businessToday } from "@/lib/loans/calculation";
 
 const schema = z.object({
   name: z.string().trim().min(3).max(120),
@@ -23,20 +24,22 @@ const schema = z.object({
 export async function GET(request: Request) {
   try {
     await requireUser(request, ["MASTER"]);
+    const today = businessToday();
     const todayStart = businessDayStartUtc();
     const todayKey = businessDateKey();
     const collectors = await prisma.user.findMany({
       where: { role: "COLLECTOR" },
-      select: { id: true, name: true, email: true, phone: true, active: true, mustChangePassword: true, createdAt: true, zone: true, liquidations: { orderBy: { date: "desc" }, take: 1, select: { date: true, closingCashCents: true, differenceCents: true, expensesCents: true } }, cashMovements: { where: { occurredAt: { gte: todayStart, lt: addDays(todayStart, 1) } }, select: { type: true, amountCents: true } }, _count: { select: { assignedClients: true, managedCredits: true } } },
+      select: { id: true, name: true, email: true, phone: true, active: true, mustChangePassword: true, createdAt: true, zone: true, liquidations: { orderBy: { date: "desc" }, take: 1, select: { date: true, closingCashCents: true, differenceCents: true, expensesCents: true } }, cashMovements: { where: { occurredAt: { gte: today, lt: addDays(todayStart, 1) } }, select: { type: true, amountCents: true, occurredAt: true } }, _count: { select: { assignedClients: true, managedCredits: true } } },
       orderBy: [{ active: "desc" }, { name: "asc" }],
     });
     const zones = await prisma.zone.findMany({ where: { active: true }, orderBy: { name: "asc" } });
     return jsonResponse({ collectors: collectors.map((collector) => {
       const latest = collector.liquidations[0];
-      const physicalIncomeCents = collector.cashMovements
+      const todayMovements = financialEventsForDate(collector.cashMovements, today);
+      const physicalIncomeCents = todayMovements
         .filter((movement) => ["PAYMENT_CASH", "ADVANCE_INSTALLMENT", "MICROINSURANCE", "RENEWAL_SETTLEMENT"].includes(movement.type))
         .reduce((total, movement) => total + movement.amountCents, BigInt(0));
-      const disbursedCents = collector.cashMovements
+      const disbursedCents = todayMovements
         .filter((movement) => movement.type === "DISBURSEMENT")
         .reduce((total, movement) => total + movement.amountCents, BigInt(0));
       const todayExpensesCents = latest?.date.toISOString().slice(0, 10) === todayKey ? latest.expensesCents : BigInt(0);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateAutomaticLiquidation } from "./calculation";
+import { calculateAutomaticLiquidation, financialEventDateKey, financialEventsForDate } from "./calculation";
 
 describe("calculateAutomaticLiquidation", () => {
   it("separa el M.S del cobrado sin cambiar la caja esperada del Excel", () => {
@@ -76,5 +76,20 @@ describe("calculateAutomaticLiquidation", () => {
     expect(result.surplusCents).toBe(BigInt(87_000));
     expect(result.expensesCents).toBe(BigInt(100_000));
     expect(result.expectedClosingCents).toBe(BigInt(3_000_000));
+  });
+});
+
+describe("fecha financiera de movimientos", () => {
+  it("mantiene en su fecha contractual los desembolsos antiguos guardados a medianoche UTC", () => {
+    const disbursement = { type: "DISBURSEMENT", occurredAt: new Date("2026-09-14T00:00:00.000Z") };
+    const payment = { type: "PAYMENT_CASH", occurredAt: new Date("2026-09-14T00:00:00.000Z") };
+
+    expect(financialEventDateKey(disbursement)).toBe("2026-09-14");
+    expect(financialEventDateKey(payment)).toBe("2026-09-13");
+    expect(financialEventsForDate([disbursement, payment], "2026-09-14")).toEqual([disbursement]);
+  });
+
+  it("usa normalmente la fecha de Perú para los movimientos nuevos", () => {
+    expect(financialEventDateKey({ type: "DISBURSEMENT", occurredAt: "2026-09-14T12:00:00.000Z" })).toBe("2026-09-14");
   });
 });

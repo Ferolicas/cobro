@@ -32,6 +32,11 @@ export function dateOnly(value: Date | string) {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
 }
 
+export function businessTimestamp(value: Date | string) {
+  const key = dateOnly(value).toISOString().slice(0, 10);
+  return new Date(`${key}T12:00:00.000Z`);
+}
+
 export function collectionDate(disbursedAt: Date, installmentIndex: number) {
   let date = dateOnly(disbursedAt);
   while (date.getUTCDay() === 0) date = addDays(date, 1);

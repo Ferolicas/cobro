@@ -1,8 +1,34 @@
+import { businessDateKey } from "../loans/calculation";
+
 export type DailyCashMovement = {
   type: string;
   direction: string;
   amountCents: bigint;
 };
+
+const ORIGINATION_MOVEMENT_TYPES = new Set([
+  "DISBURSEMENT",
+  "ADVANCE_INSTALLMENT",
+  "MICROINSURANCE",
+  "RENEWAL_SETTLEMENT",
+]);
+
+export function financialEventDateKey(event: { type: string; occurredAt: Date | string }) {
+  const occurredAt = new Date(event.occurredAt);
+  const isLegacyUtcMidnight = ORIGINATION_MOVEMENT_TYPES.has(event.type)
+    && occurredAt.getUTCHours() === 0
+    && occurredAt.getUTCMinutes() === 0
+    && occurredAt.getUTCSeconds() === 0
+    && occurredAt.getUTCMilliseconds() === 0;
+  return isLegacyUtcMidnight
+    ? occurredAt.toISOString().slice(0, 10)
+    : businessDateKey(occurredAt);
+}
+
+export function financialEventsForDate<T extends { type: string; occurredAt: Date | string }>(events: T[], date: Date | string) {
+  const key = typeof date === "string" ? date.slice(0, 10) : date.toISOString().slice(0, 10);
+  return events.filter((event) => financialEventDateKey(event) === key);
+}
 
 function sumType(movements: DailyCashMovement[], type: string) {
   return movements

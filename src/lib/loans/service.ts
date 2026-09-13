@@ -2,7 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { businessToday, collectionDate, collectionDayDifference, CREDIT_DAYS, creditNumbers, creditRating, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
+import { businessTimestamp, businessToday, collectionDate, collectionDayDifference, CREDIT_DAYS, creditNumbers, creditRating, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
 export { CREDIT_DAYS, creditNumbers, dateOnly, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
@@ -174,6 +174,7 @@ export async function refreshOverdueStatuses() {
 
 export async function createCredit(input: NewCreditInput) {
   return prisma.$transaction(async (tx) => {
+    const occurredAt = businessTimestamp(input.disbursedAt);
     const active = await tx.credit.findFirst({
       where: { clientId: input.clientId, status: { in: ["ACTIVE", "OVERDUE"] } },
     });
@@ -229,7 +230,7 @@ export async function createCredit(input: NewCreditInput) {
         creditId: input.previousCreditId,
         collectorId: input.collectorId,
         amountCents: priorSettlementCents,
-        paidAt: input.disbursedAt,
+        paidAt: occurredAt,
         method: "RENEWAL",
         source: "RENEWAL_SETTLEMENT",
         note: `Liquidado con ${code}`,
@@ -237,14 +238,14 @@ export async function createCredit(input: NewCreditInput) {
       });
       await tx.credit.update({
         where: { id: input.previousCreditId },
-        data: { status: "RENEWED", closedAt: input.disbursedAt },
+        data: { status: "RENEWED", closedAt: occurredAt },
       });
     }
     await allocatePayment(tx, {
       creditId: credit.id,
       collectorId: input.collectorId,
       amountCents: advancePaymentCents,
-      paidAt: input.disbursedAt,
+      paidAt: occurredAt,
       method: "WITHHELD",
       source: "ADVANCE_INSTALLMENT",
       note: "Primera cuota cobrada al desembolsar",
@@ -257,7 +258,7 @@ export async function createCredit(input: NewCreditInput) {
         type: "DISBURSEMENT",
         direction: "OUT",
         amountCents: input.principalCents,
-        occurredAt: input.disbursedAt,
+        occurredAt,
       },
     });
     await tx.cashMovement.create({
@@ -267,7 +268,7 @@ export async function createCredit(input: NewCreditInput) {
         type: "ADVANCE_INSTALLMENT",
         direction: "IN",
         amountCents: advancePaymentCents,
-        occurredAt: input.disbursedAt,
+        occurredAt,
       },
     });
     if (microinsuranceCents > BigInt(0)) {
@@ -278,7 +279,7 @@ export async function createCredit(input: NewCreditInput) {
           type: "MICROINSURANCE",
           direction: "IN",
           amountCents: microinsuranceCents,
-          occurredAt: input.disbursedAt,
+          occurredAt,
         },
       });
     }
@@ -290,7 +291,7 @@ export async function createCredit(input: NewCreditInput) {
           type: "RENEWAL_SETTLEMENT",
           direction: "IN",
           amountCents: priorSettlementCents,
-          occurredAt: input.disbursedAt,
+          occurredAt,
         },
       });
     }

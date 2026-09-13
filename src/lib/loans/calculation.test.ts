@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { businessDayStartUtc, businessToday, collectionDate, collectionDayDifference, creditNumbers, creditRating, installmentPlan } from "./calculation";
+import { businessDayStartUtc, businessTimestamp, businessToday, collectionDate, collectionDayDifference, creditNumbers, creditRating, installmentPlan } from "./calculation";
 
 describe("reglas de crédito", () => {
   it("calcula 20% y 24 cuotas exactas para S/ 200", () => {
@@ -46,5 +46,9 @@ describe("reglas de crédito", () => {
     expect(businessToday(new Date("2026-09-04T03:30:00.000Z")).toISOString()).toBe("2026-09-03T00:00:00.000Z");
     expect(businessToday(new Date("2026-09-04T05:30:00.000Z")).toISOString()).toBe("2026-09-04T00:00:00.000Z");
     expect(businessDayStartUtc(new Date("2026-09-04T05:30:00.000Z")).toISOString()).toBe("2026-09-04T05:00:00.000Z");
+  });
+
+  it("registra desembolsos dentro del día peruano elegido", () => {
+    expect(businessTimestamp("2026-09-14").toISOString()).toBe("2026-09-14T12:00:00.000Z");
   });
 });

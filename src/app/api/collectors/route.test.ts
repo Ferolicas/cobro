@@ -33,9 +33,11 @@ vi.mock("@/lib/json", () => ({
 }));
 vi.mock("@/lib/notify", () => ({ notifyMasters: mocks.notifyMasters }));
 vi.mock("@/lib/liquidations/constants", () => ({ COLLECTOR_BASE_CENTS: BigInt(3_000_000) }));
+vi.mock("@/lib/liquidations/calculation", () => ({ financialEventsForDate: (events: unknown[]) => events }));
 vi.mock("@/lib/loans/calculation", () => ({
   businessDateKey: () => "2026-09-14",
   businessDayStartUtc: () => new Date("2026-09-14T05:00:00.000Z"),
+  businessToday: () => new Date("2026-09-14T00:00:00.000Z"),
 }));
 
 import { POST } from "./route";

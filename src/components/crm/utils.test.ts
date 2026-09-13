@@ -67,12 +67,10 @@ describe("lectura diaria del plan", () => {
         { number: 1, dueDate: "2026-08-03T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-08-03T16:00:00.000Z" },
         { number: 2, dueDate: "2026-08-04T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-09-10T16:00:00.000Z" },
       ],
-      payments: [{
-        amountCents: 8_000,
-        paidAt: "2026-09-10T16:00:00.000Z",
-        source: "EXCEL_IMPORT",
-        allocations: [{ installment: { number: 1 } }, { installment: { number: 2 } }],
-      }],
+      payments: [
+        { amountCents: 4_000, paidAt: "2026-08-03T16:00:00.000Z", source: "EXCEL_IMPORT", allocations: [{ installment: { number: 1 } }] },
+        { amountCents: 4_000, paidAt: "2026-09-10T16:00:00.000Z", source: "EXCEL_IMPORT", allocations: [{ installment: { number: 2 } }] },
+      ],
       totalDueCents: 8_000,
       installmentCents: 4_000,
       today: "2026-09-10",
@@ -99,5 +97,25 @@ describe("lectura diaria del plan", () => {
     });
     expect(ledger[0]).toMatchObject({ displayCents: 0, visualStatus: "partial", checked: false });
     expect(ledger[1]).toMatchObject({ displayCents: 8_000, visualStatus: "paid", checked: true });
+  });
+
+  it("nunca recalcula días anteriores con el saldo FIFO pagado después", () => {
+    const ledger = installmentLedger({
+      installments: [
+        { number: 1, dueDate: "2026-10-01T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-09-08T15:00:00.000Z" },
+        { number: 2, dueDate: "2026-10-02T00:00:00.000Z", paidCents: 3_000, status: "PARTIAL", paidAt: null },
+        { number: 3, dueDate: "2026-10-03T00:00:00.000Z", paidCents: 0, status: "PENDING", paidAt: null },
+      ],
+      payments: [
+        { amountCents: 3_000, paidAt: "2026-09-07T15:00:00.000Z", source: "DAILY_COLLECTION", allocations: [{ installment: { number: 1 } }] },
+        { amountCents: 4_000, paidAt: "2026-09-08T15:00:00.000Z", source: "DAILY_COLLECTION", allocations: [{ installment: { number: 1 } }, { installment: { number: 2 } }] },
+      ],
+      totalDueCents: 12_000,
+      installmentCents: 4_000,
+      today: "2026-09-08",
+    });
+    expect(ledger[0]).toMatchObject({ dueCents: 4_000, displayCents: 3_000, visualStatus: "partial", checked: true });
+    expect(ledger[1]).toMatchObject({ dueCents: 5_000, displayCents: 4_000, visualStatus: "partial", checked: true });
+    expect(ledger[2]).toMatchObject({ dueCents: 5_000, displayCents: 5_000, visualStatus: "pending", checked: false });
   });
 });

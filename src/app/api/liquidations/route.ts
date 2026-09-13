@@ -5,7 +5,7 @@ import { audit } from "@/lib/audit";
 import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
-import { calculateAutomaticLiquidation } from "@/lib/liquidations/calculation";
+import { calculateAutomaticLiquidation, financialEventDateKey, financialEventsForDate } from "@/lib/liquidations/calculation";
 import { COLLECTOR_BASE_CENTS, COLLECTOR_SALARY_PERCENT } from "@/lib/liquidations/constants";
 import { calculateWeeklyBalance, calculateWeeklyResult, type FinancialDay } from "@/lib/liquidations/weekly";
 import { businessDateKey, dateOnly } from "@/lib/loans/calculation";
@@ -66,13 +66,15 @@ async function dailySummary(
   manual?: { manualExpensesCents: bigint },
 ) {
   const { start, end } = dayBounds(date);
-  const startOfWeek = dayBounds(weekStart(date)).start;
-  const [existing, previous, movements, weekMovements, totalAssignedClients, newClientsCount, overdue30Count, zeroBalanceCount] =
+  const dateKey = date.toISOString().slice(0, 10);
+  const startOfWeekDate = weekStart(date);
+  const startOfWeekKey = startOfWeekDate.toISOString().slice(0, 10);
+  const [existing, previous, movementRows, weekMovementRows, totalAssignedClients, newClientsCount, overdue30Count, zeroBalanceCount] =
     await Promise.all([
       db.liquidation.findUnique({ where: { collectorId_date: { collectorId, date } } }),
       db.liquidation.findFirst({ where: { collectorId, date: { lt: date } }, orderBy: { date: "desc" } }),
-      db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: start, lt: end } }, orderBy: { occurredAt: "asc" } }),
-      db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: startOfWeek, lt: end } } }),
+      db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: dateOnly(date), lt: end } }, orderBy: { occurredAt: "asc" } }),
+      db.cashMovement.findMany({ where: { collectorId, occurredAt: { gte: dateOnly(startOfWeekDate), lt: end } } }),
       db.client.count({ where: { collectorId, active: true } }),
       db.client.count({
         where: {
@@ -90,6 +92,11 @@ async function dailySummary(
       }),
       db.credit.count({ where: { collectorId, closedAt: { gte: start, lt: end } } }),
     ]);
+  const movements = financialEventsForDate(movementRows, dateKey);
+  const weekMovements = weekMovementRows.filter((movement) => {
+    const movementDate = financialEventDateKey(movement);
+    return movementDate >= startOfWeekKey && movementDate <= dateKey;
+  });
 
   if (existing?.status === "LEGACY_IMPORTED") {
     const collectedBeforeMicroinsuranceCents = existing.collectedCashCents > existing.microinsuranceCents
@@ -221,7 +228,7 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
   } else {
     chainDates = Array.from({ length: 11 }, (_, index) => addDays(selectedWeekEnd, (index - 10) * 7));
   }
-  const chainStart = dayBounds(addDays(chainDates[0], -5)).start;
+  const chainStart = dateOnly(addDays(chainDates[0], -5));
   const chainEnd = dayBounds(addDays(chainDates[10], 1)).start;
   const [chainMovements, chainLiquidations] = await Promise.all([
     prisma.cashMovement.findMany({
@@ -235,7 +242,7 @@ async function buildFinancialOverview(collectorId: string, collectorEmail: strin
   ]);
   const dynamicByWeek = new Map<string, { disbursed: bigint; microinsurance: bigint; collected: bigint; manualExpenses: bigint; chainWithdrawal: bigint }>();
   for (const movement of chainMovements) {
-    const key = weekEndKey(dateOnly(businessDateKey(movement.occurredAt)));
+    const key = weekEndKey(dateOnly(financialEventDateKey(movement)));
     const current = dynamicByWeek.get(key) ?? { disbursed: BigInt(0), microinsurance: BigInt(0), collected: BigInt(0), manualExpenses: BigInt(0), chainWithdrawal: BigInt(0) };
     if (movement.type === "DISBURSEMENT") current.disbursed += movement.amountCents;
     else if (movement.type === "MICROINSURANCE") current.microinsurance += movement.amountCents;
@@ -328,7 +335,7 @@ export async function POST(request: Request) {
 
     const liquidation = await prisma.$transaction(async (tx) => {
       const summary = await dailySummary(tx, user.id, date, manual);
-      const { start, end } = dayBounds(date);
+      const { end } = dayBounds(date);
       const data = {
         collectorId: user.id,
         date,
@@ -362,10 +369,17 @@ export async function POST(request: Request) {
         update: data,
         include: { collector: { select: { id: true, name: true } }, documents: true },
       });
-      await tx.cashMovement.updateMany({
-        where: { collectorId: user.id, occurredAt: { gte: start, lt: end } },
-        data: { liquidationId: saved.id },
+      const movementRows = await tx.cashMovement.findMany({
+        where: { collectorId: user.id, occurredAt: { gte: dateOnly(date), lt: end } },
+        select: { id: true, type: true, occurredAt: true },
       });
+      const movementIds = financialEventsForDate(movementRows, input.date).map((movement) => movement.id);
+      if (movementIds.length) {
+        await tx.cashMovement.updateMany({
+          where: { id: { in: movementIds } },
+          data: { liquidationId: saved.id },
+        });
+      }
       return saved;
     });
 

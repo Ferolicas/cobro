@@ -28,7 +28,7 @@ function value(currency: Currency, cents: number | null, future = false) {
 function DailyWeekCard({ day, currency }: { day: FinancialDay; currency: Currency }) {
   const rows = [
     ["BASE", day.openingBaseCents],
-    ["SALIDA", day.openingBaseCents],
+    ["SALIDA", day.openingBaseCents - day.disbursedCents],
     ["COBRADO", day.ledgerCollectedCashCents],
     ["M.S", day.microinsuranceCents],
     ["TOTAL INGRESADO", day.totalIncomeCents],
@@ -186,7 +186,7 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
             <header><div><p>LIQUIDACIÓN DEL DÍA</p><h3>{collectorName || user.name}</h3></div><span className="ledger-ms"><small>TOTAL INGRESADO</small><strong>{currency.money(summary.totalIncomeCents)}</strong></span></header>
             <div className="ledger-lines">
               <div><span>BASE</span><strong>{currency.money(summary.openingBaseCents)}</strong></div>
-              <div><span>SALIDA AUTOMÁTICA</span><strong>{currency.money(summary.openingBaseCents)}</strong></div>
+              <div><span>SALIDA AUTOMÁTICA</span><strong>{currency.money(summary.openingBaseCents - summary.disbursedCents)}</strong></div>
               <div><span>COBRADO</span><strong>{currency.money(summary.ledgerCollectedCashCents)}</strong></div>
               <div className="micro-row"><span>MICROSEGURO (M.S)</span><strong>{currency.money(summary.microinsuranceCents)}</strong></div>
               <div className="total-income-row"><span>TOTAL INGRESADO</span><strong>{currency.money(summary.totalIncomeCents)}</strong></div>
@@ -205,7 +205,7 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
 
           {isMaster || selectedClose?.status === "LEGACY_IMPORTED" ? <div className="master-liquidation-review">{selectedClose ? <><div className="review-status success"><CheckCircle2 /><div><strong>{selectedClose.status === "LEGACY_IMPORTED" ? "Registro preservado del Excel" : `Cierre confirmado por ${selectedClose.collector.name}`}</strong><span>{shortDate(selectedClose.date)}</span></div></div>{selectedClose.notes && <p className="liquidation-note"><strong>Nota:</strong> {selectedClose.notes}</p>}{selectedClose.documents?.length ? <div className="detail-section"><h3><FileImage />Comprobantes</h3>{selectedClose.documents.map((document) => <a className="document-row" key={document.id} href={`/api/documents/${document.id}`} target="_blank"><span>{document.fileName}</span><small>Ver archivo</small></a>)}</div> : null}</> : <div className="review-status pending"><History /><div><strong>Jornada todavía sin confirmar</strong><span>Los movimientos ya están calculados; falta el conteo final del cobrador.</span></div></div>}</div> :
             <form className="liquidation-form" onSubmit={submit}>
-              <div className="form-grid"><div className="field-help"><strong>BASE y SALIDA automáticas · {currency.money(summary.openingBaseCents)}</strong><span>La base operativa permanece fija en S/30.000. El sobrante se retira como cadena el miércoles.</span></div><label className="field"><span>Gastos manuales del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => { draftDirty.current = true; setExpenses(event.target.value); }} required /></label></div>
+              <div className="form-grid"><div className="field-help"><strong>BASE inicial · {currency.money(summary.openingBaseCents)} · SALIDA · {currency.money(summary.openingBaseCents - summary.disbursedCents)}</strong><span>Cada préstamo se descuenta automáticamente de los S/30.000 iniciales. El sobrante se retira como cadena el miércoles.</span></div><label className="field"><span>Gastos manuales del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => { draftDirty.current = true; setExpenses(event.target.value); }} required /></label></div>
               <div className="automatic-costs"><span><small>Sueldo automático</small><strong>{currency.money(summary.collectorSalaryCents)}</strong><b>3% · se carga el sábado</b></span><span><small>Retiro cadena</small><strong>{currency.money(automaticPreview.chainWithdrawalCents)}</strong><b>Miércoles · máximo {currency.money(automaticPreview.surplusCents)}</b></span></div>
               <div className="cash-reconciliation"><div><span>Caja esperada automáticamente</span><strong className={expectedClosingCents < 0 ? "danger-text" : ""}>{currency.money(expectedClosingCents)}</strong><small>Base + cobrado + M.S − préstamos − gastos − sueldo − cadena</small>{expectedClosingCents < 0 && <b className="support-alert">Requiere {currency.money(Math.abs(expectedClosingCents))} de apoyo de otro cobrador</b>}</div><label className="field"><span>Caja real contada (S/)</span><input type="number" step="0.01" value={closingCash} onChange={(event) => { draftDirty.current = true; setClosingCash(event.target.value); }} required /></label><div className={differenceCents === 0 ? "cash-difference balanced" : "cash-difference"}><span>Diferencia</span><strong>{closingCash ? currency.money(differenceCents) : "—"}</strong></div></div>
               <label className="field"><span>Notas de la jornada</span><textarea value={notes} onChange={(event) => { draftDirty.current = true; setNotes(event.target.value); }} placeholder="Explica gastos, diferencias u observaciones" /></label>
