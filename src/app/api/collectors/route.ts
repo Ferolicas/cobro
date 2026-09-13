@@ -1,10 +1,9 @@
 import { randomUUID } from "node:crypto";
 import { hashPassword } from "better-auth/crypto";
 import { z } from "zod";
-import { audit } from "@/lib/audit";
 import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
-import { jsonResponse } from "@/lib/json";
+import { jsonResponse, jsonValue } from "@/lib/json";
 import { notifyMasters } from "@/lib/notify";
 import { COLLECTOR_BASE_CENTS } from "@/lib/liquidations/constants";
 import { addDays } from "date-fns";
@@ -15,6 +14,10 @@ const schema = z.object({
   email: z.string().email().transform((value) => value.toLowerCase()),
   phone: z.string().trim().max(30).optional().nullable(),
   zoneId: z.string().min(1),
+  transferFromCollectorId: z.preprocess(
+    (value) => value === "" ? undefined : value,
+    z.string().min(1).optional(),
+  ),
 });
 
 export async function GET(request: Request) {
@@ -60,17 +63,85 @@ export async function POST(request: Request) {
     const input = schema.parse(await request.json());
     const zone = await prisma.zone.findFirst({ where: { id: input.zoneId, active: true } });
     if (!zone) return Response.json({ error: "Selecciona una zona de trabajo válida" }, { status: 400 });
+    const previousCollector = input.transferFromCollectorId
+      ? await prisma.user.findFirst({ where: { id: input.transferFromCollectorId, role: "COLLECTOR" } })
+      : null;
+    if (input.transferFromCollectorId && !previousCollector) {
+      return Response.json({ error: "El cobrador anterior ya no existe" }, { status: 400 });
+    }
     const password = await hashPassword("cobro1234*");
     const id = randomUUID();
-    const collector = await prisma.user.create({
-      data: {
-        id, name: input.name, email: input.email, phone: input.phone, zoneId: input.zoneId,
-        role: "COLLECTOR", mustChangePassword: true, active: true,
-        accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const collector = await tx.user.create({
+        data: {
+          id, name: input.name, email: input.email, phone: input.phone, zoneId: input.zoneId,
+          role: "COLLECTOR", mustChangePassword: true, active: true,
+          accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },
+        },
+      });
+      let transfer: { previousCollector: { id: string; name: string }; clients: number; credits: number } | null = null;
+      if (previousCollector) {
+        const clients = await tx.client.updateMany({
+          where: { collectorId: previousCollector.id, active: true },
+          data: { collectorId: collector.id },
+        });
+        const credits = await tx.credit.updateMany({
+          where: { collectorId: previousCollector.id, status: { in: ["ACTIVE", "OVERDUE"] } },
+          data: { collectorId: collector.id },
+        });
+        await tx.user.update({ where: { id: previousCollector.id }, data: { active: false } });
+        await tx.session.deleteMany({ where: { userId: previousCollector.id } });
+        transfer = {
+          previousCollector: { id: previousCollector.id, name: previousCollector.name },
+          clients: clients.count,
+          credits: credits.count,
+        };
+      }
+      await tx.auditLog.create({
+        data: {
+          actorId: user.id,
+          action: transfer ? "COLLECTOR_PORTFOLIO_TRANSFERRED" : "COLLECTOR_CREATED",
+          entityType: "user",
+          entityId: collector.id,
+          afterData: jsonValue(collector),
+          metadata: transfer ? jsonValue({
+            previousCollectorId: transfer.previousCollector.id,
+            previousCollectorName: transfer.previousCollector.name,
+            newCollectorId: collector.id,
+            newCollectorName: collector.name,
+            transferredClients: transfer.clients,
+            transferredCredits: transfer.credits,
+            historicalRecordsPreserved: true,
+          }) : undefined,
+        },
+      });
+      return { collector, transfer };
     });
-    await audit({ actorId: user.id, action: "COLLECTOR_CREATED", entityType: "user", entityId: id, after: collector });
-    await notifyMasters({ actorId: user.id, type: "COLLECTOR_CREATED", title: "Cobrador creado", message: `${collector.name} ya puede acceder con su correo`, entityType: "user", entityId: id, actionUrl: "/app/cobradores", details: { nombre: collector.name, correo: collector.email, zona: zone.name, baseInicial: 30_000, contraseñaTemporal: "cobro1234*", cambioObligatorio: true } });
-    return jsonResponse({ collector }, { status: 201 });
+    const { collector, transfer } = result;
+    await notifyMasters({
+      actorId: user.id,
+      type: transfer ? "COLLECTOR_PORTFOLIO_TRANSFERRED" : "COLLECTOR_CREATED",
+      title: transfer ? "Cartera transferida" : "Cobrador creado",
+      message: transfer
+        ? `${collector.name} recibió la cartera activa de ${transfer.previousCollector.name}`
+        : `${collector.name} ya puede acceder con su correo`,
+      entityType: "user",
+      entityId: id,
+      actionUrl: "/app/cobradores",
+      details: {
+        nombre: collector.name,
+        correo: collector.email,
+        zona: zone.name,
+        baseInicial: 30_000,
+        contraseñaTemporal: "cobro1234*",
+        cambioObligatorio: true,
+        cobradorAnterior: transfer?.previousCollector.name,
+        clientesTransferidos: transfer?.clients,
+        créditosTransferidos: transfer?.credits,
+        historialAnteriorConservado: Boolean(transfer),
+      },
+      audienceUserIds: transfer ? [collector.id, transfer.previousCollector.id] : [collector.id],
+    });
+    return jsonResponse({ collector, transfer }, { status: 201 });
   } catch (error) { return apiError(error); }
 }

@@ -20,7 +20,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 ## Viajes principales
 
-1. Maestro o cobrador inicia sesión con correo y contraseña.
+1. Maestro o cobrador inicia sesión con correo y contraseña. Al reemplazar un cobrador, el maestro puede crear el acceso nuevo y transferirle la cartera activa en la misma operación.
 2. Una cuenta nueva/restablecida cambia obligatoriamente `cobro1234*`.
 3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
 4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. El maestro ve estas acciones, ubicaciones y evidencias en tiempo real.
@@ -49,7 +49,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 ## Backend
 
 - `src/app/api/auth/[...all]`: Better Auth.
-- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
+- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. Al crear un cobrador, `POST /api/collectors` acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
 - `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
 - `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
@@ -86,6 +86,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - Desactivar un cobrador revoca inmediatamente todas sus sesiones. Un intento de acceso con credenciales válidas permanece en el login y muestra `Usuario desactivado`; las rutas y APIs rechazan además cualquier sesión inactiva residual.
+- Una transferencia de cartera cambia únicamente la asignación operativa de clientes activos y créditos `ACTIVE/OVERDUE`. Pagos, cierres, caja, documentos, actividades y auditorías anteriores permanecen ligados al cobrador que los ejecutó; el cobrador anterior continúa visible como inactivo.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
 - Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido. Todas las mutaciones visibles publican después de persistir a maestros y al cobrador afectado; las zonas se publican a todas las sesiones. Las fichas de cliente/crédito abiertas también se reconsultan. No hay polling periódico: Socket.IO reconecta y renueva el ticket caducado; la resincronización en vivo ocurre en segundo plano sin desmontar ni sobrescribir formularios abiertos. La matriz completa vive en `docs/REALTIME.md`.
 - Los justificantes digitales se suben primero y el servicio financiero verifica propiedad, crédito, categoría y que no hayan sido usados antes de ligarlos al pago dentro de la transacción.
