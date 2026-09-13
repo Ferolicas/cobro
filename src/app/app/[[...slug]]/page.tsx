@@ -7,8 +7,8 @@ export default async function AppPage({ params }: { params: Promise<{ slug?: str
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
   const user = session.user as unknown as CobroUser;
-  if (user.mustChangePassword) redirect("/cambiar-clave");
   if (!user.active) redirect("/login");
+  if (user.mustChangePassword) redirect("/cambiar-clave");
   const { slug = [] } = await params;
   return <CrmShell user={user} slug={slug}/>;
 }

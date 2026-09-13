@@ -13,7 +13,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { id } = await params;
     const before = await prisma.user.findUniqueOrThrow({ where: { id } });
     if (before.role !== "COLLECTOR") return Response.json({ error: "Usuario no válido" }, { status: 400 });
-    const collector = await prisma.user.update({ where: { id }, data: schema.parse(await request.json()) });
+    const input = schema.parse(await request.json());
+    const collector = await prisma.$transaction(async (tx) => {
+      const updated = await tx.user.update({ where: { id }, data: input });
+      if (input.active === false) await tx.session.deleteMany({ where: { userId: id } });
+      return updated;
+    });
     await audit({ actorId: user.id, action: "COLLECTOR_UPDATED", entityType: "user", entityId: id, before, after: collector });
     emitDataChanged({ action: "COLLECTOR_UPDATED", entityType: "user", entityId: id }, ["masters", `user:${id}`]);
     return jsonResponse({ collector });

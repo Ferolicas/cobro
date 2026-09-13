@@ -6,5 +6,6 @@ export default async function Home() {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
   const user = session.user as unknown as CobroUser;
+  if (!user.active) redirect("/login");
   redirect(user.mustChangePassword ? "/cambiar-clave" : "/app");
 }

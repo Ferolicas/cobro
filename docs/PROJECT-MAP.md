@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-14 · Commit base: a694afd
+Actualizado: 2026-09-14 · Commit base: ae30114
 
 ## Producto
 
@@ -64,7 +64,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 - Fechas de cuota: 24 días efectivos de cobro de lunes a sábado; los domingos nunca generan cuota ni cuentan para vencimiento.
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
-- Cada casilla del plan conserva el importe realmente recibido ese día. Un pago parcial o cero queda amarillo para siempre; si hubo abono conserva check verde y el faltante se suma visualmente al importe exigible del siguiente día. Tres días con cuotas vencidas pendientes cambian la clasificación de B a Q.
+- Cada casilla del plan conserva el importe realmente recibido ese día. Un pago parcial o cero queda amarillo para siempre; si hubo abono conserva check verde y el faltante se suma visualmente al importe exigible del siguiente día. Los pagos históricos ya asignados se conservan aunque su fecha haya quedado fuera del calendario recalculado sin domingos. Tres días con cuotas vencidas pendientes cambian la clasificación de B a Q.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
 - Caja neta de desembolso = capital − pago inicial − microseguro − liquidación anterior. El pago inicial nunca es menor que la primera cuota contractual.
 - Caja esperada = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS MANUALES − SUELDO − RETIRO CADENA. Yape/transferencias se informan, pero no aumentan caja física.
@@ -85,6 +85,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
+- Desactivar un cobrador revoca inmediatamente todas sus sesiones. Un intento de acceso con credenciales válidas permanece en el login y muestra `Usuario desactivado`; las rutas y APIs rechazan además cualquier sesión inactiva residual.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
 - Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido. Todas las mutaciones visibles publican después de persistir a maestros y al cobrador afectado; las zonas se publican a todas las sesiones. Las fichas de cliente/crédito abiertas también se reconsultan. No hay polling periódico: Socket.IO reconecta y renueva el ticket caducado; la resincronización en vivo ocurre en segundo plano sin desmontar ni sobrescribir formularios abiertos. La matriz completa vive en `docs/REALTIME.md`.
 - Los justificantes digitales se suben primero y el servicio financiero verifica propiedad, crédito, categoría y que no hayan sido usados antes de ligarlos al pago dentro de la transacción.

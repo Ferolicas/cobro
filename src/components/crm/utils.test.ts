@@ -60,4 +60,44 @@ describe("lectura diaria del plan", () => {
     expect(ledger[0]).toMatchObject({ displayCents: 0, visualStatus: "partial", checked: false });
     expect(ledger[1].dueCents).toBe(8_000);
   });
+
+  it("conserva las cuotas ya pagadas cuando sus pagos históricos quedaron fuera del calendario recalculado", () => {
+    const ledger = installmentLedger({
+      installments: [
+        { number: 1, dueDate: "2026-08-03T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-08-03T16:00:00.000Z" },
+        { number: 2, dueDate: "2026-08-04T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-09-10T16:00:00.000Z" },
+      ],
+      payments: [{
+        amountCents: 8_000,
+        paidAt: "2026-09-10T16:00:00.000Z",
+        source: "EXCEL_IMPORT",
+        allocations: [{ installment: { number: 1 } }, { installment: { number: 2 } }],
+      }],
+      totalDueCents: 8_000,
+      installmentCents: 4_000,
+      today: "2026-09-10",
+    });
+    expect(ledger[0]).toMatchObject({ displayCents: 4_000, visualStatus: "paid", checked: true });
+    expect(ledger[1]).toMatchObject({ displayCents: 4_000, visualStatus: "paid-late", checked: true });
+  });
+
+  it("no convierte en verde un día impago cuando el dinero se recibió en el siguiente día del plan", () => {
+    const ledger = installmentLedger({
+      installments: [
+        { number: 1, dueDate: "2026-09-07T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-09-08T15:00:00.000Z" },
+        { number: 2, dueDate: "2026-09-08T00:00:00.000Z", paidCents: 4_000, status: "PAID", paidAt: "2026-09-08T15:00:00.000Z" },
+      ],
+      payments: [{
+        amountCents: 8_000,
+        paidAt: "2026-09-08T15:00:00.000Z",
+        source: "DAILY_COLLECTION",
+        allocations: [{ installment: { number: 1 } }, { installment: { number: 2 } }],
+      }],
+      totalDueCents: 8_000,
+      installmentCents: 4_000,
+      today: "2026-09-08",
+    });
+    expect(ledger[0]).toMatchObject({ displayCents: 0, visualStatus: "partial", checked: false });
+    expect(ledger[1]).toMatchObject({ displayCents: 8_000, visualStatus: "paid", checked: true });
+  });
 });

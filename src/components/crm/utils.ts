@@ -33,20 +33,27 @@ export function installmentVisualStatus(installment: { status: string; dueDate: 
 }
 
 export function installmentLedger(input: {
-  installments: { number: number; dueDate: string | Date }[];
-  payments: { amountCents: number; paidAt: string | Date; source: string }[];
+  installments: { number: number; dueDate: string | Date; paidCents?: number; status?: string; paidAt?: string | Date | null }[];
+  payments: { amountCents: number; paidAt: string | Date; source: string; allocations?: { installment: { number: number } }[] }[];
   noPaymentActivities?: { createdAt: string | Date }[];
   totalDueCents: number;
   installmentCents: number;
   today?: string;
 }) {
   const today = input.today ?? todayInput();
+  const scheduleDates = new Set(input.installments.map((installment) => new Date(installment.dueDate).toISOString().slice(0, 10)));
   const receivedByDate = new Map<string, number>();
+  const installmentsCoveredByScheduledPayments = new Set<number>();
   for (const payment of input.payments) {
     const key = payment.source === "ADVANCE_INSTALLMENT"
       ? new Date(input.installments[0]?.dueDate ?? payment.paidAt).toISOString().slice(0, 10)
       : dateKeyInTimeZone(payment.paidAt, "America/Lima");
     receivedByDate.set(key, (receivedByDate.get(key) ?? 0) + payment.amountCents);
+    if (scheduleDates.has(key)) {
+      for (const allocation of payment.allocations ?? []) {
+        installmentsCoveredByScheduledPayments.add(allocation.installment.number);
+      }
+    }
   }
   const noPaymentDates = new Set((input.noPaymentActivities ?? []).map((activity) => dateKeyInTimeZone(activity.createdAt, "America/Lima")));
   const remainder = input.totalDueCents - input.installmentCents * input.installments.length;
@@ -55,18 +62,25 @@ export function installmentLedger(input: {
     const date = new Date(installment.dueDate).toISOString().slice(0, 10);
     const contractualCents = input.installmentCents + (index < remainder ? 1 : 0);
     const dueCents = contractualCents + carryCents;
-    const receivedCents = receivedByDate.get(date) ?? 0;
+    const receivedOnDateCents = receivedByDate.get(date) ?? 0;
+    const usePersistedPayment = receivedOnDateCents === 0
+      && (installment.paidCents ?? 0) > 0
+      && !installmentsCoveredByScheduledPayments.has(installment.number);
+    const receivedCents = usePersistedPayment ? installment.paidCents ?? 0 : receivedOnDateCents;
     const dueReached = date <= today;
     const explicitlyMissed = noPaymentDates.has(date);
-    const completed = dueReached && receivedCents >= dueCents;
-    const short = dueReached && (receivedCents > 0 || explicitlyMissed || date < today) && !completed;
+    const completed = (dueReached || usePersistedPayment) && receivedCents >= dueCents;
+    const short = (dueReached || usePersistedPayment) && (receivedCents > 0 || explicitlyMissed || date < today) && !completed;
+    const completedLate = completed && usePersistedPayment && installment.paidAt
+      ? dateKeyInTimeZone(installment.paidAt, "America/Lima") > date
+      : false;
     carryCents = short ? dueCents - receivedCents : 0;
     return {
       ...installment,
       dueCents,
       receivedCents,
       displayCents: completed || short ? receivedCents : dueCents,
-      visualStatus: completed ? "paid" : short ? "partial" : "pending",
+      visualStatus: completed ? completedLate ? "paid-late" : "paid" : short ? "partial" : "pending",
       checked: receivedCents > 0,
     };
   });
