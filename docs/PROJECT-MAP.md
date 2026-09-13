@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-08 · Commit: 04db980
+Actualizado: 2026-09-13 · Commit: 03aeead
 
 ## Producto
 
@@ -40,7 +40,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `src/components/crm/CrmShell.tsx`: navegación, cambio PEN/COP, tiempo real, notificaciones y modal exacto.
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
 - `views/TodayView.tsx`: ruta diaria, cuota actual, pago con prueba digital y “No pagó”, exclusivo del cobrador.
-- `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa para el maestro.
+- `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
 - `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan diferencia en amarillo las cuotas completadas después de vencer; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE/SALIDA fija, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
 - `views/CollectorsView.tsx`: zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
@@ -49,7 +49,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 ## Backend
 
 - `src/app/api/auth/[...all]`: Better Auth.
-- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol.
+- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
 - `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
 - `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
@@ -85,7 +85,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
-- Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido.
+- Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido. Todas las mutaciones visibles publican después de persistir a maestros y al cobrador afectado; las zonas se publican a todas las sesiones. Las fichas de cliente/crédito abiertas también se reconsultan. Hay renovación del ticket al reconectar, sincronización al recuperar foco, reconciliación defensiva y estado visual real del canal. La matriz completa vive en `docs/REALTIME.md`.
 - Los justificantes digitales se suben primero y el servicio financiero verifica propiedad, crédito, categoría y que no hayan sido usados antes de ligarlos al pago dentro de la transacción.
 - Las notificaciones de documentos fueron verificadas de extremo a extremo: carga a Sanity, evento WebSocket sin recarga y modal detallado clicable.
 - Antes de cada despliegue: `pnpm typecheck && pnpm lint && pnpm build`.
