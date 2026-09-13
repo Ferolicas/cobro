@@ -7,7 +7,7 @@ export async function POST(request: Request) {
     const { user } = await requireUser(request);
     const secret = process.env.AUTH_SECRET ?? process.env.BETTER_AUTH_SECRET;
     if (!secret) throw new Error("AUTH_SECRET no configurado");
-    const ticket = await new SignJWT({ role: user.role })
+    const ticket = await new SignJWT({ role: user.role, isSuperAdmin: user.isSuperAdmin })
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(user.id)
       .setIssuer("cobro.olcas.app")

@@ -7,12 +7,17 @@ import { businessDateKey, businessDayStartUtc, businessToday } from "@/lib/loans
 import { addDays } from "date-fns";
 import { COLLECTOR_BASE_CENTS } from "@/lib/liquidations/constants";
 import { financialEventDateKey, financialEventsForDate } from "@/lib/liquidations/calculation";
+import { assertCollectorAccess, permittedCollectorIds } from "@/lib/auth/scope";
 
 export async function GET(request: Request) {
   try {
     const { user } = await requireUser(request);
     await refreshOverdueStatuses();
-    const collectorScope = user.role === "COLLECTOR" ? { collectorId: user.id } : {};
+    const requestedCollectorId = new URL(request.url).searchParams.get("collectorId");
+    if (user.role === "MASTER" && requestedCollectorId) await assertCollectorAccess(user, requestedCollectorId);
+    const permittedIds = await permittedCollectorIds(user);
+    const scopedCollectorIds = requestedCollectorId ? [requestedCollectorId] : permittedIds;
+    const collectorScope = scopedCollectorIds === null ? {} : { collectorId: { in: scopedCollectorIds } };
     const today = businessToday();
     const todayKey = today.toISOString().slice(0, 10);
     const todayStart = businessDayStartUtc();
@@ -26,7 +31,7 @@ export async function GET(request: Request) {
         },
         orderBy: [{ maturityDate: "asc" }, { createdAt: "desc" }],
       }),
-      user.role === "MASTER" ? prisma.user.count({ where: { role: "COLLECTOR", active: true } }) : Promise.resolve(0),
+      user.role === "MASTER" ? prisma.user.count({ where: { role: "COLLECTOR", active: true, ...(scopedCollectorIds === null ? {} : { id: { in: scopedCollectorIds } }) } }) : Promise.resolve(0),
       prisma.payment.findMany({
         where: { ...collectorScope, paidAt: { gte: today, lt: addDays(todayStart, 1) }, method: { not: "RENEWAL" } },
         select: { paidAt: true, amountCents: true, source: true },
@@ -75,10 +80,14 @@ export async function GET(request: Request) {
           .reduce((sum, payment) => sum + payment.amountCents, BigInt(0)),
       };
     });
+    const scopeCollector = requestedCollectorId
+      ? await prisma.user.findFirst({ where: { id: requestedCollectorId, role: "COLLECTOR" }, select: { id: true, name: true } })
+      : null;
     return jsonResponse({
       stats: { clients, collectors, activeCredits: credits.length, overdue, activeCapitalCents, portfolioCents, expectedProfitCents, todayDueCents, collectedTodayCents, operationalBaseCents, availableBaseCents, supportNeededCents, surplusCents, unread },
       urgentCredits: credits.slice(0, 10).map((credit) => ({ ...credit, ...creditProgress(credit) })),
       series,
+      scopeCollector,
     });
   } catch (error) {
     return apiError(error);

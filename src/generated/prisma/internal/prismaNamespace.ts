@@ -398,6 +398,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 
 export const ModelName = {
   User: 'User',
+  CollectorAssignment: 'CollectorAssignment',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -431,7 +432,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "session" | "account" | "verification" | "rateLimit" | "zone" | "client" | "credit" | "installment" | "payment" | "paymentAllocation" | "liquidation" | "document" | "cashMovement" | "notification" | "auditLog" | "clientActivity" | "exchangeRate" | "systemSetting"
+    modelProps: "user" | "collectorAssignment" | "session" | "account" | "verification" | "rateLimit" | "zone" | "client" | "credit" | "installment" | "payment" | "paymentAllocation" | "liquidation" | "document" | "cashMovement" | "notification" | "auditLog" | "clientActivity" | "exchangeRate" | "systemSetting"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -506,6 +507,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.UserCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.UserCountAggregateOutputType> | number
+        }
+      }
+    }
+    CollectorAssignment: {
+      payload: Prisma.$CollectorAssignmentPayload<ExtArgs>
+      fields: Prisma.CollectorAssignmentFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.CollectorAssignmentFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.CollectorAssignmentFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        findFirst: {
+          args: Prisma.CollectorAssignmentFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.CollectorAssignmentFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        findMany: {
+          args: Prisma.CollectorAssignmentFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>[]
+        }
+        create: {
+          args: Prisma.CollectorAssignmentCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        createMany: {
+          args: Prisma.CollectorAssignmentCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.CollectorAssignmentCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>[]
+        }
+        delete: {
+          args: Prisma.CollectorAssignmentDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        update: {
+          args: Prisma.CollectorAssignmentUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        deleteMany: {
+          args: Prisma.CollectorAssignmentDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.CollectorAssignmentUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.CollectorAssignmentUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>[]
+        }
+        upsert: {
+          args: Prisma.CollectorAssignmentUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$CollectorAssignmentPayload>
+        }
+        aggregate: {
+          args: Prisma.CollectorAssignmentAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateCollectorAssignment>
+        }
+        groupBy: {
+          args: Prisma.CollectorAssignmentGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CollectorAssignmentGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.CollectorAssignmentCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.CollectorAssignmentCountAggregateOutputType> | number
         }
       }
     }
@@ -1891,6 +1966,7 @@ export const UserScalarFieldEnum = {
   role: 'role',
   mustChangePassword: 'mustChangePassword',
   active: 'active',
+  isSuperAdmin: 'isSuperAdmin',
   phone: 'phone',
   zoneId: 'zoneId',
   banned: 'banned',
@@ -1899,6 +1975,15 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const CollectorAssignmentScalarFieldEnum = {
+  administratorId: 'administratorId',
+  collectorId: 'collectorId',
+  createdAt: 'createdAt'
+} as const
+
+export type CollectorAssignmentScalarFieldEnum = (typeof CollectorAssignmentScalarFieldEnum)[keyof typeof CollectorAssignmentScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {
@@ -2517,6 +2602,7 @@ export interface PrismaClientOptionsWithAdapter extends PrismaClientBaseOptions 
 export type PrismaClientOptions = PrismaClientOptionsWithAccelerateUrl | PrismaClientOptionsWithAdapter
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
+  collectorAssignment?: Prisma.CollectorAssignmentOmit
   session?: Prisma.SessionOmit
   account?: Prisma.AccountOmit
   verification?: Prisma.VerificationOmit

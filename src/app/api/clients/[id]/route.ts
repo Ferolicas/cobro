@@ -6,6 +6,7 @@ import { jsonResponse } from "@/lib/json";
 import { notifyMasters } from "@/lib/notify";
 import { emitDataChanged } from "@/lib/realtime/hub";
 import { deleteSanityAssets } from "@/lib/sanity/assets";
+import { assertCollectorAccess, masterRecipientIdsForCollectors } from "@/lib/auth/scope";
 
 const updateSchema = z.object({
   name: z.string().trim().min(3).max(160).optional(),
@@ -41,7 +42,8 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
         activities: { include: { actor: { select: { name: true } } }, orderBy: { createdAt: "desc" }, take: 100 },
       },
     });
-    if (!client || (user.role === "COLLECTOR" && client.collectorId !== user.id)) return Response.json({ error: "Cliente no encontrado" }, { status: 404 });
+    if (!client) return Response.json({ error: "Cliente no encontrado" }, { status: 404 });
+    await assertCollectorAccess(user, client.collectorId);
     return jsonResponse({ client });
   } catch (error) { return apiError(error); }
 }
@@ -51,9 +53,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const { user } = await requireUser(request);
     const { id } = await params;
     const before = await prisma.client.findUniqueOrThrow({ where: { id } });
-    if (user.role === "COLLECTOR" && before.collectorId !== user.id) return Response.json({ error: "No tienes acceso" }, { status: 403 });
+    await assertCollectorAccess(user, before.collectorId);
     const input = updateSchema.parse(await request.json());
     if (user.role === "COLLECTOR") { delete input.collectorId; delete input.active; }
+    if (user.role === "MASTER" && input.collectorId) await assertCollectorAccess(user, input.collectorId);
     const client = await prisma.client.update({ where: { id }, data: input });
     await audit({ actorId: user.id, action: "CLIENT_UPDATED", entityType: "client", entityId: id, before, after: client });
     if (input.latitude != null && input.longitude != null) {
@@ -69,9 +72,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         audienceUserIds: [before.collectorId, client.collectorId],
       });
     } else {
+      const masterIds = await masterRecipientIdsForCollectors([before.collectorId, client.collectorId]);
       emitDataChanged(
         { action: "CLIENT_UPDATED", entityType: "client", entityId: id },
-        [...new Set(["masters", ...[before.collectorId, client.collectorId].filter((collectorId): collectorId is string => Boolean(collectorId)).map((collectorId) => `user:${collectorId}`)])],
+        [...new Set([...masterIds.map((masterId) => `user:${masterId}`), ...[before.collectorId, client.collectorId].filter((collectorId): collectorId is string => Boolean(collectorId)).map((collectorId) => `user:${collectorId}`)])],
       );
     }
     return jsonResponse({ client });
@@ -88,6 +92,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
       include: { credits: { select: { id: true } } },
     });
     if (!client) return Response.json({ error: "Cliente no encontrado" }, { status: 404 });
+    await assertCollectorAccess(user, client.collectorId);
     if (confirmation !== client.code) {
       return Response.json({ error: `Escribe ${client.code} para confirmar la eliminación` }, { status: 400 });
     }
@@ -169,9 +174,10 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
         console.error("No se pudieron eliminar todos los archivos de Sanity", error);
       }
     }
+    const masterIds = await masterRecipientIdsForCollectors([client.collectorId]);
     emitDataChanged(
       { action: "CLIENT_DELETED", entityType: "client", entityId: id },
-      [...new Set(["masters", ...(client.collectorId ? [`user:${client.collectorId}`] : [])])],
+      [...new Set([...masterIds.map((masterId) => `user:${masterId}`), ...(client.collectorId ? [`user:${client.collectorId}`] : [])])],
     );
     return jsonResponse({ ok: true, assetsPendingCleanup });
   } catch (error) { return apiError(error); }

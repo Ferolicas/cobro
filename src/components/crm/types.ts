@@ -5,6 +5,7 @@ export type AppUser = {
   role: "MASTER" | "COLLECTOR";
   mustChangePassword: boolean;
   active: boolean;
+  isSuperAdmin: boolean;
 };
 
 export type Zone = { id: string; name: string };
@@ -15,8 +16,10 @@ export type Administrator = {
   email: string;
   phone?: string | null;
   active: boolean;
+  isSuperAdmin: boolean;
   mustChangePassword: boolean;
   createdAt: string;
+  assignedCollectors: Pick<Collector, "id" | "name" | "email" | "active">[];
 };
 
 export type Collector = {
@@ -62,7 +65,7 @@ export type Client = {
 };
 
 export type Notification = { id: string; type: string; title: string; message: string; entityType?: string | null; entityId?: string | null; actionUrl?: string | null; details?: Record<string, unknown> | null; readAt?: string | null; createdAt: string; actor?: { id: string; name: string; email: string } | null };
-export type DashboardData = { stats: { clients: number; collectors: number; activeCredits: number; overdue: number; activeCapitalCents: number; portfolioCents: number; expectedProfitCents: number; todayDueCents: number; collectedTodayCents: number; operationalBaseCents: number; availableBaseCents: number; supportNeededCents: number; surplusCents: number; unread: number }; urgentCredits: Credit[]; series: { date: string; amountCents: number }[] };
+export type DashboardData = { stats: { clients: number; collectors: number; activeCredits: number; overdue: number; activeCapitalCents: number; portfolioCents: number; expectedProfitCents: number; todayDueCents: number; collectedTodayCents: number; operationalBaseCents: number; availableBaseCents: number; supportNeededCents: number; surplusCents: number; unread: number }; urgentCredits: Credit[]; series: { date: string; amountCents: number }[]; scopeCollector?: { id: string; name: string } | null };
 
 export type Liquidation = {
   id: string; date: string; openingBaseCents: number; cashOutCents: number; collectedCashCents: number; collectedYapeCents: number; disbursedCents: number;

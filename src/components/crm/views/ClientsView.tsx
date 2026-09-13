@@ -6,7 +6,7 @@ import { AlertTriangle, Building2, Camera, CheckCircle2, ContactRound, CreditCar
 import { toast } from "sonner";
 import { captureLiveLocation, mapsUrl, type LiveLocation } from "@/components/crm/location";
 import { EmptyState, LoadingState, Modal } from "@/components/crm/Modal";
-import type { AppUser, Client, CreditPreview, StoredDocument, Zone } from "@/components/crm/types";
+import type { AppUser, Client, Collector, CreditPreview, StoredDocument, Zone } from "@/components/crm/types";
 import { api, dateTime, shortDate, todayInput } from "@/components/crm/utils";
 
 type Currency = { money: (cents: number) => string };
@@ -26,6 +26,7 @@ async function uploadDocuments(clientId: string, category: string, files: File[]
 export function ClientsView({ user, currency, initialId, refreshKey }: { user: AppUser; currency: Currency; initialId?: string; refreshKey: number }) {
   const router = useRouter();
   const params = useSearchParams();
+  const collectorId = user.role === "MASTER" ? params.get("collectorId") ?? "" : "";
   const canOperate = user.role === "COLLECTOR";
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
@@ -53,10 +54,14 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
+  const [collectorOptions, setCollectorOptions] = useState<Collector[]>([]);
 
   async function load() {
     try {
-      const data = await api<{ clients: Client[] }>(`/api/clients${query ? `?q=${encodeURIComponent(query)}` : ""}`);
+      const search = new URLSearchParams();
+      if (query) search.set("q", query);
+      if (collectorId) search.set("collectorId", collectorId);
+      const data = await api<{ clients: Client[] }>(`/api/clients${search.size ? `?${search}` : ""}`);
       setClients(data.clients);
     } finally {
       setLoading(false);
@@ -71,12 +76,15 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   useEffect(() => {
     const timer = setTimeout(() => void load(), query ? 250 : 0);
     return () => clearTimeout(timer);
-  }, [query, refreshKey]);
+  }, [collectorId, query, refreshKey]);
   useEffect(() => { if (initialId) void detail(initialId).catch(() => setSelected(null)); }, [initialId, refreshKey]);
   useEffect(() => {
     if (!initialId && selected?.id) void detail(selected.id).catch(() => setSelected(null));
   }, [initialId, refreshKey, selected?.id]);
   useEffect(() => { if (canOperate) void api<{ zones: Zone[] }>("/api/zones").then((data) => setZones(data.zones)); }, [canOperate, refreshKey]);
+  useEffect(() => {
+    if (user.role === "MASTER") void api<{ collectors: Collector[] }>("/api/collectors").then((data) => setCollectorOptions(data.collectors));
+  }, [refreshKey, user.role]);
   useEffect(() => {
     if (!canOperate || step !== 3 || !principal || Number(principal) <= 0 || !disbursedAt) {
       setPreview(null);
@@ -253,7 +261,7 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
 
   if (loading && !clients.length) return <LoadingState />;
   return <div className="page-stack">
-    <div className="toolbar"><div className="search-box"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, DNI, negocio o teléfono…" /></div>{canOperate && <button className="primary-button" onClick={() => setCreateOpen(true)}><Plus />Nuevo cliente</button>}</div>
+    <div className="toolbar"><div className="search-box"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, DNI, negocio o teléfono…" /></div>{user.role === "MASTER" && <label className="collector-search-filter"><span>Cobrador</span><select value={collectorId} onChange={(event) => { const next = new URLSearchParams(params.toString()); if (event.target.value) next.set("collectorId", event.target.value); else next.delete("collectorId"); setSelected(null); router.replace(`/app/clientes${next.size ? `?${next}` : ""}`); }}><option value="">Todos mis cobradores</option>{collectorOptions.map((collector) => <option key={collector.id} value={collector.id}>{collector.name} · {collector.zone?.name || "Sin zona"}</option>)}</select></label>}{canOperate && <button className="primary-button" onClick={() => setCreateOpen(true)}><Plus />Nuevo cliente</button>}</div>
     <div className="client-grid">{filtered.map((client) => <article className="client-card" key={client.id}><button className="card-main" onClick={() => void detail(client.id)}><div className="client-top"><span className="customer-avatar">{client.name.slice(0, 2).toUpperCase()}</span><div><h3>{client.name}</h3><p>{client.code}</p></div><i className={`risk-dot ${client.riskStatus.toLowerCase()}`}></i></div><div className="client-info"><span><Building2 />{client.businessName || "Negocio sin registrar"}</span><span><MapPin />{client.zone?.name || client.address || "Zona sin asignar"}</span><span><Phone />{client.phone || "Sin teléfono"}</span></div></button><footer><div><small>Saldo activo</small><strong>{currency.money(client.credits.reduce((sum, credit) => sum + credit.balanceCents, 0))}</strong></div><span>{client.credits.length} crédito{client.credits.length === 1 ? "" : "s"} activo{client.credits.length === 1 ? "" : "s"}</span></footer></article>)}</div>
     {!filtered.length && <EmptyState icon={<ContactRound />} title="No encontramos clientes" text={canOperate ? "Prueba otro término o crea el primer cliente." : "Prueba con otro término de búsqueda."} action={canOperate ? <button className="primary-button" onClick={() => setCreateOpen(true)}><Plus />Crear cliente</button> : undefined} />}
 

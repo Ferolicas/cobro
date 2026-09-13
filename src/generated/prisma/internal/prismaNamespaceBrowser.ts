@@ -52,6 +52,7 @@ export const AnyNull = runtime.AnyNull
 
 export const ModelName = {
   User: 'User',
+  CollectorAssignment: 'CollectorAssignment',
   Session: 'Session',
   Account: 'Account',
   Verification: 'Verification',
@@ -99,6 +100,7 @@ export const UserScalarFieldEnum = {
   role: 'role',
   mustChangePassword: 'mustChangePassword',
   active: 'active',
+  isSuperAdmin: 'isSuperAdmin',
   phone: 'phone',
   zoneId: 'zoneId',
   banned: 'banned',
@@ -107,6 +109,15 @@ export const UserScalarFieldEnum = {
 } as const
 
 export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+export const CollectorAssignmentScalarFieldEnum = {
+  administratorId: 'administratorId',
+  collectorId: 'collectorId',
+  createdAt: 'createdAt'
+} as const
+
+export type CollectorAssignmentScalarFieldEnum = (typeof CollectorAssignmentScalarFieldEnum)[keyof typeof CollectorAssignmentScalarFieldEnum]
 
 
 export const SessionScalarFieldEnum = {

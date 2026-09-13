@@ -5,6 +5,7 @@ import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { notifyMasters } from "@/lib/notify";
+import { assertCollectorAccess, permittedCollectorIds } from "@/lib/auth/scope";
 
 const clientSchema = z.object({
   name: z.string().trim().min(3).max(160),
@@ -30,8 +31,12 @@ export async function GET(request: Request) {
     const { user } = await requireUser(request);
     const url = new URL(request.url);
     const query = url.searchParams.get("q")?.trim();
+    const requestedCollectorId = url.searchParams.get("collectorId");
+    if (user.role === "MASTER" && requestedCollectorId) await assertCollectorAccess(user, requestedCollectorId);
+    const permittedIds = await permittedCollectorIds(user);
+    const scopedCollectorIds = requestedCollectorId ? [requestedCollectorId] : permittedIds;
     const where = {
-      ...(user.role === "COLLECTOR" ? { collectorId: user.id } : {}),
+      ...(scopedCollectorIds === null ? {} : { collectorId: { in: scopedCollectorIds } }),
       active: true,
       ...(query ? { OR: ["name", "documentNumber", "phone", "businessName"].map((field) => ({ [field]: { contains: query, mode: "insensitive" as const } })) } : {}),
     };
@@ -49,7 +54,7 @@ export async function GET(request: Request) {
       orderBy: { updatedAt: "desc" },
       take: 250,
     });
-    return jsonResponse({ clients });
+    return jsonResponse({ clients, scopeCollectorId: requestedCollectorId });
   } catch (error) {
     return apiError(error);
   }

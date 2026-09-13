@@ -65,6 +65,7 @@ export const auth = betterAuth({
       role: { type: "string", required: false, defaultValue: "COLLECTOR", input: false },
       mustChangePassword: { type: "boolean", required: false, defaultValue: true, input: false },
       active: { type: "boolean", required: false, defaultValue: true, input: false },
+      isSuperAdmin: { type: "boolean", required: false, defaultValue: false, input: false },
       phone: { type: "string", required: false, input: false },
       zoneId: { type: "string", required: false, input: false },
     },
@@ -78,6 +79,7 @@ export type CobroUser = {
   role: "MASTER" | "COLLECTOR";
   mustChangePassword: boolean;
   active: boolean;
+  isSuperAdmin: boolean;
   phone?: string | null;
   zoneId?: string | null;
 };

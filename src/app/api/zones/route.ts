@@ -3,6 +3,7 @@ import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { audit } from "@/lib/audit";
 import { notifyMasters } from "@/lib/notify";
+import { requireSuperAdmin } from "@/lib/auth/scope";
 
 export async function GET(request: Request) {
   try {
@@ -14,6 +15,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const { user } = await requireUser(request, ["MASTER"]);
+    requireSuperAdmin(user);
     const { name } = z.object({ name: z.string().trim().min(2).max(100) }).parse(await request.json());
     const zone = await prisma.zone.upsert({ where: { name }, create: { name }, update: { active: true } });
     await audit({ actorId: user.id, action: "ZONE_CREATED", entityType: "zone", entityId: zone.id, after: zone });

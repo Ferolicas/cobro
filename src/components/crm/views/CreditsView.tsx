@@ -1,18 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { AlertTriangle, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, FileUp, LocateFixed, Plus, RefreshCw, Search, UserX } from "lucide-react";
 import { toast } from "sonner";
 import { captureLiveLocation, mapsUrl, type LiveLocation } from "@/components/crm/location";
 import { EmptyState, LoadingState, Modal } from "@/components/crm/Modal";
-import type { AppUser, Client, Credit, CreditPreview, StoredDocument } from "@/components/crm/types";
+import type { AppUser, Client, Collector, Credit, CreditPreview, StoredDocument } from "@/components/crm/types";
 import { api, dateTime, installmentLedger, shortDate, todayInput } from "@/components/crm/utils";
 
 type Currency = { money: (cents: number) => string };
 
 export function CreditsView({ user, currency, initialId, refreshKey }: { user: AppUser; currency: Currency; initialId?: string; refreshKey: number }) {
   const params = useSearchParams();
+  const router = useRouter();
+  const collectorId = user.role === "MASTER" ? params.get("collectorId") ?? "" : "";
   const canOperate = user.role === "COLLECTOR";
   const [credits, setCredits] = useState<Credit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,11 +39,15 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   const [updateFiles, setUpdateFiles] = useState<File[]>([]);
   const [updateLocation, setUpdateLocation] = useState<LiveLocation | null>(null);
   const [locating, setLocating] = useState(false);
+  const [collectorOptions, setCollectorOptions] = useState<Collector[]>([]);
   const initialRenewOpenedFor = useRef<string | undefined>(undefined);
 
   async function load() {
     try {
-      const data = await api<{ credits: Credit[] }>(`/api/credits?status=${status}${query ? `&q=${encodeURIComponent(query)}` : ""}`);
+      const search = new URLSearchParams({ status });
+      if (query) search.set("q", query);
+      if (collectorId) search.set("collectorId", collectorId);
+      const data = await api<{ credits: Credit[] }>(`/api/credits?${search}`);
       setCredits(data.credits);
     } finally {
       setLoading(false);
@@ -63,7 +69,7 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   useEffect(() => {
     const timer = setTimeout(() => void load(), query ? 250 : 0);
     return () => clearTimeout(timer);
-  }, [query, status, refreshKey]);
+  }, [collectorId, query, status, refreshKey]);
   useEffect(() => {
     if (!initialId) return;
     const openRenew = canOperate && params.get("action") === "renew" && initialRenewOpenedFor.current !== initialId;
@@ -76,6 +82,9 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   useEffect(() => {
     void loadClients();
   }, [canOperate, refreshKey]);
+  useEffect(() => {
+    if (user.role === "MASTER") void api<{ collectors: Collector[] }>("/api/collectors").then((data) => setCollectorOptions(data.collectors));
+  }, [refreshKey, user.role]);
   useEffect(() => {
     if ((!createOpen && !renewOpen) || !principal || Number(principal) <= 0) {
       setPreview(null);
@@ -283,7 +292,7 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   if (loading && !credits.length) return <LoadingState />;
   return <div className="page-stack">
     <section className="mini-metrics"><div><span>Capital listado</span><strong>{currency.money(totals.capital)}</strong></div><div><span>Valor del cobro actual</span><strong>{currency.money(totals.saldo)}</strong><small>Suma de todo lo que deben</small></div><div><span>Interés esperado</span><strong>{currency.money(totals.profit)}</strong></div></section>
-    <div className="toolbar"><div className="search-box"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cliente o código…" /></div><div className="filter-tabs">{[["ALL", "Todos"], ["ACTIVE", "Activos"], ["PAID", "Pagados"], ["WRITTEN_OFF", "Pérdidas"]].map(([id, label]) => <button key={id} className={status === id ? "active" : ""} onClick={() => setStatus(id)}>{label}</button>)}</div>{canOperate && <button className="primary-button" onClick={() => startLoanForm("create")}><Plus />Nuevo crédito</button>}</div>
+    <div className="toolbar"><div className="search-box"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Cliente o código…" /></div>{user.role === "MASTER" && <label className="collector-search-filter"><span>Cobrador</span><select value={collectorId} onChange={(event) => { const next = new URLSearchParams(params.toString()); if (event.target.value) next.set("collectorId", event.target.value); else next.delete("collectorId"); setSelected(null); router.replace(`/app/creditos${next.size ? `?${next}` : ""}`); }}><option value="">Todos mis cobradores</option>{collectorOptions.map((collector) => <option key={collector.id} value={collector.id}>{collector.name} · {collector.zone?.name || "Sin zona"}</option>)}</select></label>}<div className="filter-tabs">{[["ALL", "Todos"], ["ACTIVE", "Activos"], ["PAID", "Pagados"], ["WRITTEN_OFF", "Pérdidas"]].map(([id, label]) => <button key={id} className={status === id ? "active" : ""} onClick={() => setStatus(id)}>{label}</button>)}</div>{canOperate && <button className="primary-button" onClick={() => startLoanForm("create")}><Plus />Nuevo crédito</button>}</div>
     <div className="credit-table"><div className="table-head"><span>Cliente</span><span>Capital</span><span>Saldo</span><span>Cuota actual</span><span>Plazo</span><span>Estado</span></div>{credits.map((credit) => <button className="table-row" key={credit.id} onClick={() => void detail(credit.id)}><span className="table-client"><i>{credit.client.name.slice(0, 2).toUpperCase()}</i><div><strong>{credit.client.name}</strong><small>{credit.code}</small></div></span><span><strong>{currency.money(credit.principalCents)}</strong></span><span><strong>{currency.money(credit.balanceCents)}</strong><small>{credit.progress.toFixed(0)}% cobrado</small></span><span><strong>{credit.currentInstallmentNumber} / {credit.installmentCount}</strong><small>{currency.money(credit.dueTodayCents)} hoy</small></span><span className={credit.daysRemaining < 0 ? "danger-text" : ""}><strong>{credit.daysRemaining < 0 ? `${Math.abs(credit.daysRemaining)} vencidos` : `${credit.daysRemaining} días`}</strong><small>{shortDate(credit.maturityDate)}</small></span><span><b className={`status-badge ${credit.status.toLowerCase()}`}>{credit.status === "ACTIVE" ? "Activo" : credit.status === "PAID" ? "Pagado" : credit.status === "RENEWED" ? "Renovado" : credit.status === "OVERDUE" ? "Vencido" : "Pérdida"}</b></span></button>)}</div>
     {!credits.length && <EmptyState icon={<CreditCard />} title="No hay créditos en esta vista" text={canOperate ? "Cambia el filtro o crea un crédito." : "Cambia el filtro para revisar la cartera."} />}
 

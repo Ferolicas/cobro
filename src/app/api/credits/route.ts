@@ -7,6 +7,7 @@ import { createCredit, creditProgress, dateOnly, refreshOverdueStatuses } from "
 import { toCents } from "@/lib/money";
 import { notifyMasters } from "@/lib/notify";
 import { businessDayStartUtc } from "@/lib/loans/calculation";
+import { assertCollectorAccess, permittedCollectorIds } from "@/lib/auth/scope";
 
 const createSchema = z.object({
   clientId: z.string().min(1),
@@ -25,10 +26,14 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const status = url.searchParams.get("status");
     const q = url.searchParams.get("q")?.trim();
+    const requestedCollectorId = url.searchParams.get("collectorId");
+    if (user.role === "MASTER" && requestedCollectorId) await assertCollectorAccess(user, requestedCollectorId);
+    const permittedIds = await permittedCollectorIds(user);
+    const scopedCollectorIds = requestedCollectorId ? [requestedCollectorId] : permittedIds;
     const todayStart = businessDayStartUtc();
     const credits = await prisma.credit.findMany({
       where: {
-        ...(user.role === "COLLECTOR" ? { collectorId: user.id } : {}),
+        ...(scopedCollectorIds === null ? {} : { collectorId: { in: scopedCollectorIds } }),
         ...(status && status !== "ALL" ? { status } : {}),
         ...(q ? { OR: [{ code: { contains: q, mode: "insensitive" } }, { client: { name: { contains: q, mode: "insensitive" } } }] } : {}),
       },
@@ -45,7 +50,7 @@ export async function GET(request: Request) {
       orderBy: [{ status: "asc" }, { maturityDate: "asc" }],
       take: 300,
     });
-    return jsonResponse({ credits: credits.map((credit) => ({ ...credit, ...creditProgress(credit), noPaymentToday: credit.activities.length > 0 })) });
+    return jsonResponse({ credits: credits.map((credit) => ({ ...credit, ...creditProgress(credit), noPaymentToday: credit.activities.length > 0 })), scopeCollectorId: requestedCollectorId });
   } catch (error) { return apiError(error); }
 }
 

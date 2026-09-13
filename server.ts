@@ -24,7 +24,7 @@ const httpServer = createServer((request, response) => {
 
 const io = new Server(httpServer, {
   path: "/socket.io",
-  transports: ["websocket", "polling"],
+  transports: ["websocket"],
   cors: { origin: process.env.APP_URL ?? `http://localhost:${port}`, credentials: true },
   connectionStateRecovery: { maxDisconnectionDuration: 2 * 60 * 1000 },
 });
@@ -41,6 +41,7 @@ io.use(async (socket, nextSocket) => {
     });
     socket.data.userId = payload.sub;
     socket.data.role = payload.role;
+    socket.data.isSuperAdmin = payload.isSuperAdmin;
     nextSocket();
   } catch {
     nextSocket(new Error("No autorizado"));
@@ -50,7 +51,7 @@ io.use(async (socket, nextSocket) => {
 io.on("connection", (socket) => {
   socket.join("authenticated");
   socket.join(`user:${socket.data.userId}`);
-  if (socket.data.role === "MASTER") socket.join("masters");
+  if (socket.data.role === "MASTER" && socket.data.isSuperAdmin) socket.join("masters");
 });
 
 globalThis.__cobroRealtime = io;

@@ -18,6 +18,7 @@ model User {
   role                   String           @default("COLLECTOR")
   mustChangePassword     Boolean          @default(true)
   active                 Boolean          @default(true)
+  isSuperAdmin           Boolean          @default(false)
   phone                  String?
   zoneId                 String?
   banned                 Boolean          @default(false)
@@ -36,9 +37,22 @@ model User {
   audits                 AuditLog[]
   activities             ClientActivity[]
   cashMovements          CashMovement[]
+  managedCollectorAssignments CollectorAssignment[] @relation("AdministratorAssignments")
+  supervisorAssignments       CollectorAssignment[] @relation("CollectorAssignments")
 
   @@index([role, active])
   @@index([zoneId])
+}
+
+model CollectorAssignment {
+  administratorId String
+  collectorId     String
+  createdAt       DateTime @default(now()) @db.Timestamptz(3)
+  administrator   User     @relation("AdministratorAssignments", fields: [administratorId], references: [id], onDelete: Cascade)
+  collector       User     @relation("CollectorAssignments", fields: [collectorId], references: [id], onDelete: Cascade)
+
+  @@id([administratorId, collectorId])
+  @@index([collectorId])
 }
 
 model Session {

@@ -11,6 +11,7 @@ import { calculateWeeklyBalance, calculateWeeklyResult, type FinancialDay } from
 import { businessDateKey, dateOnly } from "@/lib/loans/calculation";
 import { toCents } from "@/lib/money";
 import { notifyMasters } from "@/lib/notify";
+import { assertCollectorAccess } from "@/lib/auth/scope";
 
 const dateSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 const closeSchema = z.object({
@@ -301,6 +302,7 @@ export async function GET(request: Request) {
     const date = dateOnly(dateSchema.parse(url.searchParams.get("date") ?? businessDateKey()));
     const collectorId = user.role === "COLLECTOR" ? user.id : url.searchParams.get("collectorId") ?? undefined;
     if (!collectorId) return jsonResponse({ liquidations: [], summary: null, overview: null });
+    await assertCollectorAccess(user, collectorId);
     const collector = await prisma.user.findFirst({ where: { id: collectorId, role: "COLLECTOR" }, select: { id: true, name: true, email: true } });
     if (!collector) return Response.json({ error: "Cobrador no encontrado" }, { status: 404 });
 

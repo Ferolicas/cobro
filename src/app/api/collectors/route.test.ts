@@ -13,6 +13,8 @@ const mocks = vi.hoisted(() => ({
   createAudit: vi.fn(),
   transaction: vi.fn(),
   notifyMasters: vi.fn(),
+  countCollectors: vi.fn(),
+  createAssignments: vi.fn(),
 }));
 
 vi.mock("better-auth/crypto", () => ({ hashPassword: mocks.hashPassword }));
@@ -20,10 +22,14 @@ vi.mock("@/lib/auth/guard", () => ({
   requireUser: mocks.requireUser,
   apiError: (error: unknown) => Response.json({ error: error instanceof Error ? error.message : "Error" }, { status: 500 }),
 }));
+vi.mock("@/lib/auth/scope", () => ({
+  permittedCollectorIds: vi.fn().mockResolvedValue(null),
+  requireSuperAdmin: vi.fn(),
+}));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     zone: { findFirst: mocks.zoneFindFirst },
-    user: { findFirst: mocks.previousCollectorFindFirst },
+    user: { findFirst: mocks.previousCollectorFindFirst, count: mocks.countCollectors },
     $transaction: mocks.transaction,
   },
 }));
@@ -45,7 +51,7 @@ import { POST } from "./route";
 describe("transferencia al crear un cobrador", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mocks.requireUser.mockResolvedValue({ user: { id: "master-1", name: "Maestro" } });
+    mocks.requireUser.mockResolvedValue({ user: { id: "master-1", name: "Maestro", role: "MASTER", isSuperAdmin: true } });
     mocks.hashPassword.mockResolvedValue("hashed-password");
     mocks.zoneFindFirst.mockResolvedValue({ id: "zone-1", name: "Centro", active: true });
     mocks.previousCollectorFindFirst.mockResolvedValue({ id: "old-1", name: "Juan David", role: "COLLECTOR", active: true });
@@ -64,11 +70,14 @@ describe("transferencia al crear un cobrador", () => {
     mocks.updatePreviousCollector.mockResolvedValue({ id: "old-1", active: false });
     mocks.deleteSessions.mockResolvedValue({ count: 2 });
     mocks.createAudit.mockResolvedValue({ id: "audit-1" });
+    mocks.countCollectors.mockResolvedValue(1);
+    mocks.createAssignments.mockResolvedValue({ count: 1 });
     mocks.transaction.mockImplementation(async (callback) => callback({
       user: { create: mocks.createCollector, update: mocks.updatePreviousCollector },
       client: { updateMany: mocks.transferClients },
       credit: { updateMany: mocks.transferCredits },
       session: { deleteMany: mocks.deleteSessions },
+      collectorAssignment: { createMany: mocks.createAssignments },
       auditLog: { create: mocks.createAudit },
     }));
     mocks.notifyMasters.mockResolvedValue([]);
@@ -124,6 +133,7 @@ describe("transferencia al crear un cobrador", () => {
         email: "ADMIN2@EXAMPLE.COM",
         phone: "999999998",
         role: "MASTER",
+        collectorIds: ["collector-1"],
       }),
     }));
     const body = await response.json();
@@ -141,6 +151,7 @@ describe("transferencia al crear un cobrador", () => {
     }) });
     expect(mocks.transferClients).not.toHaveBeenCalled();
     expect(mocks.createAudit).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "ADMIN_CREATED" }) });
+    expect(mocks.createAssignments).toHaveBeenCalledWith({ data: [{ administratorId: body.user.id, collectorId: "collector-1" }] });
     expect(body.user).toMatchObject({ name: "Administradora Dos", role: "MASTER" });
     expect(body.transfer).toBeNull();
   });

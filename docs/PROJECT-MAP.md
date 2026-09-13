@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-14 · Commit base: eea70de
+Actualizado: 2026-09-14 · Commit base: 1a0d215
 
 ## Producto
 
@@ -20,10 +20,10 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 ## Viajes principales
 
-1. Administrador o cobrador inicia sesión con correo y contraseña. Desde Usuarios, un administrador puede crear otros administradores con acceso maestro o crear un cobrador y transferirle la cartera activa de un acceso anterior en la misma operación.
+1. Administrador o cobrador inicia sesión con correo y contraseña. Desde Usuarios, el administrador principal puede crear administradores con uno o varios cobradores asignados, modificar esas asignaciones en cualquier momento, o crear un cobrador y transferirle la cartera activa de un acceso anterior en la misma operación.
 2. Una cuenta nueva/restablecida entra con `cobro1234*` y, en el primer acceso, solo escribe y confirma su contraseña nueva; ambos campos permiten mostrar u ocultar el texto. La sesión autenticada y `mustChangePassword` protegen este flujo de un segundo uso.
-3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
-4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. El maestro ve estas acciones, ubicaciones y evidencias en tiempo real.
+3. El administrador principal supervisa toda la empresa; cada administrador secundario ve solamente sus cobradores asignados. Desde Usuarios puede abrir el panel, clientes, créditos y liquidación de cada uno, además de filtrar cobradores por zona y clientes por cobrador.
+4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. Sus administradores asignados ven estas acciones, ubicaciones y evidencias en tiempo real, sin ejecutar operaciones de ruta.
 5. El alta guiada del cliente pasa por datos y zona, DNI/fotos/vídeo/ubicación GPS actual y crédito inicial. La ubicación conserva coordenadas, precisión y fecha de captura.
 6. Un crédito nace con capital, 20% de interés, 24 cuotas y un pago inicial que cubre como mínimo la primera cuota; `/api/credits/preview` calcula el contrato y efectivo antes de confirmar. En “Nuevo crédito”, elegir un cliente con crédito activo cambia directamente al formulario de renovación de su crédito vigente.
 7. Los pagos se reparten FIFO: un pago parcial deja el remanente pendiente. Yape/transferencia requiere uno o más justificantes pre-subidos y ligados transaccionalmente al pago; efectivo no los acepta. Cada cobro muestra cuota actual, total y cuotas pagadas.
@@ -40,16 +40,16 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `src/components/crm/CrmShell.tsx`: navegación, cambio PEN/COP, tiempo real, notificaciones y modal exacto.
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
 - `views/TodayView.tsx`: ruta diaria, cuota actual, pago con prueba digital y “No pagó”, exclusivo del cobrador.
-- `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
+- `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa, filtro por cobrador y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
 - `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan funciona como historial diario: importe real, faltante acumulado, amarillo persistente y check de abono; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE inicial, SALIDA disponible después de préstamos, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
-- `views/CollectorsView.tsx`: alta y listado de administradores, zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
+- `views/CollectorsView.tsx`: alta de administradores con selección múltiple de cobradores, edición inmediata de asignaciones, zonas como filtros, base/caja/déficit y accesos directos al panel, clientes, créditos y control financiero de cada cobrador visible.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
 
 ## Backend
 
 - `src/app/api/auth/[...all]`: Better Auth.
-- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. `POST /api/collectors`, exclusivo de `MASTER`, crea cuentas `MASTER` sin zona ni cartera o cuentas `COLLECTOR` con zona; para estas últimas acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
+- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol y por `CollectorAssignment`. El administrador principal crea usuarios; una cuenta `MASTER` secundaria exige uno o varios cobradores y queda limitada en servidor a esas carteras. `PATCH /api/administrators/[id]/collectors` reemplaza la asignación de forma transaccional y auditada. Para cuentas `COLLECTOR`, la creación acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` purga transaccionalmente un expediente autorizado todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
 - `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
 - `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
@@ -86,6 +86,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
+- `User.isSuperAdmin` distingue al administrador principal. `CollectorAssignment` delimita los cobradores visibles de cada administrador secundario; dashboard, clientes, créditos, documentos, liquidaciones, auditoría, notificaciones y eventos en vivo vuelven a validar ese alcance en el servidor.
 - Desactivar un cobrador revoca inmediatamente todas sus sesiones. Un intento de acceso con credenciales válidas permanece en el login y muestra `Usuario desactivado`; las rutas y APIs rechazan además cualquier sesión inactiva residual.
 - Una transferencia de cartera cambia únicamente la asignación operativa de clientes activos y créditos `ACTIVE/OVERDUE`. Pagos, cierres, caja, documentos, actividades y auditorías anteriores permanecen ligados al cobrador que los ejecutó; el cobrador anterior continúa visible como inactivo.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.

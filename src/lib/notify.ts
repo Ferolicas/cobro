@@ -2,6 +2,7 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { emitDataChanged, emitRealtime } from "@/lib/realtime/hub";
 import { jsonSafe, jsonValue } from "@/lib/json";
+import { masterRecipientIdsForCollectors } from "@/lib/auth/scope";
 
 export async function notifyMasters(params: {
   actorId?: string | null;
@@ -15,13 +16,11 @@ export async function notifyMasters(params: {
   audienceUserIds?: Array<string | null | undefined>;
   broadcastToAll?: boolean;
 }) {
-  const masters = await prisma.user.findMany({
-    where: { role: "MASTER", active: true },
-    select: { id: true },
-  });
-  const created = masters.length
+  const collectorAudienceIds = [params.actorId, ...(params.audienceUserIds ?? [])];
+  const masterIds = await masterRecipientIdsForCollectors(collectorAudienceIds);
+  const created = masterIds.length
     ? await prisma.$transaction(
-        masters.map(({ id }) =>
+        masterIds.map((id) =>
           prisma.notification.create({
             data: {
               recipientId: id,
@@ -51,7 +50,7 @@ export async function notifyMasters(params: {
   }, params.broadcastToAll
     ? ["authenticated"]
     : [...new Set([
-        "masters",
+        ...masterIds.map((id) => `user:${id}`),
         ...(params.actorId ? [`user:${params.actorId}`] : []),
         ...(params.audienceUserIds ?? []).filter((id): id is string => Boolean(id)).map((id) => `user:${id}`),
       ])]);

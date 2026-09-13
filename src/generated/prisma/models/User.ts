@@ -35,6 +35,7 @@ export type UserMinAggregateOutputType = {
   role: string | null
   mustChangePassword: boolean | null
   active: boolean | null
+  isSuperAdmin: boolean | null
   phone: string | null
   zoneId: string | null
   banned: boolean | null
@@ -53,6 +54,7 @@ export type UserMaxAggregateOutputType = {
   role: string | null
   mustChangePassword: boolean | null
   active: boolean | null
+  isSuperAdmin: boolean | null
   phone: string | null
   zoneId: string | null
   banned: boolean | null
@@ -71,6 +73,7 @@ export type UserCountAggregateOutputType = {
   role: number
   mustChangePassword: number
   active: number
+  isSuperAdmin: number
   phone: number
   zoneId: number
   banned: number
@@ -91,6 +94,7 @@ export type UserMinAggregateInputType = {
   role?: true
   mustChangePassword?: true
   active?: true
+  isSuperAdmin?: true
   phone?: true
   zoneId?: true
   banned?: true
@@ -109,6 +113,7 @@ export type UserMaxAggregateInputType = {
   role?: true
   mustChangePassword?: true
   active?: true
+  isSuperAdmin?: true
   phone?: true
   zoneId?: true
   banned?: true
@@ -127,6 +132,7 @@ export type UserCountAggregateInputType = {
   role?: true
   mustChangePassword?: true
   active?: true
+  isSuperAdmin?: true
   phone?: true
   zoneId?: true
   banned?: true
@@ -218,6 +224,7 @@ export type UserGroupByOutputType = {
   role: string
   mustChangePassword: boolean
   active: boolean
+  isSuperAdmin: boolean
   phone: string | null
   zoneId: string | null
   banned: boolean
@@ -257,6 +264,7 @@ export type UserWhereInput = {
   role?: Prisma.StringFilter<"User"> | string
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   active?: Prisma.BoolFilter<"User"> | boolean
+  isSuperAdmin?: Prisma.BoolFilter<"User"> | boolean
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   zoneId?: Prisma.StringNullableFilter<"User"> | string | null
   banned?: Prisma.BoolFilter<"User"> | boolean
@@ -275,6 +283,8 @@ export type UserWhereInput = {
   audits?: Prisma.AuditLogListRelationFilter
   activities?: Prisma.ClientActivityListRelationFilter
   cashMovements?: Prisma.CashMovementListRelationFilter
+  managedCollectorAssignments?: Prisma.CollectorAssignmentListRelationFilter
+  supervisorAssignments?: Prisma.CollectorAssignmentListRelationFilter
 }
 
 export type UserOrderByWithRelationInput = {
@@ -288,6 +298,7 @@ export type UserOrderByWithRelationInput = {
   role?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  isSuperAdmin?: Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   zoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   banned?: Prisma.SortOrder
@@ -306,6 +317,8 @@ export type UserOrderByWithRelationInput = {
   audits?: Prisma.AuditLogOrderByRelationAggregateInput
   activities?: Prisma.ClientActivityOrderByRelationAggregateInput
   cashMovements?: Prisma.CashMovementOrderByRelationAggregateInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentOrderByRelationAggregateInput
+  supervisorAssignments?: Prisma.CollectorAssignmentOrderByRelationAggregateInput
 }
 
 export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -322,6 +335,7 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   role?: Prisma.StringFilter<"User"> | string
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   active?: Prisma.BoolFilter<"User"> | boolean
+  isSuperAdmin?: Prisma.BoolFilter<"User"> | boolean
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   zoneId?: Prisma.StringNullableFilter<"User"> | string | null
   banned?: Prisma.BoolFilter<"User"> | boolean
@@ -340,6 +354,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   audits?: Prisma.AuditLogListRelationFilter
   activities?: Prisma.ClientActivityListRelationFilter
   cashMovements?: Prisma.CashMovementListRelationFilter
+  managedCollectorAssignments?: Prisma.CollectorAssignmentListRelationFilter
+  supervisorAssignments?: Prisma.CollectorAssignmentListRelationFilter
 }, "id" | "email">
 
 export type UserOrderByWithAggregationInput = {
@@ -353,6 +369,7 @@ export type UserOrderByWithAggregationInput = {
   role?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  isSuperAdmin?: Prisma.SortOrder
   phone?: Prisma.SortOrderInput | Prisma.SortOrder
   zoneId?: Prisma.SortOrderInput | Prisma.SortOrder
   banned?: Prisma.SortOrder
@@ -377,6 +394,7 @@ export type UserScalarWhereWithAggregatesInput = {
   role?: Prisma.StringWithAggregatesFilter<"User"> | string
   mustChangePassword?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   active?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
+  isSuperAdmin?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
   phone?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   zoneId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   banned?: Prisma.BoolWithAggregatesFilter<"User"> | boolean
@@ -395,6 +413,7 @@ export type UserCreateInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -412,6 +431,8 @@ export type UserCreateInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateInput = {
@@ -425,6 +446,7 @@ export type UserUncheckedCreateInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -442,6 +464,8 @@ export type UserUncheckedCreateInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUpdateInput = {
@@ -455,6 +479,7 @@ export type UserUpdateInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -472,6 +497,8 @@ export type UserUpdateInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateInput = {
@@ -485,6 +512,7 @@ export type UserUncheckedUpdateInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -502,6 +530,8 @@ export type UserUncheckedUpdateInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateManyInput = {
@@ -515,6 +545,7 @@ export type UserCreateManyInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -533,6 +564,7 @@ export type UserUpdateManyMutationInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -550,6 +582,7 @@ export type UserUncheckedUpdateManyInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -568,6 +601,7 @@ export type UserCountOrderByAggregateInput = {
   role?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  isSuperAdmin?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   zoneId?: Prisma.SortOrder
   banned?: Prisma.SortOrder
@@ -586,6 +620,7 @@ export type UserMaxOrderByAggregateInput = {
   role?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  isSuperAdmin?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   zoneId?: Prisma.SortOrder
   banned?: Prisma.SortOrder
@@ -604,6 +639,7 @@ export type UserMinOrderByAggregateInput = {
   role?: Prisma.SortOrder
   mustChangePassword?: Prisma.SortOrder
   active?: Prisma.SortOrder
+  isSuperAdmin?: Prisma.SortOrder
   phone?: Prisma.SortOrder
   zoneId?: Prisma.SortOrder
   banned?: Prisma.SortOrder
@@ -649,6 +685,34 @@ export type DateTimeFieldUpdateOperationsInput = {
 
 export type NullableDateTimeFieldUpdateOperationsInput = {
   set?: Date | string | null
+}
+
+export type UserCreateNestedOneWithoutManagedCollectorAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedCreateWithoutManagedCollectorAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagedCollectorAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserCreateNestedOneWithoutSupervisorAssignmentsInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedCreateWithoutSupervisorAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupervisorAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+}
+
+export type UserUpdateOneRequiredWithoutManagedCollectorAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedCreateWithoutManagedCollectorAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutManagedCollectorAssignmentsInput
+  upsert?: Prisma.UserUpsertWithoutManagedCollectorAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutManagedCollectorAssignmentsInput, Prisma.UserUpdateWithoutManagedCollectorAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutManagedCollectorAssignmentsInput>
+}
+
+export type UserUpdateOneRequiredWithoutSupervisorAssignmentsNestedInput = {
+  create?: Prisma.XOR<Prisma.UserCreateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedCreateWithoutSupervisorAssignmentsInput>
+  connectOrCreate?: Prisma.UserCreateOrConnectWithoutSupervisorAssignmentsInput
+  upsert?: Prisma.UserUpsertWithoutSupervisorAssignmentsInput
+  connect?: Prisma.UserWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutSupervisorAssignmentsInput, Prisma.UserUpdateWithoutSupervisorAssignmentsInput>, Prisma.UserUncheckedUpdateWithoutSupervisorAssignmentsInput>
 }
 
 export type UserCreateNestedOneWithoutSessionsInput = {
@@ -875,6 +939,294 @@ export type UserUpdateOneWithoutActivitiesNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutActivitiesInput, Prisma.UserUpdateWithoutActivitiesInput>, Prisma.UserUncheckedUpdateWithoutActivitiesInput>
 }
 
+export type UserCreateWithoutManagedCollectorAssignmentsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  mustChangePassword?: boolean
+  active?: boolean
+  isSuperAdmin?: boolean
+  phone?: string | null
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  zone?: Prisma.ZoneCreateNestedOneWithoutUsersInput
+  assignedClients?: Prisma.ClientCreateNestedManyWithoutCollectorInput
+  managedCredits?: Prisma.CreditCreateNestedManyWithoutCollectorInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutCollectorInput
+  liquidations?: Prisma.LiquidationCreateNestedManyWithoutCollectorInput
+  uploadedDocuments?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  triggeredNotifications?: Prisma.NotificationCreateNestedManyWithoutActorInput
+  audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
+  cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
+}
+
+export type UserUncheckedCreateWithoutManagedCollectorAssignmentsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  mustChangePassword?: boolean
+  active?: boolean
+  isSuperAdmin?: boolean
+  phone?: string | null
+  zoneId?: string | null
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  assignedClients?: Prisma.ClientUncheckedCreateNestedManyWithoutCollectorInput
+  managedCredits?: Prisma.CreditUncheckedCreateNestedManyWithoutCollectorInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCollectorInput
+  liquidations?: Prisma.LiquidationUncheckedCreateNestedManyWithoutCollectorInput
+  uploadedDocuments?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  triggeredNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutActorInput
+  audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
+  cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
+}
+
+export type UserCreateOrConnectWithoutManagedCollectorAssignmentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedCreateWithoutManagedCollectorAssignmentsInput>
+}
+
+export type UserCreateWithoutSupervisorAssignmentsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  mustChangePassword?: boolean
+  active?: boolean
+  isSuperAdmin?: boolean
+  phone?: string | null
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  sessions?: Prisma.SessionCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountCreateNestedManyWithoutUserInput
+  zone?: Prisma.ZoneCreateNestedOneWithoutUsersInput
+  assignedClients?: Prisma.ClientCreateNestedManyWithoutCollectorInput
+  managedCredits?: Prisma.CreditCreateNestedManyWithoutCollectorInput
+  payments?: Prisma.PaymentCreateNestedManyWithoutCollectorInput
+  liquidations?: Prisma.LiquidationCreateNestedManyWithoutCollectorInput
+  uploadedDocuments?: Prisma.DocumentCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationCreateNestedManyWithoutRecipientInput
+  triggeredNotifications?: Prisma.NotificationCreateNestedManyWithoutActorInput
+  audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
+  activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
+  cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+}
+
+export type UserUncheckedCreateWithoutSupervisorAssignmentsInput = {
+  id?: string
+  name: string
+  email: string
+  emailVerified?: boolean
+  image?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  role?: string
+  mustChangePassword?: boolean
+  active?: boolean
+  isSuperAdmin?: boolean
+  phone?: string | null
+  zoneId?: string | null
+  banned?: boolean
+  banReason?: string | null
+  banExpires?: Date | string | null
+  sessions?: Prisma.SessionUncheckedCreateNestedManyWithoutUserInput
+  accounts?: Prisma.AccountUncheckedCreateNestedManyWithoutUserInput
+  assignedClients?: Prisma.ClientUncheckedCreateNestedManyWithoutCollectorInput
+  managedCredits?: Prisma.CreditUncheckedCreateNestedManyWithoutCollectorInput
+  payments?: Prisma.PaymentUncheckedCreateNestedManyWithoutCollectorInput
+  liquidations?: Prisma.LiquidationUncheckedCreateNestedManyWithoutCollectorInput
+  uploadedDocuments?: Prisma.DocumentUncheckedCreateNestedManyWithoutUploadedByInput
+  notifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutRecipientInput
+  triggeredNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutActorInput
+  audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
+  activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
+  cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+}
+
+export type UserCreateOrConnectWithoutSupervisorAssignmentsInput = {
+  where: Prisma.UserWhereUniqueInput
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedCreateWithoutSupervisorAssignmentsInput>
+}
+
+export type UserUpsertWithoutManagedCollectorAssignmentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutManagedCollectorAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedCreateWithoutManagedCollectorAssignmentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutManagedCollectorAssignmentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutManagedCollectorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutManagedCollectorAssignmentsInput>
+}
+
+export type UserUpdateWithoutManagedCollectorAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  zone?: Prisma.ZoneUpdateOneWithoutUsersNestedInput
+  assignedClients?: Prisma.ClientUpdateManyWithoutCollectorNestedInput
+  managedCredits?: Prisma.CreditUpdateManyWithoutCollectorNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutCollectorNestedInput
+  liquidations?: Prisma.LiquidationUpdateManyWithoutCollectorNestedInput
+  uploadedDocuments?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  triggeredNotifications?: Prisma.NotificationUpdateManyWithoutActorNestedInput
+  audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
+  cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutManagedCollectorAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  assignedClients?: Prisma.ClientUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCredits?: Prisma.CreditUncheckedUpdateManyWithoutCollectorNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutCollectorNestedInput
+  liquidations?: Prisma.LiquidationUncheckedUpdateManyWithoutCollectorNestedInput
+  uploadedDocuments?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  triggeredNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutActorNestedInput
+  audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
+  cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
+}
+
+export type UserUpsertWithoutSupervisorAssignmentsInput = {
+  update: Prisma.XOR<Prisma.UserUpdateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutSupervisorAssignmentsInput>
+  create: Prisma.XOR<Prisma.UserCreateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedCreateWithoutSupervisorAssignmentsInput>
+  where?: Prisma.UserWhereInput
+}
+
+export type UserUpdateToOneWithWhereWithoutSupervisorAssignmentsInput = {
+  where?: Prisma.UserWhereInput
+  data: Prisma.XOR<Prisma.UserUpdateWithoutSupervisorAssignmentsInput, Prisma.UserUncheckedUpdateWithoutSupervisorAssignmentsInput>
+}
+
+export type UserUpdateWithoutSupervisorAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUpdateManyWithoutUserNestedInput
+  zone?: Prisma.ZoneUpdateOneWithoutUsersNestedInput
+  assignedClients?: Prisma.ClientUpdateManyWithoutCollectorNestedInput
+  managedCredits?: Prisma.CreditUpdateManyWithoutCollectorNestedInput
+  payments?: Prisma.PaymentUpdateManyWithoutCollectorNestedInput
+  liquidations?: Prisma.LiquidationUpdateManyWithoutCollectorNestedInput
+  uploadedDocuments?: Prisma.DocumentUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUpdateManyWithoutRecipientNestedInput
+  triggeredNotifications?: Prisma.NotificationUpdateManyWithoutActorNestedInput
+  audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
+  activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
+  cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+}
+
+export type UserUncheckedUpdateWithoutSupervisorAssignmentsInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  name?: Prisma.StringFieldUpdateOperationsInput | string
+  email?: Prisma.StringFieldUpdateOperationsInput | string
+  emailVerified?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  image?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  role?: Prisma.StringFieldUpdateOperationsInput | string
+  mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  banExpires?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  sessions?: Prisma.SessionUncheckedUpdateManyWithoutUserNestedInput
+  accounts?: Prisma.AccountUncheckedUpdateManyWithoutUserNestedInput
+  assignedClients?: Prisma.ClientUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCredits?: Prisma.CreditUncheckedUpdateManyWithoutCollectorNestedInput
+  payments?: Prisma.PaymentUncheckedUpdateManyWithoutCollectorNestedInput
+  liquidations?: Prisma.LiquidationUncheckedUpdateManyWithoutCollectorNestedInput
+  uploadedDocuments?: Prisma.DocumentUncheckedUpdateManyWithoutUploadedByNestedInput
+  notifications?: Prisma.NotificationUncheckedUpdateManyWithoutRecipientNestedInput
+  triggeredNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutActorNestedInput
+  audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
+  activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
+  cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+}
+
 export type UserCreateWithoutSessionsInput = {
   id?: string
   name: string
@@ -886,6 +1238,7 @@ export type UserCreateWithoutSessionsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -902,6 +1255,8 @@ export type UserCreateWithoutSessionsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutSessionsInput = {
@@ -915,6 +1270,7 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -931,6 +1287,8 @@ export type UserUncheckedCreateWithoutSessionsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutSessionsInput = {
@@ -960,6 +1318,7 @@ export type UserUpdateWithoutSessionsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -976,6 +1335,8 @@ export type UserUpdateWithoutSessionsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -989,6 +1350,7 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1005,6 +1367,8 @@ export type UserUncheckedUpdateWithoutSessionsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutAccountsInput = {
@@ -1018,6 +1382,7 @@ export type UserCreateWithoutAccountsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1034,6 +1399,8 @@ export type UserCreateWithoutAccountsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutAccountsInput = {
@@ -1047,6 +1414,7 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1063,6 +1431,8 @@ export type UserUncheckedCreateWithoutAccountsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutAccountsInput = {
@@ -1092,6 +1462,7 @@ export type UserUpdateWithoutAccountsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1108,6 +1479,8 @@ export type UserUpdateWithoutAccountsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -1121,6 +1494,7 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1137,6 +1511,8 @@ export type UserUncheckedUpdateWithoutAccountsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutZoneInput = {
@@ -1150,6 +1526,7 @@ export type UserCreateWithoutZoneInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1166,6 +1543,8 @@ export type UserCreateWithoutZoneInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutZoneInput = {
@@ -1179,6 +1558,7 @@ export type UserUncheckedCreateWithoutZoneInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1195,6 +1575,8 @@ export type UserUncheckedCreateWithoutZoneInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutZoneInput = {
@@ -1237,6 +1619,7 @@ export type UserScalarWhereInput = {
   role?: Prisma.StringFilter<"User"> | string
   mustChangePassword?: Prisma.BoolFilter<"User"> | boolean
   active?: Prisma.BoolFilter<"User"> | boolean
+  isSuperAdmin?: Prisma.BoolFilter<"User"> | boolean
   phone?: Prisma.StringNullableFilter<"User"> | string | null
   zoneId?: Prisma.StringNullableFilter<"User"> | string | null
   banned?: Prisma.BoolFilter<"User"> | boolean
@@ -1255,6 +1638,7 @@ export type UserCreateWithoutAssignedClientsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1271,6 +1655,8 @@ export type UserCreateWithoutAssignedClientsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutAssignedClientsInput = {
@@ -1284,6 +1670,7 @@ export type UserUncheckedCreateWithoutAssignedClientsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1300,6 +1687,8 @@ export type UserUncheckedCreateWithoutAssignedClientsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutAssignedClientsInput = {
@@ -1329,6 +1718,7 @@ export type UserUpdateWithoutAssignedClientsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1345,6 +1735,8 @@ export type UserUpdateWithoutAssignedClientsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAssignedClientsInput = {
@@ -1358,6 +1750,7 @@ export type UserUncheckedUpdateWithoutAssignedClientsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1374,6 +1767,8 @@ export type UserUncheckedUpdateWithoutAssignedClientsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutManagedCreditsInput = {
@@ -1387,6 +1782,7 @@ export type UserCreateWithoutManagedCreditsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1403,6 +1799,8 @@ export type UserCreateWithoutManagedCreditsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutManagedCreditsInput = {
@@ -1416,6 +1814,7 @@ export type UserUncheckedCreateWithoutManagedCreditsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1432,6 +1831,8 @@ export type UserUncheckedCreateWithoutManagedCreditsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutManagedCreditsInput = {
@@ -1461,6 +1862,7 @@ export type UserUpdateWithoutManagedCreditsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1477,6 +1879,8 @@ export type UserUpdateWithoutManagedCreditsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutManagedCreditsInput = {
@@ -1490,6 +1894,7 @@ export type UserUncheckedUpdateWithoutManagedCreditsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1506,6 +1911,8 @@ export type UserUncheckedUpdateWithoutManagedCreditsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutPaymentsInput = {
@@ -1519,6 +1926,7 @@ export type UserCreateWithoutPaymentsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1535,6 +1943,8 @@ export type UserCreateWithoutPaymentsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutPaymentsInput = {
@@ -1548,6 +1958,7 @@ export type UserUncheckedCreateWithoutPaymentsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1564,6 +1975,8 @@ export type UserUncheckedCreateWithoutPaymentsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutPaymentsInput = {
@@ -1593,6 +2006,7 @@ export type UserUpdateWithoutPaymentsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1609,6 +2023,8 @@ export type UserUpdateWithoutPaymentsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutPaymentsInput = {
@@ -1622,6 +2038,7 @@ export type UserUncheckedUpdateWithoutPaymentsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1638,6 +2055,8 @@ export type UserUncheckedUpdateWithoutPaymentsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutLiquidationsInput = {
@@ -1651,6 +2070,7 @@ export type UserCreateWithoutLiquidationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1667,6 +2087,8 @@ export type UserCreateWithoutLiquidationsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutLiquidationsInput = {
@@ -1680,6 +2102,7 @@ export type UserUncheckedCreateWithoutLiquidationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1696,6 +2119,8 @@ export type UserUncheckedCreateWithoutLiquidationsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutLiquidationsInput = {
@@ -1725,6 +2150,7 @@ export type UserUpdateWithoutLiquidationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1741,6 +2167,8 @@ export type UserUpdateWithoutLiquidationsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutLiquidationsInput = {
@@ -1754,6 +2182,7 @@ export type UserUncheckedUpdateWithoutLiquidationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1770,6 +2199,8 @@ export type UserUncheckedUpdateWithoutLiquidationsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutUploadedDocumentsInput = {
@@ -1783,6 +2214,7 @@ export type UserCreateWithoutUploadedDocumentsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1799,6 +2231,8 @@ export type UserCreateWithoutUploadedDocumentsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutUploadedDocumentsInput = {
@@ -1812,6 +2246,7 @@ export type UserUncheckedCreateWithoutUploadedDocumentsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1828,6 +2263,8 @@ export type UserUncheckedCreateWithoutUploadedDocumentsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutUploadedDocumentsInput = {
@@ -1857,6 +2294,7 @@ export type UserUpdateWithoutUploadedDocumentsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -1873,6 +2311,8 @@ export type UserUpdateWithoutUploadedDocumentsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutUploadedDocumentsInput = {
@@ -1886,6 +2326,7 @@ export type UserUncheckedUpdateWithoutUploadedDocumentsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -1902,6 +2343,8 @@ export type UserUncheckedUpdateWithoutUploadedDocumentsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutCashMovementsInput = {
@@ -1915,6 +2358,7 @@ export type UserCreateWithoutCashMovementsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -1931,6 +2375,8 @@ export type UserCreateWithoutCashMovementsInput = {
   triggeredNotifications?: Prisma.NotificationCreateNestedManyWithoutActorInput
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutCashMovementsInput = {
@@ -1944,6 +2390,7 @@ export type UserUncheckedCreateWithoutCashMovementsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -1960,6 +2407,8 @@ export type UserUncheckedCreateWithoutCashMovementsInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutActorInput
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutCashMovementsInput = {
@@ -1989,6 +2438,7 @@ export type UserUpdateWithoutCashMovementsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2005,6 +2455,8 @@ export type UserUpdateWithoutCashMovementsInput = {
   triggeredNotifications?: Prisma.NotificationUpdateManyWithoutActorNestedInput
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutCashMovementsInput = {
@@ -2018,6 +2470,7 @@ export type UserUncheckedUpdateWithoutCashMovementsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2034,6 +2487,8 @@ export type UserUncheckedUpdateWithoutCashMovementsInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutActorNestedInput
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutNotificationsInput = {
@@ -2047,6 +2502,7 @@ export type UserCreateWithoutNotificationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -2063,6 +2519,8 @@ export type UserCreateWithoutNotificationsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutNotificationsInput = {
@@ -2076,6 +2534,7 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -2092,6 +2551,8 @@ export type UserUncheckedCreateWithoutNotificationsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutNotificationsInput = {
@@ -2110,6 +2571,7 @@ export type UserCreateWithoutTriggeredNotificationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -2126,6 +2588,8 @@ export type UserCreateWithoutTriggeredNotificationsInput = {
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutTriggeredNotificationsInput = {
@@ -2139,6 +2603,7 @@ export type UserUncheckedCreateWithoutTriggeredNotificationsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -2155,6 +2620,8 @@ export type UserUncheckedCreateWithoutTriggeredNotificationsInput = {
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutTriggeredNotificationsInput = {
@@ -2184,6 +2651,7 @@ export type UserUpdateWithoutNotificationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2200,6 +2668,8 @@ export type UserUpdateWithoutNotificationsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutNotificationsInput = {
@@ -2213,6 +2683,7 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2229,6 +2700,8 @@ export type UserUncheckedUpdateWithoutNotificationsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUpsertWithoutTriggeredNotificationsInput = {
@@ -2253,6 +2726,7 @@ export type UserUpdateWithoutTriggeredNotificationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2269,6 +2743,8 @@ export type UserUpdateWithoutTriggeredNotificationsInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutTriggeredNotificationsInput = {
@@ -2282,6 +2758,7 @@ export type UserUncheckedUpdateWithoutTriggeredNotificationsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2298,6 +2775,8 @@ export type UserUncheckedUpdateWithoutTriggeredNotificationsInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutAuditsInput = {
@@ -2311,6 +2790,7 @@ export type UserCreateWithoutAuditsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -2327,6 +2807,8 @@ export type UserCreateWithoutAuditsInput = {
   triggeredNotifications?: Prisma.NotificationCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutAuditsInput = {
@@ -2340,6 +2822,7 @@ export type UserUncheckedCreateWithoutAuditsInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -2356,6 +2839,8 @@ export type UserUncheckedCreateWithoutAuditsInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutActorInput
   activities?: Prisma.ClientActivityUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutAuditsInput = {
@@ -2385,6 +2870,7 @@ export type UserUpdateWithoutAuditsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2401,6 +2887,8 @@ export type UserUpdateWithoutAuditsInput = {
   triggeredNotifications?: Prisma.NotificationUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutAuditsInput = {
@@ -2414,6 +2902,7 @@ export type UserUncheckedUpdateWithoutAuditsInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2430,6 +2919,8 @@ export type UserUncheckedUpdateWithoutAuditsInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateWithoutActivitiesInput = {
@@ -2443,6 +2934,7 @@ export type UserCreateWithoutActivitiesInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -2459,6 +2951,8 @@ export type UserCreateWithoutActivitiesInput = {
   triggeredNotifications?: Prisma.NotificationCreateNestedManyWithoutActorInput
   audits?: Prisma.AuditLogCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentCreateNestedManyWithoutCollectorInput
 }
 
 export type UserUncheckedCreateWithoutActivitiesInput = {
@@ -2472,6 +2966,7 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   zoneId?: string | null
   banned?: boolean
@@ -2488,6 +2983,8 @@ export type UserUncheckedCreateWithoutActivitiesInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedCreateNestedManyWithoutActorInput
   audits?: Prisma.AuditLogUncheckedCreateNestedManyWithoutActorInput
   cashMovements?: Prisma.CashMovementUncheckedCreateNestedManyWithoutCollectorInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutAdministratorInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedCreateNestedManyWithoutCollectorInput
 }
 
 export type UserCreateOrConnectWithoutActivitiesInput = {
@@ -2517,6 +3014,7 @@ export type UserUpdateWithoutActivitiesInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2533,6 +3031,8 @@ export type UserUpdateWithoutActivitiesInput = {
   triggeredNotifications?: Prisma.NotificationUpdateManyWithoutActorNestedInput
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutActivitiesInput = {
@@ -2546,6 +3046,7 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   zoneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
@@ -2562,6 +3063,8 @@ export type UserUncheckedUpdateWithoutActivitiesInput = {
   triggeredNotifications?: Prisma.NotificationUncheckedUpdateManyWithoutActorNestedInput
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserCreateManyZoneInput = {
@@ -2575,6 +3078,7 @@ export type UserCreateManyZoneInput = {
   role?: string
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: string | null
   banned?: boolean
   banReason?: string | null
@@ -2592,6 +3096,7 @@ export type UserUpdateWithoutZoneInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2608,6 +3113,8 @@ export type UserUpdateWithoutZoneInput = {
   audits?: Prisma.AuditLogUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateWithoutZoneInput = {
@@ -2621,6 +3128,7 @@ export type UserUncheckedUpdateWithoutZoneInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2637,6 +3145,8 @@ export type UserUncheckedUpdateWithoutZoneInput = {
   audits?: Prisma.AuditLogUncheckedUpdateManyWithoutActorNestedInput
   activities?: Prisma.ClientActivityUncheckedUpdateManyWithoutActorNestedInput
   cashMovements?: Prisma.CashMovementUncheckedUpdateManyWithoutCollectorNestedInput
+  managedCollectorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutAdministratorNestedInput
+  supervisorAssignments?: Prisma.CollectorAssignmentUncheckedUpdateManyWithoutCollectorNestedInput
 }
 
 export type UserUncheckedUpdateManyWithoutZoneInput = {
@@ -2650,6 +3160,7 @@ export type UserUncheckedUpdateManyWithoutZoneInput = {
   role?: Prisma.StringFieldUpdateOperationsInput | string
   mustChangePassword?: Prisma.BoolFieldUpdateOperationsInput | boolean
   active?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  isSuperAdmin?: Prisma.BoolFieldUpdateOperationsInput | boolean
   phone?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   banned?: Prisma.BoolFieldUpdateOperationsInput | boolean
   banReason?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
@@ -2674,6 +3185,8 @@ export type UserCountOutputType = {
   audits: number
   activities: number
   cashMovements: number
+  managedCollectorAssignments: number
+  supervisorAssignments: number
 }
 
 export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2689,6 +3202,8 @@ export type UserCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.I
   audits?: boolean | UserCountOutputTypeCountAuditsArgs
   activities?: boolean | UserCountOutputTypeCountActivitiesArgs
   cashMovements?: boolean | UserCountOutputTypeCountCashMovementsArgs
+  managedCollectorAssignments?: boolean | UserCountOutputTypeCountManagedCollectorAssignmentsArgs
+  supervisorAssignments?: boolean | UserCountOutputTypeCountSupervisorAssignmentsArgs
 }
 
 /**
@@ -2785,6 +3300,20 @@ export type UserCountOutputTypeCountCashMovementsArgs<ExtArgs extends runtime.Ty
   where?: Prisma.CashMovementWhereInput
 }
 
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountManagedCollectorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CollectorAssignmentWhereInput
+}
+
+/**
+ * UserCountOutputType without action
+ */
+export type UserCountOutputTypeCountSupervisorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.CollectorAssignmentWhereInput
+}
+
 
 export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
@@ -2797,6 +3326,7 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   role?: boolean
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: boolean
   zoneId?: boolean
   banned?: boolean
@@ -2815,6 +3345,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   audits?: boolean | Prisma.User$auditsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   cashMovements?: boolean | Prisma.User$cashMovementsArgs<ExtArgs>
+  managedCollectorAssignments?: boolean | Prisma.User$managedCollectorAssignmentsArgs<ExtArgs>
+  supervisorAssignments?: boolean | Prisma.User$supervisorAssignmentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }, ExtArgs["result"]["user"]>
 
@@ -2829,6 +3361,7 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   role?: boolean
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: boolean
   zoneId?: boolean
   banned?: boolean
@@ -2848,6 +3381,7 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   role?: boolean
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: boolean
   zoneId?: boolean
   banned?: boolean
@@ -2867,6 +3401,7 @@ export type UserSelectScalar = {
   role?: boolean
   mustChangePassword?: boolean
   active?: boolean
+  isSuperAdmin?: boolean
   phone?: boolean
   zoneId?: boolean
   banned?: boolean
@@ -2874,7 +3409,7 @@ export type UserSelectScalar = {
   banExpires?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "mustChangePassword" | "active" | "phone" | "zoneId" | "banned" | "banReason" | "banExpires", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "mustChangePassword" | "active" | "isSuperAdmin" | "phone" | "zoneId" | "banned" | "banReason" | "banExpires", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   sessions?: boolean | Prisma.User$sessionsArgs<ExtArgs>
   accounts?: boolean | Prisma.User$accountsArgs<ExtArgs>
@@ -2889,6 +3424,8 @@ export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   audits?: boolean | Prisma.User$auditsArgs<ExtArgs>
   activities?: boolean | Prisma.User$activitiesArgs<ExtArgs>
   cashMovements?: boolean | Prisma.User$cashMovementsArgs<ExtArgs>
+  managedCollectorAssignments?: boolean | Prisma.User$managedCollectorAssignmentsArgs<ExtArgs>
+  supervisorAssignments?: boolean | Prisma.User$supervisorAssignmentsArgs<ExtArgs>
   _count?: boolean | Prisma.UserCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type UserIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
@@ -2914,6 +3451,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     audits: Prisma.$AuditLogPayload<ExtArgs>[]
     activities: Prisma.$ClientActivityPayload<ExtArgs>[]
     cashMovements: Prisma.$CashMovementPayload<ExtArgs>[]
+    managedCollectorAssignments: Prisma.$CollectorAssignmentPayload<ExtArgs>[]
+    supervisorAssignments: Prisma.$CollectorAssignmentPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
@@ -2926,6 +3465,7 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     role: string
     mustChangePassword: boolean
     active: boolean
+    isSuperAdmin: boolean
     phone: string | null
     zoneId: string | null
     banned: boolean
@@ -3338,6 +3878,8 @@ export interface Prisma__UserClient<T, Null = never, ExtArgs extends runtime.Typ
   audits<T extends Prisma.User$auditsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$auditsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   activities<T extends Prisma.User$activitiesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$activitiesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$ClientActivityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   cashMovements<T extends Prisma.User$cashMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$cashMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  managedCollectorAssignments<T extends Prisma.User$managedCollectorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$managedCollectorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CollectorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+  supervisorAssignments<T extends Prisma.User$supervisorAssignmentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.User$supervisorAssignmentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CollectorAssignmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
    * Attaches callbacks for the resolution and/or rejection of the Promise.
    * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3377,6 +3919,7 @@ export interface UserFieldRefs {
   readonly role: Prisma.FieldRef<"User", 'String'>
   readonly mustChangePassword: Prisma.FieldRef<"User", 'Boolean'>
   readonly active: Prisma.FieldRef<"User", 'Boolean'>
+  readonly isSuperAdmin: Prisma.FieldRef<"User", 'Boolean'>
   readonly phone: Prisma.FieldRef<"User", 'String'>
   readonly zoneId: Prisma.FieldRef<"User", 'String'>
   readonly banned: Prisma.FieldRef<"User", 'Boolean'>
@@ -4087,6 +4630,54 @@ export type User$cashMovementsArgs<ExtArgs extends runtime.Types.Extensions.Inte
   take?: number
   skip?: number
   distinct?: Prisma.CashMovementScalarFieldEnum | Prisma.CashMovementScalarFieldEnum[]
+}
+
+/**
+ * User.managedCollectorAssignments
+ */
+export type User$managedCollectorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CollectorAssignment
+   */
+  select?: Prisma.CollectorAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CollectorAssignment
+   */
+  omit?: Prisma.CollectorAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CollectorAssignmentInclude<ExtArgs> | null
+  where?: Prisma.CollectorAssignmentWhereInput
+  orderBy?: Prisma.CollectorAssignmentOrderByWithRelationInput | Prisma.CollectorAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.CollectorAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CollectorAssignmentScalarFieldEnum | Prisma.CollectorAssignmentScalarFieldEnum[]
+}
+
+/**
+ * User.supervisorAssignments
+ */
+export type User$supervisorAssignmentsArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the CollectorAssignment
+   */
+  select?: Prisma.CollectorAssignmentSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the CollectorAssignment
+   */
+  omit?: Prisma.CollectorAssignmentOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.CollectorAssignmentInclude<ExtArgs> | null
+  where?: Prisma.CollectorAssignmentWhereInput
+  orderBy?: Prisma.CollectorAssignmentOrderByWithRelationInput | Prisma.CollectorAssignmentOrderByWithRelationInput[]
+  cursor?: Prisma.CollectorAssignmentWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.CollectorAssignmentScalarFieldEnum | Prisma.CollectorAssignmentScalarFieldEnum[]
 }
 
 /**

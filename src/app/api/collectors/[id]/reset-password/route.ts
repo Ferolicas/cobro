@@ -3,11 +3,13 @@ import { audit } from "@/lib/audit";
 import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { notifyMasters } from "@/lib/notify";
+import { assertCollectorAccess } from "@/lib/auth/scope";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await requireUser(request, ["MASTER"]);
     const { id } = await params;
+    await assertCollectorAccess(user, id);
     const target = await prisma.user.findUniqueOrThrow({ where: { id } });
     if (target.role !== "COLLECTOR") return Response.json({ error: "Solo se restablecen cobradores" }, { status: 400 });
     const password = await hashPassword("cobro1234*");

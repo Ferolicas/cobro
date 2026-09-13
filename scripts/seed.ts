@@ -7,7 +7,11 @@ const DEFAULT_PASSWORD = "cobro1234*";
 
 async function ensureUser(input: { email: string; name: string; role: "MASTER" | "COLLECTOR"; active?: boolean }) {
   const existing = await prisma.user.findUnique({ where: { email: input.email.toLowerCase() } });
-  if (existing) return existing;
+  if (existing) {
+    return input.role === "MASTER" && !existing.isSuperAdmin
+      ? prisma.user.update({ where: { id: existing.id }, data: { isSuperAdmin: true } })
+      : existing;
+  }
   const id = randomUUID();
   const password = await hashPassword(DEFAULT_PASSWORD);
   return prisma.user.create({
@@ -16,6 +20,7 @@ async function ensureUser(input: { email: string; name: string; role: "MASTER" |
       name: input.name,
       email: input.email.toLowerCase(),
       role: input.role,
+      isSuperAdmin: input.role === "MASTER",
       active: input.active ?? true,
       mustChangePassword: true,
       accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },

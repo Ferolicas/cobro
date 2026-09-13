@@ -9,6 +9,7 @@ import { COLLECTOR_BASE_CENTS } from "@/lib/liquidations/constants";
 import { financialEventsForDate } from "@/lib/liquidations/calculation";
 import { addDays } from "date-fns";
 import { businessDateKey, businessDayStartUtc, businessToday } from "@/lib/loans/calculation";
+import { permittedCollectorIds, requireSuperAdmin } from "@/lib/auth/scope";
 
 const schema = z.object({
   name: z.string().trim().min(3).max(120),
@@ -23,23 +24,31 @@ const schema = z.object({
     (value) => value === "" ? undefined : value,
     z.string().min(1).optional(),
   ),
+  collectorIds: z.array(z.string().min(1)).default([]),
 });
 
 export async function GET(request: Request) {
   try {
-    await requireUser(request, ["MASTER"]);
+    const { user } = await requireUser(request, ["MASTER"]);
+    const allowedCollectorIds = await permittedCollectorIds(user);
     const today = businessToday();
     const todayStart = businessDayStartUtc();
     const todayKey = businessDateKey();
     const [collectors, administrators, zones] = await Promise.all([
       prisma.user.findMany({
-        where: { role: "COLLECTOR" },
+        where: { role: "COLLECTOR", ...(allowedCollectorIds === null ? {} : { id: { in: allowedCollectorIds } }) },
         select: { id: true, name: true, email: true, phone: true, active: true, mustChangePassword: true, createdAt: true, zone: true, liquidations: { orderBy: { date: "desc" }, take: 1, select: { date: true, closingCashCents: true, differenceCents: true, expensesCents: true } }, cashMovements: { where: { occurredAt: { gte: today, lt: addDays(todayStart, 1) } }, select: { type: true, amountCents: true, occurredAt: true } }, _count: { select: { assignedClients: true, managedCredits: true } } },
         orderBy: [{ active: "desc" }, { name: "asc" }],
       }),
       prisma.user.findMany({
-        where: { role: "MASTER" },
-        select: { id: true, name: true, email: true, phone: true, active: true, mustChangePassword: true, createdAt: true },
+        where: user.isSuperAdmin ? { role: "MASTER" } : { id: user.id },
+        select: {
+          id: true, name: true, email: true, phone: true, active: true, isSuperAdmin: true, mustChangePassword: true, createdAt: true,
+          managedCollectorAssignments: {
+            select: { collector: { select: { id: true, name: true, email: true, active: true } } },
+            orderBy: { collector: { name: "asc" } },
+          },
+        },
         orderBy: [{ active: "desc" }, { name: "asc" }],
       }),
       prisma.zone.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
@@ -67,19 +76,36 @@ export async function GET(request: Request) {
           lastClosedAt: latest?.date ?? null,
         },
       };
-    }), administrators, zones });
+    }), administrators: administrators.map(({ managedCollectorAssignments, ...administrator }) => ({
+      ...administrator,
+      assignedCollectors: managedCollectorAssignments.map(({ collector }) => collector),
+    })), zones, canManageUsers: user.isSuperAdmin });
   } catch (error) { return apiError(error); }
 }
 
 export async function POST(request: Request) {
   try {
     const { user } = await requireUser(request, ["MASTER"]);
+    requireSuperAdmin(user);
     const input = schema.parse(await request.json());
     if (input.role === "COLLECTOR" && !input.zoneId) {
       return Response.json({ error: "Selecciona una zona de trabajo válida" }, { status: 400 });
     }
     if (input.role === "MASTER" && input.transferFromCollectorId) {
       return Response.json({ error: "Una transferencia de cartera solo corresponde a un cobrador" }, { status: 400 });
+    }
+    const collectorIds = [...new Set(input.collectorIds)];
+    if (input.role === "MASTER" && collectorIds.length === 0) {
+      return Response.json({ error: "Asigna al menos un cobrador al nuevo administrador" }, { status: 400 });
+    }
+    if (input.role === "COLLECTOR" && collectorIds.length > 0) {
+      return Response.json({ error: "Las asignaciones solo corresponden a administradores" }, { status: 400 });
+    }
+    if (input.role === "MASTER") {
+      const validCollectors = await prisma.user.count({ where: { id: { in: collectorIds }, role: "COLLECTOR" } });
+      if (validCollectors !== collectorIds.length) {
+        return Response.json({ error: "Uno de los cobradores seleccionados ya no existe" }, { status: 400 });
+      }
     }
     const zone = input.role === "COLLECTOR"
       ? await prisma.zone.findFirst({ where: { id: input.zoneId, active: true } })
@@ -101,6 +127,11 @@ export async function POST(request: Request) {
           accounts: { create: { id: randomUUID(), issuer: "local:credential", accountId: id, providerId: "credential", password } },
         },
       });
+      if (input.role === "MASTER") {
+        await tx.collectorAssignment.createMany({
+          data: collectorIds.map((collectorId) => ({ administratorId: createdUser.id, collectorId })),
+        });
+      }
       let transfer: { previousCollector: { id: string; name: string }; clients: number; credits: number } | null = null;
       if (previousCollector) {
         const clients = await tx.client.updateMany({
@@ -134,7 +165,7 @@ export async function POST(request: Request) {
             transferredClients: transfer.clients,
             transferredCredits: transfer.credits,
             historicalRecordsPreserved: true,
-          }) : undefined,
+          }) : input.role === "MASTER" ? jsonValue({ assignedCollectorIds: collectorIds }) : undefined,
         },
       });
       return { createdUser, transfer };
@@ -147,7 +178,7 @@ export async function POST(request: Request) {
       title: transfer ? "Cartera transferida" : createdAdministrator ? "Administrador creado" : "Cobrador creado",
       message: transfer
         ? `${createdUser.name} recibió la cartera activa de ${transfer.previousCollector.name}`
-        : `${createdUser.name} ya puede acceder como ${createdAdministrator ? "administrador" : "cobrador"}`,
+        : `${createdUser.name} ya puede acceder como ${createdAdministrator ? `administrador de ${collectorIds.length} cobrador${collectorIds.length === 1 ? "" : "es"}` : "cobrador"}`,
       entityType: "user",
       entityId: id,
       actionUrl: "/app/cobradores",
@@ -163,6 +194,7 @@ export async function POST(request: Request) {
         clientesTransferidos: transfer?.clients,
         créditosTransferidos: transfer?.credits,
         historialAnteriorConservado: Boolean(transfer),
+        cobradoresAsignados: createdAdministrator ? collectorIds.length : undefined,
       },
       audienceUserIds: transfer ? [createdUser.id, transfer.previousCollector.id] : [createdUser.id],
     });
