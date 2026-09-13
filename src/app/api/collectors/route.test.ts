@@ -114,4 +114,34 @@ describe("transferencia al crear un cobrador", () => {
       credits: 11,
     });
   });
+
+  it("permite a un administrador crear otro administrador sin zona ni cartera", async () => {
+    const response = await POST(new Request("http://localhost/api/collectors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Administradora Dos",
+        email: "ADMIN2@EXAMPLE.COM",
+        phone: "999999998",
+        role: "MASTER",
+      }),
+    }));
+    const body = await response.json();
+
+    expect(response.status).toBe(201);
+    expect(mocks.zoneFindFirst).not.toHaveBeenCalled();
+    expect(mocks.previousCollectorFindFirst).not.toHaveBeenCalled();
+    expect(mocks.createCollector).toHaveBeenCalledWith({ data: expect.objectContaining({
+      name: "Administradora Dos",
+      email: "admin2@example.com",
+      role: "MASTER",
+      zoneId: null,
+      mustChangePassword: true,
+      active: true,
+    }) });
+    expect(mocks.transferClients).not.toHaveBeenCalled();
+    expect(mocks.createAudit).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "ADMIN_CREATED" }) });
+    expect(body.user).toMatchObject({ name: "Administradora Dos", role: "MASTER" });
+    expect(body.transfer).toBeNull();
+  });
 });

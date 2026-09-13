@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-14 · Commit base: a345b37
+Actualizado: 2026-09-14 · Commit base: eea70de
 
 ## Producto
 
@@ -20,7 +20,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 ## Viajes principales
 
-1. Maestro o cobrador inicia sesión con correo y contraseña. Al reemplazar un cobrador, el maestro puede crear el acceso nuevo y transferirle la cartera activa en la misma operación.
+1. Administrador o cobrador inicia sesión con correo y contraseña. Desde Usuarios, un administrador puede crear otros administradores con acceso maestro o crear un cobrador y transferirle la cartera activa de un acceso anterior en la misma operación.
 2. Una cuenta nueva/restablecida entra con `cobro1234*` y, en el primer acceso, solo escribe y confirma su contraseña nueva; ambos campos permiten mostrar u ocultar el texto. La sesión autenticada y `mustChangePassword` protegen este flujo de un segundo uso.
 3. El maestro supervisa toda la empresa en modo de lectura operativa; mantiene únicamente acciones administrativas como cobradores, zonas, auditoría y pérdidas.
 4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. El maestro ve estas acciones, ubicaciones y evidencias en tiempo real.
@@ -43,13 +43,13 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
 - `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan funciona como historial diario: importe real, faltante acumulado, amarillo persistente y check de abono; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE inicial, SALIDA disponible después de préstamos, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
-- `views/CollectorsView.tsx`: zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
+- `views/CollectorsView.tsx`: alta y listado de administradores, zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
 
 ## Backend
 
 - `src/app/api/auth/[...all]`: Better Auth.
-- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. Al crear un cobrador, `POST /api/collectors` acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
+- `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol. `POST /api/collectors`, exclusivo de `MASTER`, crea cuentas `MASTER` sin zona ni cartera o cuentas `COLLECTOR` con zona; para estas últimas acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` es exclusivo del maestro, purga transaccionalmente el expediente todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
 - `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
 - `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
@@ -64,7 +64,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 - Fechas de cuota: 24 días efectivos de cobro de lunes a sábado; los domingos nunca generan cuota ni cuentan para vencimiento.
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
-- Cada casilla del plan se reconstruye exclusivamente desde pagos inmutables y conserva el importe realmente recibido ese día; nunca usa el total FIFO mutable de la cuota. Un pago parcial o cero queda amarillo para siempre; si hubo abono conserva check verde y el faltante se suma visualmente al importe exigible del siguiente día. Los pagos históricos ya asignados se conservan aunque su fecha haya quedado fuera del calendario recalculado sin domingos. Tres días con cuotas vencidas pendientes cambian la clasificación de B a Q.
+- Cada casilla del plan se reconstruye exclusivamente desde registros `Payment` inmutables, en orden cronológico, y conserva exactamente el importe de esa cuota registrada; nunca usa el total FIFO mutable de la cuota ni agrupa varios registros hechos el mismo día. Un pago parcial o cero queda amarillo para siempre; si hubo abono conserva check verde y el faltante se suma visualmente al importe exigible del siguiente registro. Los pagos históricos ya asignados se conservan aunque su fecha haya quedado fuera del calendario recalculado sin domingos. Tres días con cuotas vencidas pendientes cambian la clasificación de B a Q.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
 - Caja neta de desembolso = capital − pago inicial − microseguro − liquidación anterior. El pago inicial nunca es menor que la primera cuota contractual.
 - Caja esperada = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS MANUALES − SUELDO − RETIRO CADENA. Yape/transferencias se informan, pero no aumentan caja física.

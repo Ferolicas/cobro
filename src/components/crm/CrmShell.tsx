@@ -21,12 +21,12 @@ type CurrencyContext = { currency: "PEN" | "COP"; rate: number; money: (cents: n
 export const defaultCurrency: CurrencyContext = { currency: "PEN", rate: 1, money: (cents) => `S/ ${(cents / 100).toLocaleString("es-PE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` };
 
 const masterNav = [
-  { id: "dashboard", label: "Resumen", icon: LayoutDashboard }, { id: "clientes", label: "Clientes", icon: ContactRound }, { id: "creditos", label: "Créditos", icon: CreditCard }, { id: "liquidaciones", label: "Liquidaciones", icon: ClipboardCheck }, { id: "cobradores", label: "Cobradores", icon: UsersRound }, { id: "reportes", label: "Caja y reportes", icon: WalletCards }, { id: "auditoria", label: "Auditoría", icon: BookOpenCheck },
+  { id: "dashboard", label: "Resumen", icon: LayoutDashboard }, { id: "clientes", label: "Clientes", icon: ContactRound }, { id: "creditos", label: "Créditos", icon: CreditCard }, { id: "liquidaciones", label: "Liquidaciones", icon: ClipboardCheck }, { id: "cobradores", label: "Usuarios", icon: UsersRound }, { id: "reportes", label: "Caja y reportes", icon: WalletCards }, { id: "auditoria", label: "Auditoría", icon: BookOpenCheck },
 ];
 const collectorNav = [
   { id: "dashboard", label: "Mi resumen", icon: LayoutDashboard }, { id: "cobro-hoy", label: "Cobro de hoy", icon: CircleDollarSign }, { id: "clientes", label: "Mis clientes", icon: ContactRound }, { id: "creditos", label: "Mis créditos", icon: CreditCard }, { id: "liquidaciones", label: "Mi liquidación", icon: ClipboardCheck },
 ];
-const titleMap: Record<string, [string, string]> = { dashboard: ["Resumen del negocio", "Una mirada clara a todo lo que importa hoy"], "cobro-hoy": ["Cobro de hoy", "Tu ruta, ordenada por prioridad"], clientes: ["Clientes", "Personas y negocios de tu cartera"], creditos: ["Créditos", "Cuotas, saldos y renovaciones"], liquidaciones: ["Liquidación diaria", "Cierra tu jornada sin perder un sol"], cobradores: ["Equipo de cobro", "Accesos, zonas y carga de trabajo"], reportes: ["Caja y reportes", "Ganancias, cartera y resultados"], auditoria: ["Auditoría", "Historial completo de movimientos"] };
+const titleMap: Record<string, [string, string]> = { dashboard: ["Resumen del negocio", "Una mirada clara a todo lo que importa hoy"], "cobro-hoy": ["Cobro de hoy", "Tu ruta, ordenada por prioridad"], clientes: ["Clientes", "Personas y negocios de tu cartera"], creditos: ["Créditos", "Cuotas, saldos y renovaciones"], liquidaciones: ["Liquidación diaria", "Cierra tu jornada sin perder un sol"], cobradores: ["Usuarios y equipo de cobro", "Administradores, cobradores, accesos y zonas"], reportes: ["Caja y reportes", "Ganancias, cartera y resultados"], auditoria: ["Auditoría", "Historial completo de movimientos"] };
 
 export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
   const router = useRouter(); const requestedView = slug[0] || "dashboard"; const entityId = slug[1];

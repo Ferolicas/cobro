@@ -9,6 +9,16 @@ export type AppUser = {
 
 export type Zone = { id: string; name: string };
 
+export type Administrator = {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string | null;
+  active: boolean;
+  mustChangePassword: boolean;
+  createdAt: string;
+};
+
 export type Collector = {
   id: string;
   name: string;

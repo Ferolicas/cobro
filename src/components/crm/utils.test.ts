@@ -118,4 +118,26 @@ describe("lectura diaria del plan", () => {
     expect(ledger[1]).toMatchObject({ dueCents: 5_000, displayCents: 4_000, visualStatus: "partial", checked: true });
     expect(ledger[2]).toMatchObject({ dueCents: 5_000, displayCents: 5_000, visualStatus: "pending", checked: false });
   });
+
+  it("muestra cada cuota registrada por separado aunque todas se cobren el mismo día", () => {
+    const ledger = installmentLedger({
+      installments: Array.from({ length: 6 }, (_, index) => ({
+        number: index + 1,
+        dueDate: `2026-09-${String(14 + index).padStart(2, "0")}T00:00:00.000Z`,
+      })),
+      payments: [
+        { id: "01", amountCents: 4_000, paidAt: "2026-09-13T12:00:00.000Z", source: "ADVANCE_INSTALLMENT" },
+        { id: "02", amountCents: 4_000, paidAt: "2026-09-13T19:45:00.000Z", source: "DAILY_COLLECTION" },
+        { id: "03", amountCents: 3_000, paidAt: "2026-09-13T19:49:00.000Z", source: "DAILY_COLLECTION" },
+        { id: "04", amountCents: 5_000, paidAt: "2026-09-13T19:50:00.000Z", source: "DAILY_COLLECTION" },
+      ],
+      totalDueCents: 24_000,
+      installmentCents: 4_000,
+      today: "2026-09-13",
+    });
+
+    expect(ledger.slice(0, 5).map((installment) => installment.displayCents)).toEqual([4_000, 4_000, 3_000, 5_000, 4_000]);
+    expect(ledger.slice(0, 4).map((installment) => installment.checked)).toEqual([true, true, true, true]);
+    expect(ledger[4].visualStatus).toBe("pending");
+  });
 });
