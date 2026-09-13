@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { BarChart3, Calculator, CheckCircle2, Eye, FileImage, History, LockKeyhole, RefreshCw, ShieldCheck, Upload, UsersRound } from "lucide-react";
 import { toast } from "sonner";
@@ -100,6 +100,8 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
   const [expenses, setExpenses] = useState("0.00");
   const [closingCash, setClosingCash] = useState("");
   const [notes, setNotes] = useState("");
+  const draftDirty = useRef(false);
+  const lastRefreshKey = useRef(refreshKey);
 
   const selectedClose = useMemo(() => history.find((item) => item.date.slice(0, 10) === date) ?? null, [date, history]);
 
@@ -116,12 +118,12 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
     if (isMaster && requestedCollectorId) setCollectorId(requestedCollectorId);
   }, [isMaster, requestedCollectorId]);
 
-  async function load() {
+  async function load({ resetDraft = false, showLoading = false } = {}) {
     const id = isMaster ? collectorId : user.id;
     if (!id) {
       setSummary(null); setOverview(null); setHistory([]); return;
     }
-    setLoading(true);
+    if (showLoading) setLoading(true);
     try {
       const data = await api<ResponseData>(`/api/liquidations?date=${date}&collectorId=${id}`);
       setCollectorName(data.collector.name);
@@ -129,16 +131,24 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
       setSummary(data.summary);
       setOverview(data.overview);
       const close = data.liquidations.find((item) => item.date.slice(0, 10) === date);
-      setExpenses(centsInput(data.summary.manualExpensesCents));
-      setClosingCash(close ? centsInput(close.closingCashCents) : "");
-      setNotes(close?.notes ?? "");
-      setFiles([]);
+      if (resetDraft || !draftDirty.current) {
+        setExpenses(centsInput(data.summary.manualExpensesCents));
+        setClosingCash(close ? centsInput(close.closingCashCents) : "");
+        setNotes(close?.notes ?? "");
+        setFiles([]);
+        draftDirty.current = false;
+      }
     } finally {
-      setLoading(false);
+      if (showLoading) setLoading(false);
     }
   }
 
-  useEffect(() => { void load(); }, [collectorId, date, refreshKey, isMaster, user.id]);
+  useEffect(() => { void load({ resetDraft: true, showLoading: true }); }, [collectorId, date, isMaster, user.id]);
+  useEffect(() => {
+    if (lastRefreshKey.current === refreshKey) return;
+    lastRefreshKey.current = refreshKey;
+    void load();
+  }, [refreshKey]);
 
   const automaticPreview = useMemo(() => {
     if (!summary) return { expectedClosingCents: 0, surplusCents: 0, chainWithdrawalCents: 0 };
@@ -159,7 +169,7 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
         const upload = new FormData(); files.forEach((file) => upload.append("files", file)); upload.append("category", "OTHER"); upload.append("liquidationId", data.liquidation.id);
         await api("/api/uploads", { method: "POST", body: upload });
       }
-      toast.success("Cierre automático confirmado y enviado al maestro"); await load();
+      toast.success("Cierre automático confirmado y enviado al maestro"); await load({ resetDraft: true, showLoading: true });
     } catch (error) { toast.error(error instanceof Error ? error.message : "No se pudo guardar"); }
     finally { setSaving(false); }
   }
@@ -195,11 +205,11 @@ export function LiquidationsView({ user, currency, refreshKey }: { user: AppUser
 
           {isMaster || selectedClose?.status === "LEGACY_IMPORTED" ? <div className="master-liquidation-review">{selectedClose ? <><div className="review-status success"><CheckCircle2 /><div><strong>{selectedClose.status === "LEGACY_IMPORTED" ? "Registro preservado del Excel" : `Cierre confirmado por ${selectedClose.collector.name}`}</strong><span>{shortDate(selectedClose.date)}</span></div></div>{selectedClose.notes && <p className="liquidation-note"><strong>Nota:</strong> {selectedClose.notes}</p>}{selectedClose.documents?.length ? <div className="detail-section"><h3><FileImage />Comprobantes</h3>{selectedClose.documents.map((document) => <a className="document-row" key={document.id} href={`/api/documents/${document.id}`} target="_blank"><span>{document.fileName}</span><small>Ver archivo</small></a>)}</div> : null}</> : <div className="review-status pending"><History /><div><strong>Jornada todavía sin confirmar</strong><span>Los movimientos ya están calculados; falta el conteo final del cobrador.</span></div></div>}</div> :
             <form className="liquidation-form" onSubmit={submit}>
-              <div className="form-grid"><div className="field-help"><strong>BASE y SALIDA automáticas · {currency.money(summary.openingBaseCents)}</strong><span>La base operativa permanece fija en S/30.000. El sobrante se retira como cadena el miércoles.</span></div><label className="field"><span>Gastos manuales del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => setExpenses(event.target.value)} required /></label></div>
+              <div className="form-grid"><div className="field-help"><strong>BASE y SALIDA automáticas · {currency.money(summary.openingBaseCents)}</strong><span>La base operativa permanece fija en S/30.000. El sobrante se retira como cadena el miércoles.</span></div><label className="field"><span>Gastos manuales del día (S/)</span><input type="number" min="0" step="0.01" value={expenses} onChange={(event) => { draftDirty.current = true; setExpenses(event.target.value); }} required /></label></div>
               <div className="automatic-costs"><span><small>Sueldo automático</small><strong>{currency.money(summary.collectorSalaryCents)}</strong><b>3% · se carga el sábado</b></span><span><small>Retiro cadena</small><strong>{currency.money(automaticPreview.chainWithdrawalCents)}</strong><b>Miércoles · máximo {currency.money(automaticPreview.surplusCents)}</b></span></div>
-              <div className="cash-reconciliation"><div><span>Caja esperada automáticamente</span><strong className={expectedClosingCents < 0 ? "danger-text" : ""}>{currency.money(expectedClosingCents)}</strong><small>Base + cobrado + M.S − préstamos − gastos − sueldo − cadena</small>{expectedClosingCents < 0 && <b className="support-alert">Requiere {currency.money(Math.abs(expectedClosingCents))} de apoyo de otro cobrador</b>}</div><label className="field"><span>Caja real contada (S/)</span><input type="number" step="0.01" value={closingCash} onChange={(event) => setClosingCash(event.target.value)} required /></label><div className={differenceCents === 0 ? "cash-difference balanced" : "cash-difference"}><span>Diferencia</span><strong>{closingCash ? currency.money(differenceCents) : "—"}</strong></div></div>
-              <label className="field"><span>Notas de la jornada</span><textarea value={notes} onChange={(event) => setNotes(event.target.value)} placeholder="Explica gastos, diferencias u observaciones" /></label>
-              <label className="upload-drop"><Upload /><strong>Comprobantes adicionales del cierre</strong><span>Los justificantes Yape/transferencia ya están ligados a cada pago</span><input type="file" accept="image/*,video/*" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []))} />{files.length > 0 && <b>{files.length} archivo(s) listo(s)</b>}</label>
+              <div className="cash-reconciliation"><div><span>Caja esperada automáticamente</span><strong className={expectedClosingCents < 0 ? "danger-text" : ""}>{currency.money(expectedClosingCents)}</strong><small>Base + cobrado + M.S − préstamos − gastos − sueldo − cadena</small>{expectedClosingCents < 0 && <b className="support-alert">Requiere {currency.money(Math.abs(expectedClosingCents))} de apoyo de otro cobrador</b>}</div><label className="field"><span>Caja real contada (S/)</span><input type="number" step="0.01" value={closingCash} onChange={(event) => { draftDirty.current = true; setClosingCash(event.target.value); }} required /></label><div className={differenceCents === 0 ? "cash-difference balanced" : "cash-difference"}><span>Diferencia</span><strong>{closingCash ? currency.money(differenceCents) : "—"}</strong></div></div>
+              <label className="field"><span>Notas de la jornada</span><textarea value={notes} onChange={(event) => { draftDirty.current = true; setNotes(event.target.value); }} placeholder="Explica gastos, diferencias u observaciones" /></label>
+              <label className="upload-drop"><Upload /><strong>Comprobantes adicionales del cierre</strong><span>Los justificantes Yape/transferencia ya están ligados a cada pago</span><input type="file" accept="image/*,video/*" multiple onChange={(event) => { draftDirty.current = true; setFiles(Array.from(event.target.files ?? [])); }} />{files.length > 0 && <b>{files.length} archivo(s) listo(s)</b>}</label>
               <button className="primary-button full" disabled={saving}>{saving ? "Confirmando cierre…" : selectedClose ? "Actualizar cierre automático" : "Confirmar cierre automático"}</button>
             </form>}
         </> : <div className="muted-box">Selecciona un cobrador para revisar su jornada.</div>}

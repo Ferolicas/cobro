@@ -85,7 +85,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
-- Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido. Todas las mutaciones visibles publican después de persistir a maestros y al cobrador afectado; las zonas se publican a todas las sesiones. Las fichas de cliente/crédito abiertas también se reconsultan. Hay renovación del ticket al reconectar, sincronización al recuperar foco, reconciliación defensiva y estado visual real del canal. La matriz completa vive en `docs/REALTIME.md`.
+- Los eventos WebSocket no son fuente de verdad: la UI vuelve a consultar el dato persistido. Todas las mutaciones visibles publican después de persistir a maestros y al cobrador afectado; las zonas se publican a todas las sesiones. Las fichas de cliente/crédito abiertas también se reconsultan. No hay polling periódico: Socket.IO reconecta y renueva el ticket caducado; la resincronización en vivo ocurre en segundo plano sin desmontar ni sobrescribir formularios abiertos. La matriz completa vive en `docs/REALTIME.md`.
 - Los justificantes digitales se suben primero y el servicio financiero verifica propiedad, crédito, categoría y que no hayan sido usados antes de ligarlos al pago dentro de la transacción.
 - Las notificaciones de documentos fueron verificadas de extremo a extremo: carga a Sanity, evento WebSocket sin recarga y modal detallado clicable.
 - Antes de cada despliegue: `pnpm typecheck && pnpm lint && pnpm build`.

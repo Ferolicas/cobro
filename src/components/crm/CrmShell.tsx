@@ -32,6 +32,7 @@ export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
   const router = useRouter(); const requestedView = slug[0] || "dashboard"; const entityId = slug[1];
   const [sidebar, setSidebar] = useState(false); const [notificationsOpen, setNotificationsOpen] = useState(false); const [notifications, setNotifications] = useState<Notification[]>([]); const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null); const [currency, setCurrency] = useState<"PEN"|"COP">("PEN"); const [rate, setRate] = useState(1); const [refreshKey, setRefreshKey] = useState(0); const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "fallback">("connecting");
   const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasConnected = useRef(false);
   const nav = user.role === "MASTER" ? masterNav : collectorNav;
   const view = nav.some((item) => item.id === requestedView) ? requestedView : "dashboard";
   const currencyContext = useMemo<CurrencyContext>(() => ({ currency, rate, money: (cents) => { const value = currency === "COP" ? (cents / 100) * rate : cents / 100; return new Intl.NumberFormat(currency === "COP" ? "es-CO" : "es-PE", { style: "currency", currency, maximumFractionDigits: currency === "COP" ? 0 : 2 }).format(value); } }), [currency, rate]);
@@ -67,7 +68,8 @@ export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
           socket.on("connect", () => {
             if (disposed) return;
             setRealtimeStatus("live");
-            synchronize();
+            if (hasConnected.current) synchronize();
+            hasConnected.current = true;
           });
           socket.on("disconnect", () => { if (!disposed) setRealtimeStatus("fallback"); });
           socket.on("connect_error", (error) => {
@@ -101,24 +103,9 @@ export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
     void loadNotifications();
     void api<{ rate: number }>("/api/exchange").then((data) => setRate(data.rate)).catch(() => undefined);
     void connectWithFreshTicket();
-    const fallbackTimer = setInterval(() => {
-      if (!socket?.connected) {
-        synchronize();
-        void connectWithFreshTicket();
-      }
-    }, 15_000);
-    const consistencyTimer = setInterval(synchronize, 60_000);
-    const onFocus = () => synchronize();
-    const onVisibility = () => { if (document.visibilityState === "visible") synchronize(); };
-    window.addEventListener("focus", onFocus);
-    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       disposed = true;
-      clearInterval(fallbackTimer);
-      clearInterval(consistencyTimer);
       if (refreshTimer.current) clearTimeout(refreshTimer.current);
-      window.removeEventListener("focus", onFocus);
-      document.removeEventListener("visibilitychange", onVisibility);
       socket?.disconnect();
     };
   }, [loadNotifications, scheduleRefresh]);

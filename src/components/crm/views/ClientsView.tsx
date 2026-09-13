@@ -10,6 +10,7 @@ import type { AppUser, Client, CreditPreview, StoredDocument, Zone } from "@/com
 import { api, dateTime, shortDate, todayInput } from "@/components/crm/utils";
 
 type Currency = { money: (cents: number) => string };
+type ClientDraft = Record<"name" | "documentNumber" | "phone" | "alternatePhone" | "businessName" | "businessType" | "zoneId" | "address" | "locationNotes" | "reference" | "notes", string>;
 
 async function uploadDocuments(clientId: string, category: string, files: File[], creditId?: string) {
   if (!files.length) return [];
@@ -46,12 +47,14 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   const [previewError, setPreviewError] = useState("");
   const [onboardingClientId, setOnboardingClientId] = useState("");
   const [onboardingDocumentsReady, setOnboardingDocumentsReady] = useState(false);
+  const [clientDraft, setClientDraft] = useState<ClientDraft | null>(null);
+  const [disbursedAt, setDisbursedAt] = useState(todayInput());
+  const [creditNotes, setCreditNotes] = useState("");
   const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [deleting, setDeleting] = useState(false);
 
   async function load() {
-    setLoading(true);
     try {
       const data = await api<{ clients: Client[] }>(`/api/clients${query ? `?q=${encodeURIComponent(query)}` : ""}`);
       setClients(data.clients);
@@ -75,14 +78,14 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   }, [initialId, refreshKey, selected?.id]);
   useEffect(() => { if (canOperate) void api<{ zones: Zone[] }>("/api/zones").then((data) => setZones(data.zones)); }, [canOperate, refreshKey]);
   useEffect(() => {
-    if (!canOperate || step !== 3 || !principal || Number(principal) <= 0) {
+    if (!canOperate || step !== 3 || !principal || Number(principal) <= 0 || !disbursedAt) {
       setPreview(null);
       return;
     }
     const timer = setTimeout(() => {
       void api<CreditPreview>("/api/credits/preview", {
         method: "POST",
-        body: JSON.stringify({ principal, microinsurance, advancePayment: advancePayment || undefined, disbursedAt: todayInput() }),
+        body: JSON.stringify({ principal, microinsurance, advancePayment: advancePayment || undefined, disbursedAt }),
       }).then((data) => {
         setPreview(data);
         setPreviewError("");
@@ -93,7 +96,7 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
       });
     }, 250);
     return () => clearTimeout(timer);
-  }, [advancePayment, canOperate, microinsurance, principal, step]);
+  }, [advancePayment, canOperate, disbursedAt, microinsurance, principal, step]);
 
   const filtered = useMemo(() => clients, [clients]);
 
@@ -111,6 +114,9 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
     setPreviewError("");
     setOnboardingClientId("");
     setOnboardingDocumentsReady(false);
+    setClientDraft(null);
+    setDisbursedAt(todayInput());
+    setCreditNotes("");
   }
 
   async function locate(setter: (value: LiveLocation) => void) {
@@ -129,7 +135,15 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   function validateFirstStep(form: HTMLFormElement) {
     const names = ["name", "documentNumber", "phone", "businessName", "zoneId"];
     const invalid = names.map((name) => form.elements.namedItem(name)).find((field) => field instanceof HTMLInputElement || field instanceof HTMLSelectElement ? !field.reportValidity() : false);
-    if (!invalid) setStep(2);
+    if (invalid) return;
+    const data = new FormData(form);
+    setClientDraft({
+      name: String(data.get("name") ?? ""), documentNumber: String(data.get("documentNumber") ?? ""), phone: String(data.get("phone") ?? ""),
+      alternatePhone: String(data.get("alternatePhone") ?? ""), businessName: String(data.get("businessName") ?? ""), businessType: String(data.get("businessType") ?? ""),
+      zoneId: String(data.get("zoneId") ?? ""), address: String(data.get("address") ?? ""), locationNotes: String(data.get("locationNotes") ?? ""),
+      reference: String(data.get("reference") ?? ""), notes: String(data.get("notes") ?? ""),
+    });
+    setStep(2);
   }
 
   function validateEvidenceStep() {
@@ -142,26 +156,22 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
 
   async function create(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!clientDraft) { setStep(1); return toast.error("Revisa y confirma primero los datos del cliente"); }
     if (!location || !preview || previewError) return toast.error(previewError || "Completa el cálculo del crédito");
     setSaving(true);
-    const form = new FormData(event.currentTarget);
     try {
       let clientId = onboardingClientId;
       if (!clientId) {
         const data = await api<{ client: { id: string } }>("/api/clients", {
           method: "POST",
           body: JSON.stringify({
-            name: String(form.get("name") ?? ""),
-            documentNumber: String(form.get("documentNumber") ?? ""),
-            phone: String(form.get("phone") ?? ""),
-            alternatePhone: String(form.get("alternatePhone") ?? "") || null,
-            businessName: String(form.get("businessName") ?? ""),
-            businessType: String(form.get("businessType") ?? "") || null,
-            zoneId: String(form.get("zoneId") ?? ""),
-            address: String(form.get("address") ?? "") || null,
-            locationNotes: String(form.get("locationNotes") ?? "") || null,
-            reference: String(form.get("reference") ?? "") || null,
-            notes: String(form.get("notes") ?? "") || null,
+            ...clientDraft,
+            alternatePhone: clientDraft.alternatePhone || null,
+            businessType: clientDraft.businessType || null,
+            address: clientDraft.address || null,
+            locationNotes: clientDraft.locationNotes || null,
+            reference: clientDraft.reference || null,
+            notes: clientDraft.notes || null,
             ...location,
           }),
         });
@@ -182,8 +192,8 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
           principal,
           microinsurance,
           advancePayment,
-          disbursedAt: String(form.get("disbursedAt") ?? todayInput()),
-          notes: String(form.get("creditNotes") ?? "") || null,
+          disbursedAt,
+          notes: creditNotes || null,
         }),
       });
       toast.success("Cliente, documentos, ubicación y crédito creados correctamente");
@@ -247,7 +257,7 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
     <div className="client-grid">{filtered.map((client) => <article className="client-card" key={client.id}><button className="card-main" onClick={() => void detail(client.id)}><div className="client-top"><span className="customer-avatar">{client.name.slice(0, 2).toUpperCase()}</span><div><h3>{client.name}</h3><p>{client.code}</p></div><i className={`risk-dot ${client.riskStatus.toLowerCase()}`}></i></div><div className="client-info"><span><Building2 />{client.businessName || "Negocio sin registrar"}</span><span><MapPin />{client.zone?.name || client.address || "Zona sin asignar"}</span><span><Phone />{client.phone || "Sin teléfono"}</span></div></button><footer><div><small>Saldo activo</small><strong>{currency.money(client.credits.reduce((sum, credit) => sum + credit.balanceCents, 0))}</strong></div><span>{client.credits.length} crédito{client.credits.length === 1 ? "" : "s"} activo{client.credits.length === 1 ? "" : "s"}</span></footer></article>)}</div>
     {!filtered.length && <EmptyState icon={<ContactRound />} title="No encontramos clientes" text={canOperate ? "Prueba otro término o crea el primer cliente." : "Prueba con otro término de búsqueda."} action={canOperate ? <button className="primary-button" onClick={() => setCreateOpen(true)}><Plus />Crear cliente</button> : undefined} />}
 
-    {createOpen && canOperate && <Modal title="Nuevo cliente" subtitle={`Paso ${step} de 3 · ${step === 1 ? "Datos y zona" : step === 2 ? "Documentos y ubicación" : "Crédito inicial"}`} onClose={resetOnboarding} wide><form className="modal-form" onSubmit={create}>
+    {createOpen && canOperate && <Modal title="Nuevo cliente" subtitle={`Paso ${step} de 3 · ${step === 1 ? "Datos y zona" : step === 2 ? "Documentos y ubicación" : "Crédito inicial"}`} onClose={resetOnboarding} wide><form className="modal-form" onSubmit={create} noValidate>
       <div className="wizard-progress"><i className="done">1</i><span className={step >= 2 ? "done" : ""}></span><i className={step >= 2 ? "done" : ""}>2</i><span className={step >= 3 ? "done" : ""}></span><i className={step >= 3 ? "done" : ""}>3</i></div>
       <section className={step === 1 ? "wizard-step form-grid" : "wizard-step hidden"}>
         <label className="field span-2"><span>Nombre completo *</span><input name="name" required minLength={3} autoFocus /></label>
@@ -276,11 +286,11 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
         <label className="field"><span>Valor del préstamo (S/) *</span><input type="number" min="1" step="0.01" value={principal} onChange={(event) => setPrincipal(event.target.value)} required /></label>
         <label className="field"><span>Microseguro pagado (S/)</span><input type="number" min="0" step="0.01" value={microinsurance} onChange={(event) => setMicroinsurance(event.target.value)} required /></label>
         <label className="field"><span>Primera cuota pagada (S/) *</span><input type="number" min={preview ? preview.minimumAdvancePaymentCents / 100 : 0.01} step="0.01" value={advancePayment} onChange={(event) => setAdvancePayment(event.target.value)} required /></label>
-        <label className="field"><span>Fecha de desembolso</span><input type="date" name="disbursedAt" defaultValue={todayInput()} required /></label>
+        <label className="field"><span>Fecha de desembolso</span><input type="date" value={disbursedAt} onChange={(event) => setDisbursedAt(event.target.value)} required /></label>
         {preview && <div className="loan-preview span-2"><div><span>Total a pagar</span><strong>{currency.money(preview.totalDueCents)}</strong></div><div><span>24 cuotas desde</span><strong>{currency.money(preview.minimumAdvancePaymentCents)}</strong></div><div><span>Pago inicial</span><strong>{currency.money(preview.advancePaymentCents)}</strong></div><div><span>Efectivo entregado</span><strong>{currency.money(preview.cashDeliveredCents)}</strong></div></div>}
         {previewError && <p className="form-error span-2">{previewError}</p>}
-        <label className="field span-2"><span>Observaciones del crédito</span><textarea name="creditNotes" /></label>
-        <div className="form-actions span-2"><button type="button" className="secondary-button" onClick={() => setStep(2)}>Atrás</button><button className="primary-button" disabled={saving || !preview}>{saving ? "Creando expediente…" : "Crear cliente y desembolsar"}</button></div>
+        <label className="field span-2"><span>Observaciones del crédito</span><textarea value={creditNotes} onChange={(event) => setCreditNotes(event.target.value)} /></label>
+        <div className="form-actions span-2"><button type="button" className="secondary-button" onClick={() => setStep(2)}>Atrás</button><button type="submit" className="primary-button" disabled={saving}>{saving ? "Creando expediente…" : "Crear cliente y desembolsar"}</button></div>
       </section>
     </form></Modal>}
 

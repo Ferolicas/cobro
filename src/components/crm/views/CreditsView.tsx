@@ -40,7 +40,6 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   const initialRenewOpenedFor = useRef<string | undefined>(undefined);
 
   async function load() {
-    setLoading(true);
     try {
       const data = await api<{ credits: Credit[] }>(`/api/credits?status=${status}${query ? `&q=${encodeURIComponent(query)}` : ""}`);
       setCredits(data.credits);

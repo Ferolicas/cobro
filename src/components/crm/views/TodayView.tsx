@@ -22,7 +22,6 @@ export function TodayView({ currency, refreshKey }: { currency: Currency; refres
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    setLoading(true);
     try {
       const data = await api<{ credits: Credit[] }>("/api/credits?status=ALL");
       setCredits(data.credits.filter((credit) => ["ACTIVE", "OVERDUE"].includes(credit.status) && (credit.dueTodayCents > 0 || credit.daysRemaining < 0)));
