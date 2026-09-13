@@ -1,9 +1,8 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { addDays, differenceInCalendarDays } from "date-fns";
 import { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db/prisma";
-import { businessToday, CREDIT_DAYS, creditNumbers, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
+import { businessToday, collectionDate, collectionDayDifference, CREDIT_DAYS, creditNumbers, creditRating, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
 export { CREDIT_DAYS, creditNumbers, dateOnly, installmentPlan, INTEREST_RATE_BPS } from "@/lib/loans/calculation";
 
@@ -158,8 +157,17 @@ export async function registerPayment(params: {
 }
 
 export async function refreshOverdueStatuses() {
+  const today = businessToday();
+  const active = await prisma.credit.findMany({
+    where: { status: "ACTIVE", balanceCents: { gt: BigInt(0) } },
+    select: { id: true, disbursedAt: true },
+  });
+  const overdueIds = active
+    .filter((credit) => collectionDate(credit.disbursedAt, CREDIT_DAYS - 1) < today)
+    .map((credit) => credit.id);
+  if (!overdueIds.length) return { count: 0 };
   return prisma.credit.updateMany({
-    where: { status: "ACTIVE", balanceCents: { gt: BigInt(0) }, maturityDate: { lt: businessToday() } },
+    where: { id: { in: overdueIds } },
     data: { status: "OVERDUE" },
   });
 }
@@ -205,7 +213,7 @@ export async function createCredit(input: NewCreditInput) {
         installmentCount: CREDIT_DAYS,
         installmentCents,
         disbursedAt: input.disbursedAt,
-        maturityDate: addDays(input.disbursedAt, CREDIT_DAYS - 1),
+        maturityDate: schedule[schedule.length - 1].dueDate,
         microinsuranceCents,
         advancePaymentCents,
         priorSettlementCents,
@@ -311,21 +319,31 @@ export function creditProgress(credit: {
   installments: { number: number; dueDate: Date; expectedCents: bigint; paidCents: bigint; status?: string }[];
 }) {
   const today = businessToday();
-  const daysElapsed = Math.max(0, differenceInCalendarDays(today, credit.disbursedAt));
-  const dueTodayCents = credit.installments
+  const installments = credit.installments.map((item) => ({
+    ...item,
+    dueDate: collectionDate(credit.disbursedAt, item.number - 1),
+  }));
+  const maturityDate = collectionDate(credit.disbursedAt, CREDIT_DAYS - 1);
+  const daysElapsed = Math.max(0, collectionDayDifference(installments[0]?.dueDate ?? credit.disbursedAt, today));
+  const dueTodayCents = installments
     .filter((item) => item.dueDate <= today)
     .reduce((sum, item) => sum + (item.expectedCents - item.paidCents), BigInt(0));
-  const paidInstallmentsCount = credit.installments.filter(
+  const paidInstallmentsCount = installments.filter(
     (item) => item.paidCents >= item.expectedCents,
   ).length;
+  const lateDays = installments.filter(
+    (item) => item.dueDate <= today && item.paidCents < item.expectedCents,
+  ).length;
   const currentInstallmentNumber =
-    credit.installments.find((item) => item.paidCents < item.expectedCents)?.number ??
-    credit.installments.length;
+    installments.find((item) => item.paidCents < item.expectedCents)?.number ??
+    installments.length;
   return {
-    daysRemaining: differenceInCalendarDays(credit.maturityDate, today),
+    installments,
+    maturityDate,
+    daysRemaining: collectionDayDifference(today, maturityDate),
     daysElapsed,
-    excelStatus: daysElapsed <= CREDIT_DAYS ? "B" : "Q",
-    zeroPaymentDays: credit.installments.filter((item) => item.dueDate <= today && item.paidCents === BigInt(0)).length,
+    excelStatus: creditRating(lateDays),
+    zeroPaymentDays: installments.filter((item) => item.dueDate <= today && item.paidCents === BigInt(0)).length,
     dueTodayCents: dueTodayCents > credit.balanceCents ? credit.balanceCents : dueTodayCents,
     paidInstallmentsCount,
     currentInstallmentNumber,

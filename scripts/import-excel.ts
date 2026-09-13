@@ -1,8 +1,8 @@
 import "dotenv/config";
 import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
-import { addDays } from "date-fns";
 import { prisma } from "../src/lib/db/prisma";
+import { collectionDate, installmentPlan } from "../src/lib/loans/calculation";
 
 const sourcePath = process.argv[2];
 if (!sourcePath) throw new Error("Uso: pnpm db:import-excel /ruta/archivo.xlsx");
@@ -110,11 +110,11 @@ async function main() {
       const client = await prisma.client.create({ data: { code: code("IMP-CL", identity), name, phone: phone || null, zoneId: currentZone?.id, collectorId: collector.id, notes: "Importado desde COBRO BEATRIS UNIDO 02/09/2026" } });
       clientId = client.id; clientByIdentity.set(identity, client.id); clientsCreated++;
     }
-    const interestCents = principalCents * BigInt(20) / BigInt(100); const totalDueCents = principalCents + interestCents; const baseInstallment = totalDueCents / BigInt(24); const remainder = totalDueCents - baseInstallment * BigInt(24);
+    const interestCents = principalCents * BigInt(20) / BigInt(100); const totalDueCents = principalCents + interestCents; const baseInstallment = totalDueCents / BigInt(24); const schedule = installmentPlan(principalCents, disbursedAt);
     const paymentCells: { paidAt: Date; amountCents: bigint }[] = [];
     for (let column = 28; column <= 146; column++) { const paidAt = date(sheet.getCell(1, column)); const paid = amount(sheet.getCell(row, column)); if (paidAt && paid > BigInt(0)) paymentCells.push({ paidAt: businessTimestamp(paidAt), amountCents: paid }); }
-    const paidCents = paymentCells.reduce((sum, item) => sum + item.amountCents, BigInt(0)); const balanceCents = totalDueCents - paidCents; const maturityDate = addDays(disbursedAt, 23); const status = balanceCents <= BigInt(0) ? "PAID" : maturityDate < new Date("2026-09-02T23:59:59Z") ? "OVERDUE" : "ACTIVE";
-    const credit = await prisma.credit.create({ data: { code: code("IMP-CR", `${row}-${name}-${disbursedAt.toISOString()}`), clientId, collectorId: collector.id, principalCents, interestRateBps: 2000, interestCents, totalDueCents, installmentCount: 24, installmentCents: baseInstallment, disbursedAt, maturityDate, status, microinsuranceCents: BigInt(0), advancePaymentCents: BigInt(0), priorSettlementCents: BigInt(0), cashDeliveredCents: principalCents, paidCents: BigInt(0), balanceCents: totalDueCents, notes: "Saldo y pagos importados fielmente del Excel; la cuota adelantada histórica no estaba identificada por separado.", installments: { create: Array.from({length:24},(_,index)=>({number:index+1,dueDate:addDays(disbursedAt,index),expectedCents:baseInstallment+(BigInt(index)<remainder?BigInt(1):BigInt(0))})) } } });
+    const paidCents = paymentCells.reduce((sum, item) => sum + item.amountCents, BigInt(0)); const balanceCents = totalDueCents - paidCents; const maturityDate = collectionDate(disbursedAt, 23); const status = balanceCents <= BigInt(0) ? "PAID" : maturityDate < new Date("2026-09-02T23:59:59Z") ? "OVERDUE" : "ACTIVE";
+    const credit = await prisma.credit.create({ data: { code: code("IMP-CR", `${row}-${name}-${disbursedAt.toISOString()}`), clientId, collectorId: collector.id, principalCents, interestRateBps: 2000, interestCents, totalDueCents, installmentCount: 24, installmentCents: baseInstallment, disbursedAt, maturityDate, status, microinsuranceCents: BigInt(0), advancePaymentCents: BigInt(0), priorSettlementCents: BigInt(0), cashDeliveredCents: principalCents, paidCents: BigInt(0), balanceCents: totalDueCents, notes: "Saldo y pagos importados fielmente del Excel; la cuota adelantada histórica no estaba identificada por separado.", installments: { create: schedule } } });
     await prisma.cashMovement.create({ data: { collectorId: collector.id, creditId: credit.id, type: "DISBURSEMENT", direction: "OUT", amountCents: principalCents, occurredAt: businessTimestamp(disbursedAt), note: "Importado de Excel" } });
     for (const importedPayment of paymentCells) {
       const payment = await prisma.payment.create({ data: { creditId: credit.id, collectorId: collector.id, amountCents: importedPayment.amountCents, paidAt: importedPayment.paidAt, method: "CASH", source: "EXCEL_IMPORT", note: "Movimiento histórico importado" } });

@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-13 · Commit: 03aeead
+Actualizado: 2026-09-14 · Commit base: a694afd
 
 ## Producto
 
@@ -41,7 +41,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `views/DashboardView.tsx`: panorama, caja, cartera y urgencias.
 - `views/TodayView.tsx`: ruta diaria, cuota actual, pago con prueba digital y “No pagó”, exclusivo del cobrador.
 - `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
-- `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan diferencia en amarillo las cuotas completadas después de vencer; solo lectura operativa para el maestro.
+- `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan funciona como historial diario: importe real, faltante acumulado, amarillo persistente y check de abono; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE/SALIDA fija, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
 - `views/CollectorsView.tsx`: zonas actuales, base/caja/déficit, altas, acceso y control financiero de cada cobrador.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
@@ -62,8 +62,9 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 ## Datos y reglas
 
-- Fechas de cuota: días 0 a 23 desde el desembolso; vencimiento en el día 24 del ciclo.
+- Fechas de cuota: 24 días efectivos de cobro de lunes a sábado; los domingos nunca generan cuota ni cuentan para vencimiento.
 - La suma de las 24 cuotas es exactamente capital + 20%; los céntimos residuales se distribuyen en las primeras cuotas.
+- Cada casilla del plan conserva el importe realmente recibido ese día. Un pago parcial o cero queda amarillo para siempre; si hubo abono conserva check verde y el faltante se suma visualmente al importe exigible del siguiente día. Tres días con cuotas vencidas pendientes cambian la clasificación de B a Q.
 - Saldo = total contractual − pagos aplicados. No hay intereses de mora ni multas.
 - Caja neta de desembolso = capital − pago inicial − microseguro − liquidación anterior. El pago inicial nunca es menor que la primera cuota contractual.
 - Caja esperada = BASE + TOTAL INGRESADO − PRÉSTAMOS − GASTOS MANUALES − SUELDO − RETIRO CADENA. Yape/transferencias se informan, pero no aumentan caja física.

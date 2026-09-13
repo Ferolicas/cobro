@@ -31,6 +31,7 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 
 - Todo importe persistido está en céntimos como `BigInt`; las respuestas JSON lo convierten a número.
 - Un crédito nuevo siempre usa 20%, 24 cuotas, cobra al desembolsar como mínimo la primera cuota (puede registrar un pago inicial mayor) y no aplica mora.
+- Las 24 cuotas son 24 días efectivos de cobro de lunes a sábado: los domingos no generan cuota, atraso ni vencimiento.
 - El microseguro es ingreso de caja separado y nunca aumenta la deuda.
 - Una renovación liquida y cierra el crédito anterior antes de crear el nuevo.
 - Todo cambio financiero debe ser transaccional, auditable y notificar al maestro.
@@ -41,6 +42,7 @@ CRM privado para microcréditos diarios. Producción vive en `cobro.olcas.app`, 
 - BASE y SALIDA son siempre S/30.000 por cobrador. El sueldo es 3% de lo cobrado sin M.S y se carga el sábado; el miércoles la cadena retira automáticamente como máximo el sobrante sobre la base. Un déficit se muestra como apoyo requerido de otro cobrador, sin inventar transferencias.
 - El resultado semanal y cada resultado dinámico de la cadena se calculan como COBRADO − PRÉSTAMOS − GASTOS TOTALES + M.S. El sueldo permanece en 3% de COBRADO y nunca incluye M.S.
 - En Nuevo crédito, elegir un cliente con crédito activo abre directamente la renovación de ese crédito. En el plan, una cuota pagada después de su vencimiento se conserva pagada pero se distingue en amarillo.
+- El plan conserva por día el importe realmente recibido: un pago parcial o cero queda amarillo para siempre, el abono parcial lleva check verde y su faltante se acumula en el valor exigible del siguiente día. Con 3 días de cobro vencidos y pendientes, la clasificación cambia de B a Q.
 - El alta de cliente exige zona activa, DNI, ubicación GPS actual, evidencias y crédito inicial. Yape/transferencia exige justificante ligado al pago; sus archivos se numeran de forma persistente.
 - Los cierres con `status=LEGACY_IMPORTED` son históricos inmutables del Excel; no se pueden sobrescribir desde el panel del cobrador.
 - Las notificaciones se guardan antes de emitir el evento WebSocket y deben conservar `details` completos y `actionUrl`.

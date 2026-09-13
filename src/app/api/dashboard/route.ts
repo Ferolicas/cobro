@@ -47,7 +47,7 @@ export async function GET(request: Request) {
     const portfolioCents = credits.reduce((sum, credit) => sum + credit.balanceCents, BigInt(0));
     const expectedProfitCents = credits.reduce((sum, credit) => sum + credit.interestCents, BigInt(0));
     const todayDueCents = credits.reduce((sum, credit) => sum + creditProgress(credit).dueTodayCents, BigInt(0));
-    const overdue = credits.filter((credit) => credit.maturityDate < today && credit.balanceCents > BigInt(0)).length;
+    const overdue = credits.filter((credit) => creditProgress(credit).daysRemaining < 0 && credit.balanceCents > BigInt(0)).length;
     const operationalBaseCents = COLLECTOR_BASE_CENTS * BigInt(user.role === "MASTER" ? collectors : 1);
     const physicalIncomeCents = todayMovements
       .filter((movement) => ["PAYMENT_CASH", "ADVANCE_INSTALLMENT", "MICROINSURANCE", "RENEWAL_SETTLEMENT"].includes(movement.type))

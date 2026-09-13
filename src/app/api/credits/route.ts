@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       actorId: user.id, type: "CREDIT_CREATED", title: "Nuevo crédito desembolsado",
       message: `${user.name} desembolsó S/ ${input.principal.toFixed(2)} a ${credit.client.name}`,
       entityType: "credit", entityId: credit.id, actionUrl: `/app/creditos/${credit.id}`,
-      details: { cliente: credit.client.name, capital: input.principal, interés: "20%", plazo: "24 días", microseguro: input.microinsurance, primeraCuota: Number(credit.advancePaymentCents) / 100, efectivoEntregado: Number(credit.cashDeliveredCents) / 100 },
+      details: { cliente: credit.client.name, capital: input.principal, interés: "20%", plazo: "24 días de cobro (lunes a sábado)", microseguro: input.microinsurance, primeraCuota: Number(credit.advancePaymentCents) / 100, efectivoEntregado: Number(credit.cashDeliveredCents) / 100 },
     });
     return jsonResponse({ credit }, { status: 201 });
   } catch (error) { return apiError(error); }

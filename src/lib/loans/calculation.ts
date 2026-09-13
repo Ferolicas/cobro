@@ -32,6 +32,33 @@ export function dateOnly(value: Date | string) {
   return new Date(Date.UTC(value.getUTCFullYear(), value.getUTCMonth(), value.getUTCDate()));
 }
 
+export function collectionDate(disbursedAt: Date, installmentIndex: number) {
+  let date = dateOnly(disbursedAt);
+  while (date.getUTCDay() === 0) date = addDays(date, 1);
+  for (let index = 0; index < installmentIndex; index += 1) {
+    do date = addDays(date, 1); while (date.getUTCDay() === 0);
+  }
+  return date;
+}
+
+export function collectionDayDifference(from: Date, to: Date) {
+  const start = dateOnly(from);
+  const end = dateOnly(to);
+  if (start.getTime() === end.getTime()) return 0;
+  const direction = start < end ? 1 : -1;
+  let cursor = start;
+  let days = 0;
+  while (cursor.getTime() !== end.getTime()) {
+    cursor = addDays(cursor, direction);
+    if (cursor.getUTCDay() !== 0) days += direction;
+  }
+  return days;
+}
+
+export function creditRating(lateCollectionDays: number): "B" | "Q" {
+  return lateCollectionDays >= 3 ? "Q" : "B";
+}
+
 export function creditNumbers(principalCents: bigint, count = CREDIT_DAYS) {
   if (principalCents <= BigInt(0)) throw new Error("El capital debe ser mayor que cero");
   if (count <= 0) throw new Error("El número de cuotas debe ser mayor que cero");
@@ -46,7 +73,7 @@ export function installmentPlan(principalCents: bigint, disbursedAt: Date) {
   const remainder = totalDueCents - installmentCents * BigInt(CREDIT_DAYS);
   return Array.from({ length: CREDIT_DAYS }, (_, index) => ({
     number: index + 1,
-    dueDate: addDays(disbursedAt, index),
+    dueDate: collectionDate(disbursedAt, index),
     expectedCents: installmentCents + (BigInt(index) < remainder ? BigInt(1) : BigInt(0)),
   }));
 }
