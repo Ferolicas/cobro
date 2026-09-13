@@ -48,6 +48,7 @@ io.use(async (socket, nextSocket) => {
 });
 
 io.on("connection", (socket) => {
+  socket.join("authenticated");
   socket.join(`user:${socket.data.userId}`);
   if (socket.data.role === "MASTER") socket.join("masters");
 });

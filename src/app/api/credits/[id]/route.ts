@@ -23,7 +23,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (before.balanceCents <= BigInt(0)) return Response.json({ error: "El crédito ya no tiene saldo" }, { status: 400 });
     const credit = await prisma.credit.update({ where: { id }, data: { status: "WRITTEN_OFF", writtenOffCents: before.balanceCents, closedAt: new Date(), notes: [before.notes, `Castigo: ${note}`].filter(Boolean).join("\n") } });
     await audit({ actorId: user.id, action, entityType: "credit", entityId: id, before, after: credit, metadata: { note } });
-    await notifyMasters({ actorId: user.id, type: "CREDIT_WRITTEN_OFF", title: "Crédito registrado como pérdida", message: `${before.client.name}: pérdida de S/ ${(Number(before.balanceCents)/100).toFixed(2)}`, entityType: "credit", entityId: id, actionUrl: `/app/creditos/${id}`, details: { cliente: before.client.name, crédito: before.code, capital: Number(before.principalCents)/100, cobrado: Number(before.paidCents)/100, pérdida: Number(before.balanceCents)/100, motivo: note } });
+    await notifyMasters({ actorId: user.id, type: "CREDIT_WRITTEN_OFF", title: "Crédito registrado como pérdida", message: `${before.client.name}: pérdida de S/ ${(Number(before.balanceCents)/100).toFixed(2)}`, entityType: "credit", entityId: id, actionUrl: `/app/creditos/${id}`, details: { cliente: before.client.name, crédito: before.code, capital: Number(before.principalCents)/100, cobrado: Number(before.paidCents)/100, pérdida: Number(before.balanceCents)/100, motivo: note }, audienceUserIds: [before.collectorId] });
     return jsonResponse({ credit });
   } catch (error) { return apiError(error); }
 }

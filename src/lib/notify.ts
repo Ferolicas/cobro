@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { emitRealtime } from "@/lib/realtime/hub";
+import { emitDataChanged, emitRealtime } from "@/lib/realtime/hub";
 import { jsonSafe, jsonValue } from "@/lib/json";
 
 export async function notifyMasters(params: {
@@ -12,39 +12,48 @@ export async function notifyMasters(params: {
   entityId?: string;
   actionUrl?: string;
   details?: unknown;
+  audienceUserIds?: Array<string | null | undefined>;
+  broadcastToAll?: boolean;
 }) {
   const masters = await prisma.user.findMany({
     where: { role: "MASTER", active: true },
     select: { id: true },
   });
-  if (!masters.length) return [];
-  const created = await prisma.$transaction(
-    masters.map(({ id }) =>
-      prisma.notification.create({
-        data: {
-          recipientId: id,
-          actorId: params.actorId,
-          type: params.type,
-          title: params.title,
-          message: params.message,
-          entityType: params.entityType,
-          entityId: params.entityId,
-          actionUrl: params.actionUrl,
-          details: params.details === undefined ? undefined : jsonValue(params.details),
-        },
-        include: { actor: { select: { id: true, name: true, email: true } } },
-      }),
-    ),
-  );
+  const created = masters.length
+    ? await prisma.$transaction(
+        masters.map(({ id }) =>
+          prisma.notification.create({
+            data: {
+              recipientId: id,
+              actorId: params.actorId,
+              type: params.type,
+              title: params.title,
+              message: params.message,
+              entityType: params.entityType,
+              entityId: params.entityId,
+              actionUrl: params.actionUrl,
+              details: params.details === undefined ? undefined : jsonValue(params.details),
+            },
+            include: { actor: { select: { id: true, name: true, email: true } } },
+          }),
+        ),
+      )
+    : [];
   for (const notification of created) {
     emitRealtime("notification:new", jsonSafe(notification), [
       `user:${notification.recipientId}`,
     ]);
   }
-  emitRealtime(
-    "data:changed",
-    { type: params.entityType, id: params.entityId },
-    [...new Set(["masters", ...(params.actorId ? [`user:${params.actorId}`] : [])])],
-  );
+  emitDataChanged({
+    action: params.type,
+    entityType: params.entityType ?? "system",
+    entityId: params.entityId,
+  }, params.broadcastToAll
+    ? ["authenticated"]
+    : [...new Set([
+        "masters",
+        ...(params.actorId ? [`user:${params.actorId}`] : []),
+        ...(params.audienceUserIds ?? []).filter((id): id is string => Boolean(id)).map((id) => `user:${id}`),
+      ])]);
   return created;
 }

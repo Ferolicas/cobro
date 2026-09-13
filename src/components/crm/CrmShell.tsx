@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
 import { Bell, BookOpenCheck, CircleDollarSign, ClipboardCheck, ContactRound, CreditCard, LayoutDashboard, LogOut, Menu, ReceiptText, Search, ShieldCheck, UsersRound, WalletCards, X } from "lucide-react";
@@ -30,12 +30,98 @@ const titleMap: Record<string, [string, string]> = { dashboard: ["Resumen del ne
 
 export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
   const router = useRouter(); const requestedView = slug[0] || "dashboard"; const entityId = slug[1];
-  const [sidebar, setSidebar] = useState(false); const [notificationsOpen, setNotificationsOpen] = useState(false); const [notifications, setNotifications] = useState<Notification[]>([]); const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null); const [currency, setCurrency] = useState<"PEN"|"COP">("PEN"); const [rate, setRate] = useState(1); const [refreshKey, setRefreshKey] = useState(0);
+  const [sidebar, setSidebar] = useState(false); const [notificationsOpen, setNotificationsOpen] = useState(false); const [notifications, setNotifications] = useState<Notification[]>([]); const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null); const [currency, setCurrency] = useState<"PEN"|"COP">("PEN"); const [rate, setRate] = useState(1); const [refreshKey, setRefreshKey] = useState(0); const [realtimeStatus, setRealtimeStatus] = useState<"connecting" | "live" | "fallback">("connecting");
+  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const nav = user.role === "MASTER" ? masterNav : collectorNav;
   const view = nav.some((item) => item.id === requestedView) ? requestedView : "dashboard";
   const currencyContext = useMemo<CurrencyContext>(() => ({ currency, rate, money: (cents) => { const value = currency === "COP" ? (cents / 100) * rate : cents / 100; return new Intl.NumberFormat(currency === "COP" ? "es-CO" : "es-PE", { style: "currency", currency, maximumFractionDigits: currency === "COP" ? 0 : 2 }).format(value); } }), [currency, rate]);
   const loadNotifications = useCallback(async () => { try { const data = await api<{ notifications: Notification[] }>("/api/notifications"); setNotifications(data.notifications); } catch { /* session handling stays with page */ } }, []);
-  useEffect(() => { void loadNotifications(); void api<{rate:number}>("/api/exchange").then((data)=>setRate(data.rate)).catch(()=>undefined); const timer=setInterval(loadNotifications,60000); let socket: ReturnType<typeof io> | undefined; void api<{ticket:string}>("/api/realtime-ticket",{method:"POST"}).then(({ticket})=>{socket=io({path:"/socket.io",auth:{ticket}});socket.on("notification:new",(notification:Notification)=>{setNotifications((items)=>[notification,...items.filter((item)=>item.id!==notification.id)]);toast.info(notification.title,{description:notification.message});});socket.on("data:changed",()=>setRefreshKey((key)=>key+1));}); return()=>{clearInterval(timer);socket?.disconnect();}; },[loadNotifications]);
+  const scheduleRefresh = useCallback(() => {
+    if (refreshTimer.current) clearTimeout(refreshTimer.current);
+    refreshTimer.current = setTimeout(() => setRefreshKey((key) => key + 1), 80);
+  }, []);
+  useEffect(() => {
+    let socket: ReturnType<typeof io> | undefined;
+    let disposed = false;
+    let refreshingTicket = false;
+
+    const synchronize = () => {
+      scheduleRefresh();
+      void loadNotifications();
+    };
+    const connectWithFreshTicket = async () => {
+      if (disposed || refreshingTicket) return;
+      refreshingTicket = true;
+      try {
+        const { ticket } = await api<{ ticket: string }>("/api/realtime-ticket", { method: "POST" });
+        if (disposed) return;
+        if (!socket) {
+          socket = io({
+            path: "/socket.io",
+            auth: { ticket },
+            autoConnect: false,
+            reconnection: true,
+            reconnectionDelay: 500,
+            reconnectionDelayMax: 5_000,
+          });
+          socket.on("connect", () => {
+            if (disposed) return;
+            setRealtimeStatus("live");
+            synchronize();
+          });
+          socket.on("disconnect", () => { if (!disposed) setRealtimeStatus("fallback"); });
+          socket.on("connect_error", (error) => {
+            if (disposed) return;
+            setRealtimeStatus("fallback");
+            if (error.message === "No autorizado") void connectWithFreshTicket();
+          });
+          socket.on("notification:new", (notification: Notification) => {
+            setNotifications((items) => [notification, ...items.filter((item) => item.id !== notification.id)]);
+            toast.info(notification.title, { description: notification.message });
+          });
+          socket.on("notification:read", ({ id, readAt }: { id: string; readAt: string }) => {
+            setNotifications((items) => items.map((item) => item.id === id ? { ...item, readAt } : item));
+          });
+          socket.on("notification:read-all", ({ readAt }: { readAt: string }) => {
+            setNotifications((items) => items.map((item) => ({ ...item, readAt: item.readAt ?? readAt })));
+          });
+          socket.on("data:changed", scheduleRefresh);
+        } else {
+          socket.auth = { ticket };
+        }
+        setRealtimeStatus("connecting");
+        socket.connect();
+      } catch {
+        if (!disposed) setRealtimeStatus("fallback");
+      } finally {
+        refreshingTicket = false;
+      }
+    };
+
+    void loadNotifications();
+    void api<{ rate: number }>("/api/exchange").then((data) => setRate(data.rate)).catch(() => undefined);
+    void connectWithFreshTicket();
+    const fallbackTimer = setInterval(() => {
+      if (!socket?.connected) {
+        synchronize();
+        void connectWithFreshTicket();
+      }
+    }, 15_000);
+    const consistencyTimer = setInterval(synchronize, 60_000);
+    const onFocus = () => synchronize();
+    const onVisibility = () => { if (document.visibilityState === "visible") synchronize(); };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      disposed = true;
+      clearInterval(fallbackTimer);
+      clearInterval(consistencyTimer);
+      if (refreshTimer.current) clearTimeout(refreshTimer.current);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisibility);
+      socket?.disconnect();
+    };
+  }, [loadNotifications, scheduleRefresh]);
   const unread = notifications.filter((item)=>!item.readAt).length;
   function navigate(id:string){router.push(id==="dashboard"?"/app":`/app/${id}`);setSidebar(false)}
   async function openNotification(notification:Notification){setSelectedNotification(notification);setNotificationsOpen(false);if(!notification.readAt){await api(`/api/notifications/${notification.id}/read`,{method:"POST"});setNotifications((items)=>items.map((item)=>item.id===notification.id?{...item,readAt:new Date().toISOString()}:item));}}
@@ -49,7 +135,7 @@ export function CrmShell({ user, slug }: { user: AppUser; slug: string[] }) {
     <aside className={`sidebar ${sidebar?"open":""}`}><div className="sidebar-brand"><span className="brand-mark">C</span><div><strong>COBRO</strong><small>Control inteligente</small></div><button className="mobile-close" onClick={()=>setSidebar(false)}><X/></button></div><div className="nav-label">GESTIÓN</div><nav>{nav.map((item)=><button key={item.id} className={(view===item.id||(view==="dashboard"&&item.id==="dashboard"))?"active":""} onClick={()=>navigate(item.id)}><item.icon/><span>{item.label}</span></button>)}</nav><div className="sidebar-help"><ShieldCheck/><div><strong>Datos protegidos</strong><span>Actividad auditada</span></div></div><button className="logout-button" onClick={logout}><LogOut/>Cerrar sesión</button></aside>
     <div className="app-stage"><header className="app-header"><button className="menu-button" onClick={()=>setSidebar(true)}><Menu/></button><div className="header-search"><Search/><input placeholder="Buscar clientes o créditos…" onKeyDown={(e)=>{if(e.key==="Enter"&&e.currentTarget.value.trim())router.push(`/app/clientes?q=${encodeURIComponent(e.currentTarget.value)}`)}}/></div><div className="header-actions"><div className="currency-toggle"><button className={currency==="PEN"?"active":""} onClick={()=>setCurrency("PEN")}>S/ PEN</button><button className={currency==="COP"?"active":""} onClick={()=>setCurrency("COP")}>$ COP</button></div><button className="notification-button" onClick={()=>setNotificationsOpen(!notificationsOpen)} aria-label="Notificaciones"><Bell/>{unread>0&&<b>{unread>99?"99+":unread}</b>}</button><button className="profile-button"><span>{user.name.split(" ").slice(0,2).map((part)=>part[0]).join("").toUpperCase()}</span><div><strong>{user.name}</strong><small>{user.role==="MASTER"?"Administrador":"Cobrador"}</small></div></button></div></header>
       {notificationsOpen&&<section className="notifications-popover"><header><div><h3>Notificaciones</h3><span>{unread} sin leer</span></div><button onClick={async()=>{await api("/api/notifications/read-all",{method:"POST"});setNotifications((items)=>items.map((item)=>({...item,readAt:item.readAt??new Date().toISOString()})))}}>Marcar todas</button></header><div>{notifications.length?notifications.slice(0,30).map((item)=><button key={item.id} className={!item.readAt?"unread":""} onClick={()=>void openNotification(item)}><i></i><span><strong>{item.title}</strong><small>{item.message}</small><time>{dateTime(item.createdAt)}</time></span></button>):<p className="no-notifications">Todo está al día.</p>}</div></section>}
-      <main className="app-main"><div className="page-heading"><div><p>{user.role==="MASTER"?"PANEL MAESTRO":"MI RUTA"}</p><h1>{title}</h1><span>{subtitle}</span></div><div className="live-chip"><i></i>En vivo</div></div>
+      <main className="app-main"><div className="page-heading"><div><p>{user.role==="MASTER"?"PANEL MAESTRO":"MI RUTA"}</p><h1>{title}</h1><span>{subtitle}</span></div><div className={`live-chip ${realtimeStatus}`}><i></i>{realtimeStatus === "live" ? "En vivo" : realtimeStatus === "connecting" ? "Conectando…" : "Reconectando…"}</div></div>
         {view==="dashboard"&&<DashboardView user={user} currency={currencyContext} refreshKey={refreshKey}/>}
         {view==="clientes"&&<ClientsView user={user} currency={currencyContext} initialId={entityId} refreshKey={refreshKey}/>}
         {view==="creditos"&&<CreditsView user={user} currency={currencyContext} initialId={entityId} refreshKey={refreshKey}/>}

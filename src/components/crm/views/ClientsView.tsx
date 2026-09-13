@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Building2, Camera, CheckCircle2, ContactRound, CreditCard, FileBadge, LocateFixed, MapPin, Phone, Plus, RefreshCw, Search, Upload, Video } from "lucide-react";
+import { AlertTriangle, Building2, Camera, CheckCircle2, ContactRound, CreditCard, FileBadge, LocateFixed, MapPin, Phone, Plus, RefreshCw, Search, Trash2, Upload, Video } from "lucide-react";
 import { toast } from "sonner";
 import { captureLiveLocation, mapsUrl, type LiveLocation } from "@/components/crm/location";
 import { EmptyState, LoadingState, Modal } from "@/components/crm/Modal";
@@ -46,6 +46,9 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
   const [previewError, setPreviewError] = useState("");
   const [onboardingClientId, setOnboardingClientId] = useState("");
   const [onboardingDocumentsReady, setOnboardingDocumentsReady] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -66,8 +69,11 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
     const timer = setTimeout(() => void load(), query ? 250 : 0);
     return () => clearTimeout(timer);
   }, [query, refreshKey]);
-  useEffect(() => { if (initialId) void detail(initialId); }, [initialId, refreshKey]);
-  useEffect(() => { if (canOperate) void api<{ zones: Zone[] }>("/api/zones").then((data) => setZones(data.zones)); }, [canOperate]);
+  useEffect(() => { if (initialId) void detail(initialId).catch(() => setSelected(null)); }, [initialId, refreshKey]);
+  useEffect(() => {
+    if (!initialId && selected?.id) void detail(selected.id).catch(() => setSelected(null));
+  }, [initialId, refreshKey, selected?.id]);
+  useEffect(() => { if (canOperate) void api<{ zones: Zone[] }>("/api/zones").then((data) => setZones(data.zones)); }, [canOperate, refreshKey]);
   useEffect(() => {
     if (!canOperate || step !== 3 || !principal || Number(principal) <= 0) {
       setPreview(null);
@@ -215,6 +221,26 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
     });
   }
 
+  async function deleteClient(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deleteTarget || deleteConfirmation !== deleteTarget.code) return;
+    setDeleting(true);
+    try {
+      const result = await api<{ assetsPendingCleanup: boolean }>(`/api/clients/${deleteTarget.id}`, {
+        method: "DELETE",
+        body: JSON.stringify({ confirmation: deleteConfirmation }),
+      });
+      setClients((items) => items.filter((item) => item.id !== deleteTarget.id));
+      setDeleteTarget(null);
+      setDeleteConfirmation("");
+      toast.success(result.assetsPendingCleanup ? "Cliente eliminado; los archivos externos quedaron en cola de limpieza" : "Cliente eliminado definitivamente");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "No se pudo eliminar el cliente");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   if (loading && !clients.length) return <LoadingState />;
   return <div className="page-stack">
     <div className="toolbar"><div className="search-box"><Search /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Nombre, DNI, negocio o teléfono…" /></div>{canOperate && <button className="primary-button" onClick={() => setCreateOpen(true)}><Plus />Nuevo cliente</button>}</div>
@@ -266,6 +292,13 @@ export function ClientsView({ user, currency, initialId, refreshKey }: { user: A
       <section className="detail-section"><h3><CreditCard />Historial de créditos</h3>{selected.credits.length ? selected.credits.map((credit) => <div className="credit-row" key={credit.id}><div><strong>{credit.code}</strong><span>{shortDate(credit.disbursedAt)} · {credit.status}</span></div><div><small>Capital</small><strong>{currency.money(credit.principalCents)}</strong></div><div><small>Saldo</small><strong>{currency.money(credit.balanceCents)}</strong></div>{canOperate && ["ACTIVE", "OVERDUE"].includes(credit.status) && <button className="renew-inline" onClick={() => router.push(`/app/creditos/${credit.id}?action=renew`)}><RefreshCw />Renovar</button>}</div>) : <p className="muted-box">Aún no tiene créditos.</p>}</section>
       <section className="detail-section"><h3><Upload />Documentación y evidencias</h3>{selected.documents?.length ? selected.documents.map((document) => <a className="document-row" key={document.id} href={`/api/documents/${document.id}`} target="_blank"><span><strong>{document.label || document.fileName}</strong><small>{document.fileName}</small></span><small>{dateTime(document.createdAt)}</small></a>) : <p className="muted-box">No hay archivos cargados.</p>}</section>
       <section className="detail-section"><h3>Actividad visible para administración</h3>{selected.activities?.map((activity) => <div className="timeline-row" key={activity.id}><i></i><div><strong>{activity.title}</strong><span>{activity.description || activity.actor?.name || "Sistema"} · {dateTime(activity.createdAt)}</span></div></div>)}</section>
+      {user.role === "MASTER" && <div className="danger-zone admin-delete-zone"><AlertTriangle /><div><strong>Eliminar cliente</strong><span>Disponible solo si sus movimientos todavía no forman parte de un cierre diario.</span></div><button className="danger-button" onClick={() => { setDeleteTarget(selected); setDeleteConfirmation(""); setSelected(null); }}><Trash2 />Eliminar</button></div>}
     </div></Modal>}
+
+    {deleteTarget && <Modal title="Eliminar cliente definitivamente" subtitle={`${deleteTarget.name} · ${deleteTarget.code}`} onClose={() => { if (!deleting) { setDeleteTarget(null); setDeleteConfirmation(""); } }}><form className="modal-form" onSubmit={deleteClient}>
+      <div className="warning-box"><AlertTriangle /><span>Se borrarán el cliente, sus créditos, pagos, movimientos sin cerrar y documentos. Esta acción no se puede deshacer.</span></div>
+      <label className="field"><span>Escribe <strong>{deleteTarget.code}</strong> para confirmar</span><input value={deleteConfirmation} onChange={(event) => setDeleteConfirmation(event.target.value)} autoFocus autoComplete="off" /></label>
+      <div className="form-actions"><button type="button" className="secondary-button" onClick={() => { setDeleteTarget(null); setDeleteConfirmation(""); }} disabled={deleting}>Cancelar</button><button className="danger-button" disabled={deleting || deleteConfirmation !== deleteTarget.code}>{deleting ? "Eliminando…" : "Eliminar definitivamente"}</button></div>
+    </form></Modal>}
   </div>;
 }

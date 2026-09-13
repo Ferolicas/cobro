@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { AlertTriangle, CalendarDays, CheckCircle2, CircleDollarSign, CreditCard, FileUp, LocateFixed, Plus, RefreshCw, Search, UserX } from "lucide-react";
 import { toast } from "sonner";
@@ -37,6 +37,7 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
   const [updateFiles, setUpdateFiles] = useState<File[]>([]);
   const [updateLocation, setUpdateLocation] = useState<LiveLocation | null>(null);
   const [locating, setLocating] = useState(false);
+  const initialRenewOpenedFor = useRef<string | undefined>(undefined);
 
   async function load() {
     setLoading(true);
@@ -65,8 +66,14 @@ export function CreditsView({ user, currency, initialId, refreshKey }: { user: A
     return () => clearTimeout(timer);
   }, [query, status, refreshKey]);
   useEffect(() => {
-    if (initialId) void detail(initialId, canOperate && params.get("action") === "renew");
+    if (!initialId) return;
+    const openRenew = canOperate && params.get("action") === "renew" && initialRenewOpenedFor.current !== initialId;
+    if (openRenew) initialRenewOpenedFor.current = initialId;
+    void detail(initialId, openRenew).catch(() => setSelected(null));
   }, [canOperate, initialId, params, refreshKey]);
+  useEffect(() => {
+    if (!initialId && selected?.id) void detail(selected.id).catch(() => setSelected(null));
+  }, [initialId, refreshKey, selected?.id]);
   useEffect(() => {
     void loadClients();
   }, [canOperate, refreshKey]);

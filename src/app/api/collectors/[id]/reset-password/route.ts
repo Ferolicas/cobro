@@ -17,7 +17,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       prisma.session.deleteMany({ where: { userId: id } }),
     ]);
     await audit({ actorId: user.id, action: "COLLECTOR_PASSWORD_RESET", entityType: "user", entityId: id });
-    await notifyMasters({ actorId: user.id, type: "PASSWORD_RESET", title: "Contraseña restablecida", message: `La contraseña de ${target.name} volvió al valor temporal`, entityType: "user", entityId: id, actionUrl: "/app/cobradores", details: { cobrador: target.name, contraseñaTemporal: "cobro1234*", sesionesCerradas: true } });
+    await notifyMasters({ actorId: user.id, type: "PASSWORD_RESET", title: "Contraseña restablecida", message: `La contraseña de ${target.name} volvió al valor temporal`, entityType: "user", entityId: id, actionUrl: "/app/cobradores", details: { cobrador: target.name, contraseñaTemporal: "cobro1234*", sesionesCerradas: true }, audienceUserIds: [id] });
     return Response.json({ ok: true, temporaryPassword: "cobro1234*" });
   } catch (error) { return apiError(error); }
 }
