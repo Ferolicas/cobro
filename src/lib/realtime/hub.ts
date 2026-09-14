@@ -32,3 +32,7 @@ export function emitDataChanged(
     rooms,
   );
 }
+
+export function disconnectRealtimeUser(userId: string) {
+  globalThis.__cobroRealtime?.in(`user:${userId}`).disconnectSockets(true);
+}

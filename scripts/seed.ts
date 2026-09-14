@@ -30,10 +30,9 @@ async function ensureUser(input: { email: string; name: string; role: "MASTER" |
 
 async function main() {
   const master = await ensureUser({ email: process.env.MASTER_EMAIL ?? "prueba@olcas.app", name: process.env.MASTER_NAME ?? "Administrador principal", role: "MASTER" });
-  const importedCollector = await ensureUser({ email: process.env.IMPORT_COLLECTOR_EMAIL ?? "beatriz@cobro.olcas.app", name: "Beatriz", role: "COLLECTOR" });
   const zones = ["San Isidro", "Barrio Milagros", "Wichanzao", "Esperanza Baja", "Esperanza Alta", "Alto Trujillo", "El Porvenir", "Puma Cagua", "Buenos Aires"];
   for (const name of zones) await prisma.zone.upsert({ where: { name }, create: { name }, update: { active: true } });
-  console.log(`Seed listo: master=${master.email}, cartera=${importedCollector.email}, zonas=${zones.length}`);
+  console.log(`Seed listo: master=${master.email}, zonas=${zones.length}`);
 }
 
 main().finally(() => prisma.$disconnect());

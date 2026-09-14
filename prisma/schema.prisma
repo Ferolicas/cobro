@@ -249,7 +249,7 @@ model PaymentAllocation {
 
 model Liquidation {
   id                       String         @id @default(cuid())
-  collectorId              String
+  collectorId              String?
   date                     DateTime       @db.Date
   openingBaseCents         BigInt
   cashOutCents             BigInt         @default(0)
@@ -275,7 +275,7 @@ model Liquidation {
   reviewedAt               DateTime?      @db.Timestamptz(3)
   createdAt                DateTime       @default(now()) @db.Timestamptz(3)
   updatedAt                DateTime       @updatedAt @db.Timestamptz(3)
-  collector                User           @relation(fields: [collectorId], references: [id], onDelete: Restrict)
+  collector                User?          @relation(fields: [collectorId], references: [id], onDelete: SetNull)
   documents                Document[]
   cashMovements            CashMovement[]
 
@@ -289,7 +289,7 @@ model Document {
   creditId      String?
   paymentId     String?
   liquidationId String?
-  uploadedById  String
+  uploadedById  String?
   category      String
   label         String?
   fileName      String
@@ -302,7 +302,7 @@ model Document {
   credit        Credit?      @relation(fields: [creditId], references: [id], onDelete: Cascade)
   payment       Payment?     @relation(fields: [paymentId], references: [id], onDelete: SetNull)
   liquidation   Liquidation? @relation(fields: [liquidationId], references: [id], onDelete: Cascade)
-  uploadedBy    User         @relation(fields: [uploadedById], references: [id], onDelete: Restrict)
+  uploadedBy    User?        @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
 
   @@index([clientId, category])
   @@index([creditId, category])

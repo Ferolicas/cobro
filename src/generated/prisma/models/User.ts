@@ -839,10 +839,12 @@ export type UserCreateNestedOneWithoutLiquidationsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutLiquidationsNestedInput = {
+export type UserUpdateOneWithoutLiquidationsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutLiquidationsInput, Prisma.UserUncheckedCreateWithoutLiquidationsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutLiquidationsInput
   upsert?: Prisma.UserUpsertWithoutLiquidationsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutLiquidationsInput, Prisma.UserUpdateWithoutLiquidationsInput>, Prisma.UserUncheckedUpdateWithoutLiquidationsInput>
 }
@@ -853,10 +855,12 @@ export type UserCreateNestedOneWithoutUploadedDocumentsInput = {
   connect?: Prisma.UserWhereUniqueInput
 }
 
-export type UserUpdateOneRequiredWithoutUploadedDocumentsNestedInput = {
+export type UserUpdateOneWithoutUploadedDocumentsNestedInput = {
   create?: Prisma.XOR<Prisma.UserCreateWithoutUploadedDocumentsInput, Prisma.UserUncheckedCreateWithoutUploadedDocumentsInput>
   connectOrCreate?: Prisma.UserCreateOrConnectWithoutUploadedDocumentsInput
   upsert?: Prisma.UserUpsertWithoutUploadedDocumentsInput
+  disconnect?: Prisma.UserWhereInput | boolean
+  delete?: Prisma.UserWhereInput | boolean
   connect?: Prisma.UserWhereUniqueInput
   update?: Prisma.XOR<Prisma.XOR<Prisma.UserUpdateToOneWithWhereWithoutUploadedDocumentsInput, Prisma.UserUpdateWithoutUploadedDocumentsInput>, Prisma.UserUncheckedUpdateWithoutUploadedDocumentsInput>
 }

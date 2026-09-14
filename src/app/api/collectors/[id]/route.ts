@@ -4,7 +4,7 @@ import { apiError, requireUser } from "@/lib/auth/guard";
 import { prisma } from "@/lib/db/prisma";
 import { jsonResponse } from "@/lib/json";
 import { emitDataChanged } from "@/lib/realtime/hub";
-import { assertCollectorAccess, masterRecipientIdsForCollectors } from "@/lib/auth/scope";
+import { assertCollectorAccess, masterRecipientIdsForCollectors, requireSuperAdmin } from "@/lib/auth/scope";
 
 const schema = z.object({ active: z.boolean().optional(), name: z.string().trim().min(3).optional(), phone: z.string().trim().nullable().optional(), zoneId: z.string().nullable().optional() });
 
@@ -16,6 +16,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const before = await prisma.user.findUniqueOrThrow({ where: { id } });
     if (before.role !== "COLLECTOR") return Response.json({ error: "Usuario no válido" }, { status: 400 });
     const input = schema.parse(await request.json());
+    if (input.zoneId !== undefined) {
+      requireSuperAdmin(user);
+      if (input.zoneId) {
+        const zone = await prisma.zone.findFirst({ where: { id: input.zoneId, active: true }, select: { id: true } });
+        if (!zone) return Response.json({ error: "Selecciona una zona de trabajo válida" }, { status: 400 });
+      }
+    }
     const collector = await prisma.$transaction(async (tx) => {
       const updated = await tx.user.update({ where: { id }, data: input });
       if (input.active === false) await tx.session.deleteMany({ where: { userId: id } });

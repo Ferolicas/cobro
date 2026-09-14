@@ -385,7 +385,7 @@ export type LiquidationGroupByArgs<ExtArgs extends runtime.Types.Extensions.Inte
 
 export type LiquidationGroupByOutputType = {
   id: string
-  collectorId: string
+  collectorId: string | null
   date: Date
   openingBaseCents: bigint
   cashOutCents: bigint
@@ -438,7 +438,7 @@ export type LiquidationWhereInput = {
   OR?: Prisma.LiquidationWhereInput[]
   NOT?: Prisma.LiquidationWhereInput | Prisma.LiquidationWhereInput[]
   id?: Prisma.StringFilter<"Liquidation"> | string
-  collectorId?: Prisma.StringFilter<"Liquidation"> | string
+  collectorId?: Prisma.StringNullableFilter<"Liquidation"> | string | null
   date?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
   openingBaseCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   cashOutCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -464,14 +464,14 @@ export type LiquidationWhereInput = {
   reviewedAt?: Prisma.DateTimeNullableFilter<"Liquidation"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
-  collector?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  collector?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   documents?: Prisma.DocumentListRelationFilter
   cashMovements?: Prisma.CashMovementListRelationFilter
 }
 
 export type LiquidationOrderByWithRelationInput = {
   id?: Prisma.SortOrder
-  collectorId?: Prisma.SortOrder
+  collectorId?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
   openingBaseCents?: Prisma.SortOrder
   cashOutCents?: Prisma.SortOrder
@@ -508,7 +508,7 @@ export type LiquidationWhereUniqueInput = Prisma.AtLeast<{
   AND?: Prisma.LiquidationWhereInput | Prisma.LiquidationWhereInput[]
   OR?: Prisma.LiquidationWhereInput[]
   NOT?: Prisma.LiquidationWhereInput | Prisma.LiquidationWhereInput[]
-  collectorId?: Prisma.StringFilter<"Liquidation"> | string
+  collectorId?: Prisma.StringNullableFilter<"Liquidation"> | string | null
   date?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
   openingBaseCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   cashOutCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -534,14 +534,14 @@ export type LiquidationWhereUniqueInput = Prisma.AtLeast<{
   reviewedAt?: Prisma.DateTimeNullableFilter<"Liquidation"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
   updatedAt?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
-  collector?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>
+  collector?: Prisma.XOR<Prisma.UserNullableScalarRelationFilter, Prisma.UserWhereInput> | null
   documents?: Prisma.DocumentListRelationFilter
   cashMovements?: Prisma.CashMovementListRelationFilter
 }, "id" | "collectorId_date">
 
 export type LiquidationOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
-  collectorId?: Prisma.SortOrder
+  collectorId?: Prisma.SortOrderInput | Prisma.SortOrder
   date?: Prisma.SortOrder
   openingBaseCents?: Prisma.SortOrder
   cashOutCents?: Prisma.SortOrder
@@ -579,7 +579,7 @@ export type LiquidationScalarWhereWithAggregatesInput = {
   OR?: Prisma.LiquidationScalarWhereWithAggregatesInput[]
   NOT?: Prisma.LiquidationScalarWhereWithAggregatesInput | Prisma.LiquidationScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Liquidation"> | string
-  collectorId?: Prisma.StringWithAggregatesFilter<"Liquidation"> | string
+  collectorId?: Prisma.StringNullableWithAggregatesFilter<"Liquidation"> | string | null
   date?: Prisma.DateTimeWithAggregatesFilter<"Liquidation"> | Date | string
   openingBaseCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
   cashOutCents?: Prisma.BigIntWithAggregatesFilter<"Liquidation"> | bigint | number
@@ -634,14 +634,14 @@ export type LiquidationCreateInput = {
   reviewedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  collector: Prisma.UserCreateNestedOneWithoutLiquidationsInput
+  collector?: Prisma.UserCreateNestedOneWithoutLiquidationsInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLiquidationInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutLiquidationInput
 }
 
 export type LiquidationUncheckedCreateInput = {
   id?: string
-  collectorId: string
+  collectorId?: string | null
   date: Date | string
   openingBaseCents: bigint | number
   cashOutCents?: bigint | number
@@ -698,14 +698,14 @@ export type LiquidationUpdateInput = {
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  collector?: Prisma.UserUpdateOneRequiredWithoutLiquidationsNestedInput
+  collector?: Prisma.UserUpdateOneWithoutLiquidationsNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLiquidationNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutLiquidationNestedInput
 }
 
 export type LiquidationUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  collectorId?: Prisma.StringFieldUpdateOperationsInput | string
+  collectorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   openingBaseCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   cashOutCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -737,7 +737,7 @@ export type LiquidationUncheckedUpdateInput = {
 
 export type LiquidationCreateManyInput = {
   id?: string
-  collectorId: string
+  collectorId?: string | null
   date: Date | string
   openingBaseCents: bigint | number
   cashOutCents?: bigint | number
@@ -796,7 +796,7 @@ export type LiquidationUpdateManyMutationInput = {
 
 export type LiquidationUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  collectorId?: Prisma.StringFieldUpdateOperationsInput | string
+  collectorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   openingBaseCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   cashOutCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1145,7 +1145,7 @@ export type LiquidationScalarWhereInput = {
   OR?: Prisma.LiquidationScalarWhereInput[]
   NOT?: Prisma.LiquidationScalarWhereInput | Prisma.LiquidationScalarWhereInput[]
   id?: Prisma.StringFilter<"Liquidation"> | string
-  collectorId?: Prisma.StringFilter<"Liquidation"> | string
+  collectorId?: Prisma.StringNullableFilter<"Liquidation"> | string | null
   date?: Prisma.DateTimeFilter<"Liquidation"> | Date | string
   openingBaseCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
   cashOutCents?: Prisma.BigIntFilter<"Liquidation"> | bigint | number
@@ -1200,13 +1200,13 @@ export type LiquidationCreateWithoutDocumentsInput = {
   reviewedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  collector: Prisma.UserCreateNestedOneWithoutLiquidationsInput
+  collector?: Prisma.UserCreateNestedOneWithoutLiquidationsInput
   cashMovements?: Prisma.CashMovementCreateNestedManyWithoutLiquidationInput
 }
 
 export type LiquidationUncheckedCreateWithoutDocumentsInput = {
   id?: string
-  collectorId: string
+  collectorId?: string | null
   date: Date | string
   openingBaseCents: bigint | number
   cashOutCents?: bigint | number
@@ -1278,13 +1278,13 @@ export type LiquidationUpdateWithoutDocumentsInput = {
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  collector?: Prisma.UserUpdateOneRequiredWithoutLiquidationsNestedInput
+  collector?: Prisma.UserUpdateOneWithoutLiquidationsNestedInput
   cashMovements?: Prisma.CashMovementUpdateManyWithoutLiquidationNestedInput
 }
 
 export type LiquidationUncheckedUpdateWithoutDocumentsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  collectorId?: Prisma.StringFieldUpdateOperationsInput | string
+  collectorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   openingBaseCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   cashOutCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1340,13 +1340,13 @@ export type LiquidationCreateWithoutCashMovementsInput = {
   reviewedAt?: Date | string | null
   createdAt?: Date | string
   updatedAt?: Date | string
-  collector: Prisma.UserCreateNestedOneWithoutLiquidationsInput
+  collector?: Prisma.UserCreateNestedOneWithoutLiquidationsInput
   documents?: Prisma.DocumentCreateNestedManyWithoutLiquidationInput
 }
 
 export type LiquidationUncheckedCreateWithoutCashMovementsInput = {
   id?: string
-  collectorId: string
+  collectorId?: string | null
   date: Date | string
   openingBaseCents: bigint | number
   cashOutCents?: bigint | number
@@ -1418,13 +1418,13 @@ export type LiquidationUpdateWithoutCashMovementsInput = {
   reviewedAt?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
-  collector?: Prisma.UserUpdateOneRequiredWithoutLiquidationsNestedInput
+  collector?: Prisma.UserUpdateOneWithoutLiquidationsNestedInput
   documents?: Prisma.DocumentUpdateManyWithoutLiquidationNestedInput
 }
 
 export type LiquidationUncheckedUpdateWithoutCashMovementsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
-  collectorId?: Prisma.StringFieldUpdateOperationsInput | string
+  collectorId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   date?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   openingBaseCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
   cashOutCents?: Prisma.BigIntFieldUpdateOperationsInput | bigint | number
@@ -1641,7 +1641,7 @@ export type LiquidationSelect<ExtArgs extends runtime.Types.Extensions.InternalA
   reviewedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
   documents?: boolean | Prisma.Liquidation$documentsArgs<ExtArgs>
   cashMovements?: boolean | Prisma.Liquidation$cashMovementsArgs<ExtArgs>
   _count?: boolean | Prisma.LiquidationCountOutputTypeDefaultArgs<ExtArgs>
@@ -1675,7 +1675,7 @@ export type LiquidationSelectCreateManyAndReturn<ExtArgs extends runtime.Types.E
   reviewedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
 }, ExtArgs["result"]["liquidation"]>
 
 export type LiquidationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
@@ -1706,7 +1706,7 @@ export type LiquidationSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.E
   reviewedAt?: boolean
   createdAt?: boolean
   updatedAt?: boolean
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
 }, ExtArgs["result"]["liquidation"]>
 
 export type LiquidationSelectScalar = {
@@ -1741,28 +1741,28 @@ export type LiquidationSelectScalar = {
 
 export type LiquidationOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "collectorId" | "date" | "openingBaseCents" | "cashOutCents" | "collectedCashCents" | "collectedYapeCents" | "disbursedCents" | "expensesCents" | "collectorWithdrawalCents" | "microinsuranceCents" | "manualExpensesCents" | "collectorSalaryCents" | "chainWithdrawalCents" | "surplusCents" | "closingCashCents" | "expectedClosingCents" | "differenceCents" | "newClientsCount" | "totalAssignedClients" | "overdue30Count" | "zeroBalanceCount" | "status" | "notes" | "reviewedAt" | "createdAt" | "updatedAt", ExtArgs["result"]["liquidation"]>
 export type LiquidationInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
   documents?: boolean | Prisma.Liquidation$documentsArgs<ExtArgs>
   cashMovements?: boolean | Prisma.Liquidation$cashMovementsArgs<ExtArgs>
   _count?: boolean | Prisma.LiquidationCountOutputTypeDefaultArgs<ExtArgs>
 }
 export type LiquidationIncludeCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
 }
 export type LiquidationIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
-  collector?: boolean | Prisma.UserDefaultArgs<ExtArgs>
+  collector?: boolean | Prisma.Liquidation$collectorArgs<ExtArgs>
 }
 
 export type $LiquidationPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Liquidation"
   objects: {
-    collector: Prisma.$UserPayload<ExtArgs>
+    collector: Prisma.$UserPayload<ExtArgs> | null
     documents: Prisma.$DocumentPayload<ExtArgs>[]
     cashMovements: Prisma.$CashMovementPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
-    collectorId: string
+    collectorId: string | null
     date: Date
     openingBaseCents: bigint
     cashOutCents: bigint
@@ -2182,7 +2182,7 @@ readonly fields: LiquidationFieldRefs;
  */
 export interface Prisma__LiquidationClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
-  collector<T extends Prisma.UserDefaultArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.UserDefaultArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+  collector<T extends Prisma.Liquidation$collectorArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Liquidation$collectorArgs<ExtArgs>>): Prisma.Prisma__UserClient<runtime.Types.Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
   documents<T extends Prisma.Liquidation$documentsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Liquidation$documentsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$DocumentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   cashMovements<T extends Prisma.Liquidation$cashMovementsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Liquidation$cashMovementsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$CashMovementPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -2639,6 +2639,25 @@ export type LiquidationDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.I
    * Limit how many Liquidations to delete.
    */
   limit?: number
+}
+
+/**
+ * Liquidation.collector
+ */
+export type Liquidation$collectorArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the User
+   */
+  select?: Prisma.UserSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the User
+   */
+  omit?: Prisma.UserOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.UserInclude<ExtArgs> | null
+  where?: Prisma.UserWhereInput
 }
 
 /**

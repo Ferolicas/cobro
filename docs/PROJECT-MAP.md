@@ -1,6 +1,6 @@
 # Project Map — Cobro CRM
 
-Actualizado: 2026-09-14 · Commit base: 1a0d215
+Actualizado: 2026-09-14 · Commit base: fbdf642
 
 ## Producto
 
@@ -20,7 +20,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 
 ## Viajes principales
 
-1. Administrador o cobrador inicia sesión con correo y contraseña. Desde Usuarios, el administrador principal puede crear administradores con uno o varios cobradores asignados, modificar esas asignaciones en cualquier momento, o crear un cobrador y transferirle la cartera activa de un acceso anterior en la misma operación.
+1. Administrador o cobrador inicia sesión con correo y contraseña. Desde Usuarios, el administrador principal puede crear administradores con uno o varios cobradores asignados, modificar esas asignaciones, cambiar/asignar la zona de un cobrador, eliminar definitivamente cuentas secundarias, o crear un cobrador y transferirle la cartera activa de un acceso anterior.
 2. Una cuenta nueva/restablecida entra con `cobro1234*` y, en el primer acceso, solo escribe y confirma su contraseña nueva; ambos campos permiten mostrar u ocultar el texto. La sesión autenticada y `mustChangePassword` protegen este flujo de un segundo uso.
 3. El administrador principal supervisa toda la empresa; cada administrador secundario ve solamente sus cobradores asignados. Desde Usuarios puede abrir el panel, clientes, créditos y liquidación de cada uno, además de filtrar cobradores por zona y clientes por cobrador.
 4. El cobrador ve únicamente su ruta y es el único rol que crea clientes, desembolsa, renueva, registra pagos/no pagos, sube documentos y confirma el cierre diario. Sus administradores asignados ven estas acciones, ubicaciones y evidencias en tiempo real, sin ejecutar operaciones de ruta.
@@ -43,13 +43,14 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `views/ClientsView.tsx`: alta guiada en tres pasos, GPS/documentos/crédito y renovación para el cobrador; consulta completa, filtro por cobrador y eliminación administrativa confirmada por código para el maestro. La eliminación definitiva se bloquea si existen movimientos ligados a un cierre diario.
 - `views/CreditsView.tsx`: vista previa financiera, actualización documental, pago, renovación, pruebas y visitas sin pago; el selector deriva créditos activos a renovación y el plan funciona como historial diario: importe real, faltante acumulado, amarillo persistente y check de abono; solo lectura operativa para el maestro.
 - `views/LiquidationsView.tsx`: BASE inicial, SALIDA disponible después de préstamos, M.S, sueldo 3%, cadena, sobrante, déficit, semana y cierres diarios.
-- `views/CollectorsView.tsx`: alta de administradores con selección múltiple de cobradores, edición inmediata de asignaciones, zonas como filtros, base/caja/déficit y accesos directos al panel, clientes, créditos y control financiero de cada cobrador visible.
+- `views/CollectorsView.tsx`: alta de administradores con selección múltiple de cobradores, edición inmediata de asignaciones, cambio/asignación de zona, eliminación confirmada por correo, zonas como filtros, base/caja/déficit y accesos directos al panel, clientes, créditos y control financiero de cada cobrador visible.
 - `views/ReportsView.tsx`, `views/AuditView.tsx`: rentabilidad, pérdidas y trazabilidad.
 
 ## Backend
 
 - `src/app/api/auth/[...all]`: Better Auth.
 - `api/clients`, `api/credits`, `api/collectors`: CRUD con alcance por rol y por `CollectorAssignment`. El administrador principal crea usuarios; una cuenta `MASTER` secundaria exige uno o varios cobradores y queda limitada en servidor a esas carteras. `PATCH /api/administrators/[id]/collectors` reemplaza la asignación de forma transaccional y auditada. Para cuentas `COLLECTOR`, la creación acepta opcionalmente un cobrador anterior y transfiere clientes activos y créditos abiertos, desactiva su acceso y revoca sus sesiones dentro de una sola transacción. `DELETE /api/clients/[id]` purga transaccionalmente un expediente autorizado todavía no cerrado, conserva una auditoría mínima y elimina sus binarios de Sanity; si la limpieza externa falla deja el identificador técnico pendiente en `SystemSetting`.
+- `DELETE /api/users/[id]`: exclusivo del administrador principal y confirmado con el correo exacto. Elimina cuenta, credenciales, sesiones y asignaciones; desconecta el WebSocket y conserva clientes, créditos, pagos, documentos, caja y liquidaciones con sus referencias de usuario en `null`.
 - `api/credits/[id]/payments`, `renew`: operaciones financieras.
 - `api/credits/preview`: cálculo financiero autoritativo antes del desembolso o renovación.
 - `api/credits/[id]/no-payment`: registra una visita diaria sin movimiento financiero.
@@ -87,6 +88,7 @@ Sistema privado de gestión de micropréstamos para un maestro y hasta 500 cobra
 - `.env` solo en local/VPS, permisos 600.
 - Las contraseñas se almacenan con el hash de Better Auth; el maestro nunca ve contraseñas existentes.
 - `User.isSuperAdmin` distingue al administrador principal. `CollectorAssignment` delimita los cobradores visibles de cada administrador secundario; dashboard, clientes, créditos, documentos, liquidaciones, auditoría, notificaciones y eventos en vivo vuelven a validar ese alcance en el servidor.
+- La eliminación de un usuario nunca elimina información financiera. `Liquidation.collectorId` y `Document.uploadedById`, igual que las demás atribuciones históricas, aceptan `null` con `ON DELETE SET NULL`. El seed no vuelve a crear cobradores borrados.
 - Desactivar un cobrador revoca inmediatamente todas sus sesiones. Un intento de acceso con credenciales válidas permanece en el login y muestra `Usuario desactivado`; las rutas y APIs rechazan además cualquier sesión inactiva residual.
 - Una transferencia de cartera cambia únicamente la asignación operativa de clientes activos y créditos `ACTIVE/OVERDUE`. Pagos, cierres, caja, documentos, actividades y auditorías anteriores permanecen ligados al cobrador que los ejecutó; el cobrador anterior continúa visible como inactivo.
 - El proxy de documentos valida sesión y pertenencia antes de descargar.
